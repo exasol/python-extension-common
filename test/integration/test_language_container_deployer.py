@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from pyexasol import ExaConnection
-from pytest_itde import config
+from exasol.pytest_itde import config
 import exasol.bucketfs as bfs
 
 from exasol.python_extension_common.deployment.language_container_deployer import (

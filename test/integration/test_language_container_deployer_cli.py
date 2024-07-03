@@ -5,7 +5,7 @@ import pytest
 from urllib.parse import urlparse
 from click.testing import CliRunner
 from pyexasol import ExaConnection, ExaConnectionFailedError
-from pytest_itde import config
+from exasol.pytest_itde import config
 
 from test.utils.revert_language_settings import revert_language_settings
 from test.utils.db_utils import (create_schema, assert_udf_running)
@@ -142,3 +142,6 @@ def test_language_container_deployer_cli_with_check_cert(
         assert result.exit_code == 1
         assert expected_exception_message in result.exception.args[0].message
         assert isinstance(result.exception, ExaConnectionFailedError)
+
+def test_xxx():
+    pass
