@@ -142,6 +142,3 @@ def test_language_container_deployer_cli_with_check_cert(
         assert result.exit_code == 1
         assert expected_exception_message in result.exception.args[0].message
         assert isinstance(result.exception, ExaConnectionFailedError)
-
-def test_xxx():
-    pass
