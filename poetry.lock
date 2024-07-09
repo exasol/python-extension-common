@@ -203,13 +203,13 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "certifi"
-version = "2024.6.2"
+version = "2024.7.4"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2024.6.2-py3-none-any.whl", hash = "sha256:ddc6c8ce995e6987e7faf5e3f1b02b302836a0e5d98ece18392cb1a36c72ad56"},
-    {file = "certifi-2024.6.2.tar.gz", hash = "sha256:3cd43f1c6fa7dedc5899d69d3ad0398fd018ad1a17fba83ddaf78aa46c747516"},
+    {file = "certifi-2024.7.4-py3-none-any.whl", hash = "sha256:c198e21b1289c2ab85ee4e67bb4b4ef3ead0892059901a8d5b622f24a1101e90"},
+    {file = "certifi-2024.7.4.tar.gz", hash = "sha256:5a1e7645bc0ec61a09e26c36f6106dd4cf40c6db3a1fb6352b0244e7fb057c7b"},
 ]
 
 [[package]]
@@ -716,21 +716,21 @@ types-requests = ">=2.31.0.6,<3.0.0.0"
 
 [[package]]
 name = "exasol-script-languages-container-tool"
-version = "0.19.0"
+version = "0.20.0"
 description = "Script Languages Container Tool"
 optional = false
 python-versions = "<4,>=3.10"
 files = [
-    {file = "exasol_script_languages_container_tool-0.19.0-py3-none-any.whl", hash = "sha256:602862b9089c37fd73cd8d5c6b0c84b7ed8d00ce9a901b09bd341fc1c39f878b"},
-    {file = "exasol_script_languages_container_tool-0.19.0.tar.gz", hash = "sha256:08283250a91b9123e194239de7e95b946ed2a43aaafb73b7eb2af72c953c1664"},
+    {file = "exasol_script_languages_container_tool-0.20.0-py3-none-any.whl", hash = "sha256:15b8aa8897f207d6b7e6282dc678d6097d1d25fad757fdf3531d118ac3b5d42b"},
+    {file = "exasol_script_languages_container_tool-0.20.0.tar.gz", hash = "sha256:2d6361e3210f38f9776fe4efe48aed8d5f6a4699b779c81e1f532bcd0d5405bf"},
 ]
 
 [package.dependencies]
-exasol-integration-test-docker-environment = ">=3.0.0,<4.0.0"
+exasol-integration-test-docker-environment = ">=3.1.0,<4.0.0"
 importlib_metadata = ">=4.6.0"
 importlib-resources = ">=5.4.0"
-networkx = "2.8.2"
-requests = "2.31.0"
+networkx = ">=2.8.2,<3.0.0"
+requests = ">=2.31.0,<3.0.0"
 
 [[package]]
 name = "exasol-toolbox"
@@ -935,13 +935,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "identify"
-version = "2.5.36"
+version = "2.6.0"
 description = "File identification library for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "identify-2.5.36-py2.py3-none-any.whl", hash = "sha256:37d93f380f4de590500d9dba7db359d0d3da95ffe7f9de1753faa159e71e7dfa"},
-    {file = "identify-2.5.36.tar.gz", hash = "sha256:e5e00f54165f9047fbebeb4a560f9acfb8af4c88232be60a488e9b68d122745d"},
+    {file = "identify-2.6.0-py2.py3-none-any.whl", hash = "sha256:e79ae4406387a9d300332b5fd366d8994f1525e8414984e1a59e058b2eda2dd0"},
+    {file = "identify-2.6.0.tar.gz", hash = "sha256:cb171c685bdc31bcc4c1734698736a7d5b6c8bf2e0c15117f4d469c8640ae5cf"},
 ]
 
 [package.extras]
@@ -1360,21 +1360,21 @@ nicer-shell = ["ipython"]
 
 [[package]]
 name = "networkx"
-version = "2.8.2"
+version = "2.8.8"
 description = "Python package for creating and manipulating graphs and networks"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "networkx-2.8.2-py3-none-any.whl", hash = "sha256:51d6ae63c24dcd33901357688a2ad20d6bcd38f9a4c5307720048d3a8081059c"},
-    {file = "networkx-2.8.2.tar.gz", hash = "sha256:ae99c9b0d35e5b4a62cf1cfea01e5b3633d8d02f4a0ead69685b6e7de5b85eab"},
+    {file = "networkx-2.8.8-py3-none-any.whl", hash = "sha256:e435dfa75b1d7195c7b8378c3859f0445cd88c6b0375c181ed66823a9ceb7524"},
+    {file = "networkx-2.8.8.tar.gz", hash = "sha256:230d388117af870fce5647a3c52401fcf753e94720e6ea6b4197a5355648885e"},
 ]
 
 [package.extras]
 default = ["matplotlib (>=3.4)", "numpy (>=1.19)", "pandas (>=1.3)", "scipy (>=1.8)"]
-developer = ["mypy (>=0.942)", "pre-commit (>=2.18)"]
-doc = ["nb2plots (>=0.6)", "numpydoc (>=1.3)", "pillow (>=9.1)", "pydata-sphinx-theme (>=0.8.1)", "sphinx (>=4.5)", "sphinx-gallery (>=0.10)", "texext (>=0.6.6)"]
+developer = ["mypy (>=0.982)", "pre-commit (>=2.20)"]
+doc = ["nb2plots (>=0.6)", "numpydoc (>=1.5)", "pillow (>=9.2)", "pydata-sphinx-theme (>=0.11)", "sphinx (>=5.2)", "sphinx-gallery (>=0.11)", "texext (>=0.6.6)"]
 extra = ["lxml (>=4.6)", "pydot (>=1.4.2)", "pygraphviz (>=1.9)", "sympy (>=1.10)"]
-test = ["codecov (>=2.1)", "pytest (>=7.1)", "pytest-cov (>=3.0)"]
+test = ["codecov (>=2.1)", "pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
 name = "nodeenv"
@@ -1581,13 +1581,13 @@ tests = ["black", "chardet", "tox"]
 
 [[package]]
 name = "pyexasol"
-version = "0.25.2"
+version = "0.26.0"
 description = "Exasol python driver with extra features"
 optional = false
-python-versions = ">=3.6"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "pyexasol-0.25.2-py3-none-any.whl", hash = "sha256:54be5c75f0867a4838b84b5b5a37466c33fa9b1ca6bf51d9c3d821d367936e6e"},
-    {file = "pyexasol-0.25.2.tar.gz", hash = "sha256:3b42cb2c32b7b2ffe7a78c82bf21c3a391043758f2a575c48460252a72386691"},
+    {file = "pyexasol-0.26.0-py3-none-any.whl", hash = "sha256:b4bd2cf28bfb42352916efae7878beac847ca49bbab7be9f0066346ca0865de4"},
+    {file = "pyexasol-0.26.0.tar.gz", hash = "sha256:d00fd8e05936767c332c50be5f953514579a2c7a80f8a8922cbf7d8a56603fbb"},
 ]
 
 [package.dependencies]
@@ -1598,8 +1598,9 @@ websocket-client = ">=1.0.1"
 
 [package.extras]
 examples = ["pproxy"]
+numpy = ["numpy (>1.26.0,<2)"]
 orjson = ["orjson (>=3.6)"]
-pandas = ["pandas"]
+pandas = ["pandas[numpy] (>=2,<3)"]
 rapidjson = ["python-rapidjson"]
 ujson = ["ujson"]
 
@@ -2368,13 +2369,13 @@ files = [
 
 [[package]]
 name = "tenacity"
-version = "8.4.2"
+version = "8.5.0"
 description = "Retry code until it succeeds"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "tenacity-8.4.2-py3-none-any.whl", hash = "sha256:9e6f7cf7da729125c7437222f8a522279751cdfbe6b67bfe64f75d3a348661b2"},
-    {file = "tenacity-8.4.2.tar.gz", hash = "sha256:cd80a53a79336edba8489e767f729e4f391c896956b57140b5d7511a64bbd3ef"},
+    {file = "tenacity-8.5.0-py3-none-any.whl", hash = "sha256:b594c2a5945830c267ce6b79a166228323ed52718f30302c1359836112346687"},
+    {file = "tenacity-8.5.0.tar.gz", hash = "sha256:8bc6c0c8a09b31e6cad13c47afbed1a567518250a9a171418582ed8d9c20ca78"},
 ]
 
 [package.extras]
