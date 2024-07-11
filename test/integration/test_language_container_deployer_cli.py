@@ -5,7 +5,7 @@ import pytest
 from urllib.parse import urlparse
 from click.testing import CliRunner
 from pyexasol import ExaConnection, ExaConnectionFailedError
-from pytest_itde import config
+from exasol.pytest_itde import config
 
 from test.utils.revert_language_settings import revert_language_settings
 from test.utils.db_utils import (create_schema, assert_udf_running)
