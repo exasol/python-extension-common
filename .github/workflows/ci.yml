@@ -13,18 +13,32 @@ on:
 
 jobs:
 
-  ci-job:
+  check-job:
     name: Checks
     uses: ./.github/workflows/checks.yml
     secrets: inherit
 
+  tests-job:
+    name: Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    needs: [check-job]
+    uses: ./.github/workflows/run-tests.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+        exasol-version: ["7.1.9"]
+    secrets: inherit
+    with:
+      python-version: ${{ matrix.python-version }}
+      exasol-version: ${{ matrix.exasol-version }}
+
   metrics:
-    needs: [ ci-job ]
+    needs: [ tests-job ]
     uses: ./.github/workflows/report.yml
 
   gate-1:
     name: Gate 1 - Regular CI
-    needs: [ ci-job ]
+    needs: [ tests-job ]
     runs-on: ubuntu-latest
     steps:
       - name: Branch Protection
