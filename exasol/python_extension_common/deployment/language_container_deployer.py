@@ -13,7 +13,10 @@ from exasol.saas.client.api_access import (get_connection_params, get_database_i
 from exasol.python_extension_common.deployment.language_container_validator import (
     wait_language_container, temp_schema
 )
-from exasol.python_extension_common.deployment.extract_validator import DummyExtractValidator
+from exasol.python_extension_common.deployment.extract_validator import (
+    ExtractValidator,
+    DummyExtractValidator,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -93,12 +96,14 @@ class LanguageContainerDeployer:
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
                  language_alias: str,
-                 bucketfs_path: bfs.path.PathLike) -> None:
+                 bucketfs_path: bfs.path.PathLike,
+                 extract_validator: ExtractValidator = DummyExtractValidator(),
+                 ) -> None:
 
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
-        self.extract_validator = DummyExtractValidator()
+        self.extract_validator = extract_validator
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
     def download_and_run(self, url: str,

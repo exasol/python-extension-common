@@ -20,6 +20,13 @@ def container_file_path(container_file_name) -> Path:
     return Path(container_file_name)
 
 
+@pytest.fixture
+def container_file(tmp_path, container_file_name) -> Path:
+    file = tmp_path / container_file_name
+    file.touch()
+    return file
+
+
 @pytest.fixture(scope='module')
 def language_alias() -> str:
     return 'PYTHON3_TEST'
@@ -156,12 +163,14 @@ def test_slc_deployer_get_language_definition(mock_udf_path,
     assert command == expected_command
 
 
-def test_extract_validator_called(mock_pyexasol_conn, language_alias, tmp_path):
+def test_extract_validator_called(mock_pyexasol_conn, language_alias, container_file):
     bucket_file = Mock()
     bucketfs_path = Mock(__truediv__=Mock(return_value=bucket_file))
-    deployer = LanguageContainerDeployer(mock_pyexasol_conn, language_alias, bucketfs_path)
-    deployer.extract_validator = Mock()
-    container_file = tmp_path / "container.tgz"
-    container_file.touch()
+    deployer = LanguageContainerDeployer(
+        mock_pyexasol_conn,
+        language_alias,
+        bucketfs_path,
+        extract_validator=Mock(),
+    )
     deployer.upload_container(container_file, None)
     assert deployer.extract_validator.verify_all_nodes.call_args == call(bucket_file)
