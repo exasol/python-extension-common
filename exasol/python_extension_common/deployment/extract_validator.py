@@ -63,12 +63,14 @@ class ExtractValidator:
             """
         )
 
-    def is_extracted_on_all_nodes(self) -> bool:
+    def verify_all_nodes(self):
         """
-        Return list of the IDs of the pending cluster nodes.
+        Verify if the given bucketfs_path was extracted on all nodes
+        successfully.
 
-        A node is "pending" if the successful extraction of the manifest could
-        not be detected, yet.
+        Raise an ExtractException if the specified bucketfs_path was not an
+        archive or if after the specified timeout there are still nodes
+        pending, for which the extraction could not be verified, yet.
         """
         @retry(wait=wait_fixed(self._interval), stop=stop_after_delay(self._timeout), reraise=True)
         def check_all_nodes(total_nodes, manifest) -> List[int]:
@@ -84,12 +86,13 @@ class ExtractValidator:
             if len(pending) > 0:
                 raise ExtractException(
                     f"{len(pending)} of {total_nodes} nodes are still pending."
-                    f" IDs: {pending}"
-                )
+                    f" IDs: {pending}")
 
         manifest = manifest_path(self._bucketfs_path)
         if manifest is None:
-            return False
+            raise ExtractException(
+                f"{self._bucketfs_path} does not point to an archive"
+                f" which could contain a file {MANIFEST_FILE}")
         total_nodes = self._pyexasol_conn.execute("select nproc()")
         with temp_schema(self._pyexasol_conn) as schema:
             self._create_manifest_udf(schema)
