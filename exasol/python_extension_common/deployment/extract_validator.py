@@ -95,3 +95,8 @@ class ExtractValidator:
             self._create_manifest_udf(schema)
             check_all_nodes(total_nodes, manifest)
             return True
+
+
+class DummyExtractValidator(ExtractValidator):
+    def is_extracted_on_all_nodes(self) -> bool:
+        return True

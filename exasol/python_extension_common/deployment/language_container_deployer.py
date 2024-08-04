@@ -13,6 +13,7 @@ from exasol.saas.client.api_access import (get_connection_params, get_database_i
 from exasol.python_extension_common.deployment.language_container_validator import (
     wait_language_container, temp_schema
 )
+from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,7 @@ class LanguageContainerDeployer:
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
+        self._extract_validator = DummyExtractValidator()
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
     def download_and_run(self, url: str,
@@ -194,7 +196,8 @@ class LanguageContainerDeployer:
         with open(container_file, "br") as f:
             file_path = self._bucketfs_path / bucket_file_path
             file_path.write(f)
-        logging.debug("Container is uploaded to bucketfs")
+        if self._extract_validator.is_extracted_on_all_nodes():
+            logging.debug("Container is uploaded to bucketfs")
 
     def activate_container(self, bucket_file_path: str,
                            alter_type: LanguageActivationLevel = LanguageActivationLevel.Session,
