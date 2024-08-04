@@ -101,5 +101,8 @@ class ExtractValidator:
 
 
 class DummyExtractValidator(ExtractValidator):
-    def is_extracted_on_all_nodes(self) -> bool:
-        return True
+    def __init__(self):
+        super().__init__(None, None, timedelta(milliseconds=1))
+
+    def verify_all_nodes(self):
+        pass

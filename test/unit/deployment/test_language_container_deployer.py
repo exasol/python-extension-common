@@ -7,6 +7,7 @@ from pyexasol import ExaConnection
 
 from exasol.python_extension_common.deployment.language_container_deployer import (
     LanguageContainerDeployer, LanguageActivationLevel)
+from exasol.python_extension_common.deployment.extract_validator import Extract_Validator
 
 
 @pytest.fixture(scope='module')
@@ -153,3 +154,12 @@ def test_slc_deployer_get_language_definition(mock_udf_path,
 
     command = container_deployer.get_language_definition(container_file_name)
     assert command == expected_command
+
+
+def test_extract_validator_called(mock_pyexasol_conn, language_alias, tmp_path):
+    bucketfs_path=create_autospec(bfs.path.PathLike)
+    extract_validator = create_autospec(ExtractValidator)
+    deployer = LanguageContainerDeployer(mock_pyexasol_conn, language_alias, bucketfs_path)
+    deployer._extract_validator = extract_validator
+    container_deployer.upload_container(tmp_path, None)
+    extract_validator.assert_called_once_with(bucketfs_path)
