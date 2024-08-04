@@ -22,6 +22,10 @@ def bucket_path(path: str):
     bucket_api = bfs.MountedBucket("svc", "bkt")
     return bfs.path.BucketPath(path, bucket_api=bucket_api)
 
+@pytest.fixture
+def archive_bucket_path():
+    return bucket_path("/folder/a.tgz")
+
 
 @pytest.mark.parametrize(
     "bfs_path", [
@@ -81,7 +85,6 @@ class Simulator:
         self.callback.side_effect = self._callback
         return ExtractValidator(
             pyexasol,
-            bucket_path("/folder/a.tgz"),
             timeout=timedelta(milliseconds=20),
             interval=timedelta(milliseconds=10),
             callback=self.callback,
@@ -92,7 +95,6 @@ def test_no_archive():
     pyexasol = Mock(),
     testee = ExtractValidator(
         pyexasol,
-        bucket_path("/folder/a.txt"),
         timeout=timedelta(milliseconds=20),
     )
     with pytest.raises(
@@ -100,10 +102,10 @@ def test_no_archive():
             match=("/folder/a.txt does not point to an archive"
                    " which could contain a file exasol-manifest.json")
     ) as ex:
-        testee.verify_all_nodes()
+        testee.verify_all_nodes(bucket_path("/folder/a.txt"))
 
 
-def test_failure():
+def test_failure(archive_bucket_path):
     sim = Simulator(
         nodes=4,
         udf_results=[
@@ -112,11 +114,11 @@ def test_failure():
             [[1, False]],
         ])
     with pytest.raises(ExtractException) as ex:
-        assert sim.testee.verify_all_nodes()
+        assert sim.testee.verify_all_nodes(archive_bucket_path)
     assert "1 of 4 nodes are still pending. IDs: [1]" == str(ex.value)
 
 
-def test_success():
+def test_success(archive_bucket_path):
     sim = Simulator(
         nodes=4,
         udf_results=[
@@ -124,7 +126,7 @@ def test_success():
             [[1, True], [2, False]],
             [[1, True], [2, True]],
         ])
-    sim.testee.verify_all_nodes()
+    sim.testee.verify_all_nodes(archive_bucket_path)
     assert sim.callback.call_args_list == [
         call(4, [1,2]),
         call(4, [2]),

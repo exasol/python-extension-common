@@ -39,13 +39,11 @@ class ExtractValidator:
     """
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
-                 bucketfs_path: bfs.path.PathLike,
                  timeout: timedelta,
                  interval: timedelta = timedelta(seconds=10),
                  callback: Callable[[int, List[int]], None]= None,
                  ) -> None:
         self._pyexasol_conn = pyexasol_connection
-        self._bucketfs_path = bucketfs_path
         self._timeout = timeout
         self._interval = interval
         self._callback = callback if callback else lambda x: None
@@ -63,13 +61,13 @@ class ExtractValidator:
             """
         )
 
-    def verify_all_nodes(self):
+    def verify_all_nodes(self, bucketfs_path: bfs.path.PathLike):
         """
         Verify if the given bucketfs_path was extracted on all nodes
         successfully.
 
         Raise an ExtractException if the specified bucketfs_path was not an
-        archive or if after the specified timeout there are still nodes
+        archive or if after the configured timeout there are still nodes
         pending, for which the extraction could not be verified, yet.
         """
         @retry(wait=wait_fixed(self._interval), stop=stop_after_delay(self._timeout), reraise=True)
@@ -88,10 +86,10 @@ class ExtractValidator:
                     f"{len(pending)} of {total_nodes} nodes are still pending."
                     f" IDs: {pending}")
 
-        manifest = manifest_path(self._bucketfs_path)
+        manifest = manifest_path(bucketfs_path)
         if manifest is None:
             raise ExtractException(
-                f"{self._bucketfs_path} does not point to an archive"
+                f"{bucketfs_path} does not point to an archive"
                 f" which could contain a file {MANIFEST_FILE}")
         total_nodes = self._pyexasol_conn.execute("select nproc()")
         with temp_schema(self._pyexasol_conn) as schema:
