@@ -44,8 +44,8 @@ class ExtractValidator:
                  interval: timedelta = timedelta(seconds=10),
                  callback: Callable[[int, List[int]], None]= None,
                  ) -> None:
-        self._bucketfs_path = bucketfs_path
         self._pyexasol_conn = pyexasol_connection
+        self._bucketfs_path = bucketfs_path
         self._timeout = timeout
         self._interval = interval
         self._callback = callback if callback else lambda x: None
