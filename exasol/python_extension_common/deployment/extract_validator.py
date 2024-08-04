@@ -63,7 +63,7 @@ class ExtractValidator:
             """
         )
 
-    def is_deployed(self) -> List[int]:
+    def is_extracted_on_all_nodes(self) -> List[int]:
         """
         Return list of the IDs of the pending cluster nodes.
 
