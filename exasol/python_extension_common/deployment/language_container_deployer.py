@@ -98,7 +98,7 @@ class LanguageContainerDeployer:
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
-        self._extract_validator = DummyExtractValidator()
+        self.extract_validator = DummyExtractValidator()
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
     def download_and_run(self, url: str,
@@ -196,7 +196,7 @@ class LanguageContainerDeployer:
         with open(container_file, "br") as f:
             file_path = self._bucketfs_path / bucket_file_path
             file_path.write(f)
-        self._extract_validator.verify_all_nodes(file_path)
+        self.extract_validator.verify_all_nodes(file_path)
         logging.debug("Container is uploaded to bucketfs")
 
     def activate_container(self, bucket_file_path: str,

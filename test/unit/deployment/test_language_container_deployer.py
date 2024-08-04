@@ -1,5 +1,5 @@
 from pathlib import Path, PurePosixPath
-from unittest.mock import create_autospec, MagicMock, patch, call
+from unittest.mock import create_autospec, MagicMock, Mock, patch, call
 
 import pytest
 import exasol.bucketfs as bfs
@@ -7,7 +7,7 @@ from pyexasol import ExaConnection
 
 from exasol.python_extension_common.deployment.language_container_deployer import (
     LanguageContainerDeployer, LanguageActivationLevel)
-from exasol.python_extension_common.deployment.extract_validator import Extract_Validator
+from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 
 
 @pytest.fixture(scope='module')
@@ -157,9 +157,11 @@ def test_slc_deployer_get_language_definition(mock_udf_path,
 
 
 def test_extract_validator_called(mock_pyexasol_conn, language_alias, tmp_path):
-    bucketfs_path=create_autospec(bfs.path.PathLike)
-    extract_validator = create_autospec(ExtractValidator)
+    bucket_file = Mock()
+    bucketfs_path = Mock(__truediv__=Mock(return_value=bucket_file))
     deployer = LanguageContainerDeployer(mock_pyexasol_conn, language_alias, bucketfs_path)
-    deployer._extract_validator = extract_validator
-    container_deployer.upload_container(tmp_path, None)
-    extract_validator.assert_called_once_with(bucketfs_path)
+    deployer.extract_validator = Mock()
+    container_file = tmp_path / "container.tgz"
+    container_file.touch()
+    deployer.upload_container(container_file, None)
+    assert deployer.extract_validator.verify_all_nodes.call_args == call(bucket_file)

@@ -100,7 +100,7 @@ class ExtractValidator:
 
 class DummyExtractValidator(ExtractValidator):
     def __init__(self):
-        super().__init__(None, None, timedelta(milliseconds=1))
+        super().__init__(None, None)
 
-    def verify_all_nodes(self):
+    def verify_all_nodes(self, bucketfs_path: bfs.path.PathLike):
         pass
