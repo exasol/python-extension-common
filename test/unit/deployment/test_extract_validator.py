@@ -33,7 +33,6 @@ def bucket_path(path: str):
     ] )
 def test_manifest_path(bfs_path):
     path = bucket_path(bfs_path)
-    # print(f'{manifest_path(path)}')
     assert "/buckets/svc/bkt/folder/archive/exasol-manifest.json" == manifest_path(path)
 
 
@@ -96,7 +95,12 @@ def test_no_archive():
         bucket_path("/folder/a.txt"),
         timeout=timedelta(milliseconds=20),
     )
-    assert not testee.is_extracted_on_all_nodes()
+    with pytest.raises(
+            ExtractException,
+            match=("/folder/a.txt does not point to an archive"
+                   " which could contain a file exasol-manifest.json")
+    ) as ex:
+        testee.verify_all_nodes()
 
 
 def test_failure():
@@ -108,7 +112,7 @@ def test_failure():
             [[1, False]],
         ])
     with pytest.raises(ExtractException) as ex:
-        assert sim.testee.is_extracted_on_all_nodes()
+        assert sim.testee.verify_all_nodes()
     assert "1 of 4 nodes are still pending. IDs: [1]" == str(ex.value)
 
 
@@ -120,10 +124,7 @@ def test_success():
             [[1, True], [2, False]],
             [[1, True], [2, True]],
         ])
-    try:
-        assert sim.testee.is_extracted_on_all_nodes()
-    except ExtractException as ex:
-        print(f'{ex}')
+    sim.testee.verify_all_nodes()
     assert sim.callback.call_args_list == [
         call(4, [1,2]),
         call(4, [2]),
