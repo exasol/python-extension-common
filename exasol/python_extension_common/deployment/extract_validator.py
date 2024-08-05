@@ -48,11 +48,11 @@ class ExtractValidator:
         self._interval = interval
         self._callback = callback if callback else lambda x, y: None
 
-    def _create_manifest_udf(self, schema: str):
+    def _create_manifest_udf(self, language_alias: str, schema: str):
         # how to handle potential errors?
         self._pyexasol_conn.execute(
             f"""
-            CREATE OR REPLACE PYTHON3 SCALAR SCRIPT
+            CREATE OR REPLACE {language_alias} SCALAR SCRIPT
             "{schema}".manifest(my_path VARCHAR(256)) RETURNS BOOL AS
             import os
             def run(ctx):
@@ -61,7 +61,7 @@ class ExtractValidator:
             """
         )
 
-    def verify_all_nodes(self, bucketfs_path: bfs.path.PathLike):
+    def verify_all_nodes(self, language_alias: str, bucketfs_path: bfs.path.PathLike):
         """
         Verify if the given bucketfs_path was extracted on all nodes
         successfully.
@@ -93,5 +93,5 @@ class ExtractValidator:
                 f" which could contain a file {MANIFEST_FILE}")
         total_nodes = self._pyexasol_conn.execute("select nproc()")
         with temp_schema(self._pyexasol_conn) as schema:
-            self._create_manifest_udf(schema)
+            self._create_manifest_udf(language_alias, schema)
             check_all_nodes(total_nodes, manifest)
