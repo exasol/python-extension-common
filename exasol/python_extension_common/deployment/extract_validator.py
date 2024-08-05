@@ -21,7 +21,7 @@ class ExtractException(Exception):
     """
 
 
-def manifest_path(bfs_path: bfs.path.PathLike) -> str:
+def manifest_path(bfs_path: bfs.path.PathLike) -> str | None:
     parent = bfs.path.BucketPath(bfs_path._path.parent, bfs_path._bucket_api)
     regex = re.compile(r"(.*)\.(tar|tgz|tar\.gz|zip|gzip)$")
     match = regex.match(bfs_path.name)
@@ -41,7 +41,7 @@ class ExtractValidator:
                  pyexasol_connection: pyexasol.ExaConnection,
                  timeout: timedelta,
                  interval: timedelta = timedelta(seconds=10),
-                 callback: Callable[[int, List[int]], None]= None,
+                 callback: Callable[[int, List[int]], None] | None = None,
                  ) -> None:
         self._pyexasol_conn = pyexasol_connection
         self._timeout = timeout
@@ -71,7 +71,7 @@ class ExtractValidator:
         pending, for which the extraction could not be verified, yet.
         """
         @retry(wait=wait_fixed(self._interval), stop=stop_after_delay(self._timeout), reraise=True)
-        def check_all_nodes(total_nodes, manifest) -> List[int]:
+        def check_all_nodes(total_nodes, manifest):
             result = self._pyexasol_conn.execute(
                 f"""
                 select iproc() "Node", manifest('{manifest}') "Manifest"
