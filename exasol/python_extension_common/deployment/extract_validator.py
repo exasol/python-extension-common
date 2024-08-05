@@ -56,25 +56,38 @@ class ExtractValidator:
     def _delete_manifest_udf(self, language_alias: str, schema: str):
         self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {_udf_name(schema)}")
 
+    # The SQL statements "ALTER SESSION SET SCRIPT_LANGUAGES" and "ALTER
+    # SYSTEM SET SCRIPT_LANGUAGES" doe not check whether the specified
+    # BucketFS path exists and has permissions allowing it to be accessed by
+    # UDFs.
+    #
+    # Much more a later statement "CREATE SCRIPT" will fail with an error
+    # message.
+    #
+    # Hence we need to use a retry here, as well.
+    #
+    # Additionally we want to enable the user to specify a TOTAL timeout
+    # covering both retry phases: P1) CREATE SCRIPT P2) Check if UDF in SLC
+    # can be executed and finds extracted MANIFEST_FILE on each node of the database cluster.
     def _create_manifest_udf(self, language_alias: str, schema: str):
-        # how to handle potential errors?
         self._pyexasol_conn.execute(
             f"""
-            CREATE OR REPLACE {language_alias} SCALAR SCRIPT
-            {_udf_name(schema)}(my_path VARCHAR(256)) RETURNS BOOL AS
+            CREATE OR REPLACE {language_alias} SET SCRIPT
+                {_udf_name(schema)}(my_path VARCHAR(256))
+                EMITS (node INTEGER, manifest BOOL) AS
             import os
             def run(ctx):
-                return os.path.isfile(ctx.my_path)
+                ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
             /
             """
         )
 
-    def verify_all_nodes(self, schema: str, language_alias: str, bucketfs_path: bfs.path.PathLike):
+    def verify_all_nodes(self, schema: str, language_alias: str, bfs_archive_path: bfs.path.PathLike):
         """
-        Verify if the given bucketfs_path was extracted on all nodes
+        Verify if the given bfs_archive_path was extracted on all nodes
         successfully.
 
-        Raise an ExtractException if the specified bucketfs_path was not an
+        Raise an ExtractException if the specified bfs_archive_path was not an
         archive or if after the configured timeout there are still nodes
         pending, for which the extraction could not be verified, yet.
         """
@@ -82,10 +95,10 @@ class ExtractValidator:
         def check_all_nodes(nproc, manifest):
             result = self._pyexasol_conn.execute(
                 f"""
-                SELECT iproc() "Node", {_udf_name(schema)}('{manifest}') "Manifest"
-                FROM VALUES BETWEEN 1 AND {nproc} GROUP BY iproc()
+                SELECT {_udf_name(schema)}({manifest})
+                FROM VALUES BETWEEN 1 AND {nproc} t(i) GROUP BY i
                 """
-            )
+            ).fetchall()
             pending = list( x[0] for x in result if not x[1] )
             self._callback(nproc, pending)
             if len(pending) > 0:
@@ -93,12 +106,12 @@ class ExtractValidator:
                     f"{len(pending)} of {nproc} nodes are still pending."
                     f" IDs: {pending}")
 
-        manifest = manifest_path(bucketfs_path)
+        manifest = f"{bfs_archive_path.as_udf_path()}/{MANIFEST_FILE}"
         if manifest is None:
             raise ExtractException(
-                f"{bucketfs_path} does not point to an archive"
+                f"{bfs_archive_path} does not point to an archive"
                 f" which could contain a file {MANIFEST_FILE}")
-        nproc = self._pyexasol_conn.execute("SELECT nproc()")
+        nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()
         try:
             self._create_manifest_udf(language_alias, schema)
             check_all_nodes(nproc, manifest)
