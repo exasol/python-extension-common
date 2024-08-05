@@ -46,7 +46,7 @@ class ExtractValidator:
         self._pyexasol_conn = pyexasol_connection
         self._timeout = timeout
         self._interval = interval
-        self._callback = callback if callback else lambda x: None
+        self._callback = callback if callback else lambda x, y: None
 
     def _create_manifest_udf(self, schema: str):
         # how to handle potential errors?
