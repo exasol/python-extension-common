@@ -82,8 +82,8 @@ class ExtractValidator:
         def check_all_nodes(nproc, manifest):
             result = self._pyexasol_conn.execute(
                 f"""
-                select iproc() "Node", {_udf_name(schema)}('{manifest}') "Manifest"
-                from values between 1 and {nproc} group by iproc()
+                SELECT iproc() "Node", {_udf_name(schema)}('{manifest}') "Manifest"
+                FROM VALUES BETWEEN 1 AND {nproc} GROUP BY iproc()
                 """
             )
             pending = list( x[0] for x in result if not x[1] )
@@ -98,7 +98,7 @@ class ExtractValidator:
             raise ExtractException(
                 f"{bucketfs_path} does not point to an archive"
                 f" which could contain a file {MANIFEST_FILE}")
-        nproc = self._pyexasol_conn.execute("select nproc()")
+        nproc = self._pyexasol_conn.execute("SELECT nproc()")
         try:
             self._create_manifest_udf(language_alias, schema)
             check_all_nodes(nproc, manifest)
