@@ -14,6 +14,11 @@ from exasol.python_extension_common.deployment.language_container_validator impo
 
 MANIFEST_FILE = "exasol-manifest.json"
 
+
+def _udf_name(schema: str | None, name: str = "manifest") -> str:
+    return f'"{schema}"."{name}"' if schema else f'"{name}"'
+
+
 class ExtractException(Exception):
     """
     Expected file MANIFEST_FILE could not detected on all nodes of the
@@ -48,12 +53,15 @@ class ExtractValidator:
         self._interval = interval
         self._callback = callback if callback else lambda x, y: None
 
+    def _delete_manifest_udf(self, language_alias: str, schema: str):
+        self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {_udf_name(schema)}")
+
     def _create_manifest_udf(self, language_alias: str, schema: str):
         # how to handle potential errors?
         self._pyexasol_conn.execute(
             f"""
             CREATE OR REPLACE {language_alias} SCALAR SCRIPT
-            "{schema}".manifest(my_path VARCHAR(256)) RETURNS BOOL AS
+            {_udf_name(schema)}(my_path VARCHAR(256)) RETURNS BOOL AS
             import os
             def run(ctx):
                 return os.path.isfile(ctx.my_path)
@@ -61,7 +69,7 @@ class ExtractValidator:
             """
         )
 
-    def verify_all_nodes(self, language_alias: str, bucketfs_path: bfs.path.PathLike):
+    def verify_all_nodes(self, schema: str, language_alias: str, bucketfs_path: bfs.path.PathLike):
         """
         Verify if the given bucketfs_path was extracted on all nodes
         successfully.
@@ -71,19 +79,18 @@ class ExtractValidator:
         pending, for which the extraction could not be verified, yet.
         """
         @retry(wait=wait_fixed(self._interval), stop=stop_after_delay(self._timeout), reraise=True)
-        def check_all_nodes(total_nodes, manifest):
+        def check_all_nodes(nproc, manifest):
             result = self._pyexasol_conn.execute(
                 f"""
-                select iproc() "Node", manifest('{manifest}') "Manifest"
-                from values between 0 and {total_nodes - 1} group by iproc()
+                select iproc() "Node", {_udf_name(schema)}('{manifest}') "Manifest"
+                from values between 1 and {nproc} group by iproc()
                 """
-
             )
             pending = list( x[0] for x in result if not x[1] )
-            self._callback(total_nodes, pending)
+            self._callback(nproc, pending)
             if len(pending) > 0:
                 raise ExtractException(
-                    f"{len(pending)} of {total_nodes} nodes are still pending."
+                    f"{len(pending)} of {nproc} nodes are still pending."
                     f" IDs: {pending}")
 
         manifest = manifest_path(bucketfs_path)
@@ -91,7 +98,9 @@ class ExtractValidator:
             raise ExtractException(
                 f"{bucketfs_path} does not point to an archive"
                 f" which could contain a file {MANIFEST_FILE}")
-        total_nodes = self._pyexasol_conn.execute("select nproc()")
-        with temp_schema(self._pyexasol_conn) as schema:
+        nproc = self._pyexasol_conn.execute("select nproc()")
+        try:
             self._create_manifest_udf(language_alias, schema)
-            check_all_nodes(total_nodes, manifest)
+            check_all_nodes(nproc, manifest)
+        finally:
+            self._delete_manifest_udf(language_alias, schema)

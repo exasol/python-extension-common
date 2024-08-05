@@ -78,7 +78,7 @@ class Simulator:
         connection = ConnectionMock({
             r"(CREATE|DROP) ": None,
             r"SELECT nproc\(\)": self.nodes,
-            r"SELECT .* manifest\(": self.udf,
+            r'SELECT .*"manifest"\(': self.udf,
         })
         pyexasol = Mock()
         pyexasol.execute = connection.execute
@@ -102,7 +102,9 @@ def test_no_archive():
             match=("/folder/a.txt does not point to an archive"
                    " which could contain a file exasol-manifest.json")
     ) as ex:
-        testee.verify_all_nodes("xyz", bucket_path("/folder/a.txt"))
+        testee.verify_all_nodes(
+            "language_alias", "my_schema",
+            bucket_path("/folder/a.txt"))
 
 
 def test_failure(archive_bucket_path):
@@ -114,7 +116,8 @@ def test_failure(archive_bucket_path):
             [[1, False]],
         ])
     with pytest.raises(ExtractException) as ex:
-        assert sim.testee.verify_all_nodes("xyz", archive_bucket_path)
+        assert sim.testee.verify_all_nodes(
+            "language_alias", "my_schema", archive_bucket_path)
     assert "1 of 4 nodes are still pending. IDs: [1]" == str(ex.value)
 
 
@@ -126,7 +129,8 @@ def test_success(archive_bucket_path):
             [[1, True], [2, False]],
             [[1, True], [2, True]],
         ])
-    sim.testee.verify_all_nodes("xyz", archive_bucket_path)
+    sim.testee.verify_all_nodes(
+        "language_alias", "my_schema", archive_bucket_path)
     assert sim.callback.call_args_list == [
         call(4, [1,2]),
         call(4, [2]),
