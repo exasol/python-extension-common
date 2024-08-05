@@ -96,11 +96,3 @@ class ExtractValidator:
             self._create_manifest_udf(schema)
             check_all_nodes(total_nodes, manifest)
             return True
-
-
-class DummyExtractValidator(ExtractValidator):
-    def __init__(self):
-        super().__init__(None, None)
-
-    def verify_all_nodes(self, bucketfs_path: bfs.path.PathLike):
-        pass

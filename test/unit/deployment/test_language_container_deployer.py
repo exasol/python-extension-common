@@ -173,4 +173,4 @@ def test_extract_validator_called(mock_pyexasol_conn, language_alias, container_
         extract_validator=Mock(),
     )
     deployer.upload_container(container_file, None)
-    assert deployer.extract_validator.verify_all_nodes.call_args == call(bucket_file)
+    assert deployer._extract_validator.verify_all_nodes.call_args == call(bucket_file)
