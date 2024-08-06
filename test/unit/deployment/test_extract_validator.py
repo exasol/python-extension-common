@@ -13,6 +13,7 @@ from pathlib import Path
 from exasol.python_extension_common.deployment.extract_validator import (
     ExtractValidator,
     ExtractException,
+    _udf_name,
 )
 from tenacity import RetryError
 
@@ -71,7 +72,7 @@ class Simulator:
             r"CREATE .* SCRIPT": self.create_script,
             r"(CREATE|DROP) ": (),
             r"SELECT nproc\(\)": [ self.nodes ],
-            r'SELECT .*"manifest"\(': self.udf,
+            r'SELECT .*_manifest_': self.udf,
         })
         return ExtractValidator(
             pyexasol_connection=Mock(execute=connection.execute),
@@ -79,6 +80,16 @@ class Simulator:
             interval=timedelta(milliseconds=10),
             callback=self.callback,
         )
+
+
+@pytest.mark.parametrize(
+    "schema, expected",
+    [
+        (None, r'"alias_manifest_[0-9]+"'),
+        ("schema", r'"schema"\."alias_manifest_[0-9]+"'),
+    ])
+def test_udf_name(schema, expected):
+    assert re.match(expected, _udf_name(schema, "alias"))
 
 
 def test_create_script_failure(archive_bucket_path):

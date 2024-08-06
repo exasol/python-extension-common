@@ -15,8 +15,10 @@ from exasol.python_extension_common.deployment.language_container_validator impo
 MANIFEST_FILE = "exasol-manifest.json"
 
 
-def _udf_name(schema: str | None, name: str = "manifest") -> str:
-    return f'"{schema}"."{name}"' if schema else f'"{name}"'
+def _udf_name(schema: str | None, name: str) -> str:
+    timestamp = f'{datetime.now().timestamp():.0f}'
+    suffix = f'"{name}_manifest_{timestamp}"'
+    return f'"{schema}".{suffix}' if schema else suffix
 
 
 class ExtractException(Exception):
@@ -88,17 +90,13 @@ class ExtractValidator:
         Verify if the given bfs_archive_path was extracted on all nodes
         successfully.
 
-        Raise an ExtractException if the specified bfs_archive_path was not an
-        archive or if after the configured timeout there are still nodes
-        pending, for which the extraction could not be verified, yet.
+        Raise an ExtractException if after the configured timeout there are
+        still nodes pending, for which the extraction could not be verified,
+        yet.
         """
         manifest = f"{bfs_archive_path.as_udf_path()}/{MANIFEST_FILE}"
-        if manifest is None:
-            raise ExtractException(
-                f"{bfs_archive_path} does not point to an archive"
-                f" which could contain a file {MANIFEST_FILE}")
         nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()
-        udf_name = _udf_name(schema)
+        udf_name = _udf_name(schema, language_alias)
         start = datetime.now()
         try:
             for attempt in Retrying(
