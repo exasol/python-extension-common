@@ -1,6 +1,7 @@
 import logging
 import pytest
 import re
+import time
 import exasol.bucketfs as bfs   # type: ignore
 from pyexasol import ExaConnection
 
@@ -12,7 +13,6 @@ from pathlib import Path
 from exasol.python_extension_common.deployment.extract_validator import (
     ExtractValidator,
     ExtractException,
-    manifest_path,
 )
 from tenacity import RetryError
 
@@ -26,29 +26,6 @@ def bucket_path(path: str):
 @pytest.fixture
 def archive_bucket_path():
     return bucket_path("/folder/a.tgz")
-
-
-@pytest.mark.parametrize(
-    "bfs_path", [
-        "folder/archive.tar.gz",
-        "folder/archive.tgz",
-        "folder/archive.zip",
-        "folder/archive.tar",
-        "folder/archive.gzip",
-    ] )
-def test_manifest_path(bfs_path):
-    path = bucket_path(bfs_path)
-    assert "/buckets/svc/bkt/folder/archive/exasol-manifest.json" == manifest_path(path)
-
-
-@pytest.mark.parametrize(
-    "bfs_path", [
-        "folder/folder/",
-        "folder/file.txt",
-    ] )
-def test_manifest_path_none(bfs_path):
-    path = bucket_path(bfs_path)
-    assert manifest_path(path) is None
 
 
 class ConnectionMock:
@@ -77,7 +54,9 @@ class ConnectionMock:
 
 
 class Simulator:
-    def __init__(self, nodes: int, udf_results: List[List[any]]):
+    def __init__(self, nodes: int, udf_results: List[List[any]],
+                 create_script=()):
+        self.create_script = create_script
         self.nodes = nodes
         self.udf = Mock(side_effect=udf_results)
         self.callback = Mock(side_effect = self._callback)
@@ -88,8 +67,9 @@ class Simulator:
     @property
     def testee(self):
         connection = ConnectionMock({
+            r"CREATE .* SCRIPT": self.create_script,
             r"(CREATE|DROP) ": (),
-            r"SELECT nproc\(\)": [ self.nodes],
+            r"SELECT nproc\(\)": [ self.nodes ],
             r'SELECT .*"manifest"\(': self.udf,
         })
         return ExtractValidator(
@@ -98,6 +78,13 @@ class Simulator:
             interval=timedelta(milliseconds=10),
             callback=self.callback,
         )
+
+
+def test_create_script_failure(archive_bucket_path):
+    create_script = Mock(side_effect=Exception("failed to create UDF script"))
+    sim = Simulator(nodes=4, udf_results=[], create_script=create_script)
+    with pytest.raises(Exception, match="failed to create UDF script") as ex:
+        assert sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
 
 
 def test_failure(archive_bucket_path):
@@ -109,8 +96,7 @@ def test_failure(archive_bucket_path):
             [[1, False]],
         ])
     with pytest.raises(ExtractException) as ex:
-        assert sim.testee.verify_all_nodes(
-            "language_alias", "my_schema", archive_bucket_path)
+        sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert "1 of 4 nodes are still pending. IDs: [1]" == str(ex.value)
 
 
@@ -122,10 +108,34 @@ def test_success(archive_bucket_path):
             [[1, True], [2, False]],
             [[1, True], [2, True]],
         ])
-    sim.testee.verify_all_nodes(
-        "language_alias", "my_schema", archive_bucket_path)
+    sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert sim.callback.call_args_list == [
         call(4, [1,2]),
         call(4, [2]),
         call(4, []),
     ]
+
+
+def test_reduced_timeout(archive_bucket_path):
+    """
+    This test simulates a retry being required for creating the UDF
+    script, hence already eating up part of the total timeout.
+
+    The test then verifies the remaining part of the total timeout for actual
+    calls to the UDF being too short for successfully detecting the manifest
+    on all nodes.
+    """
+    create_script = Mock(side_effect=[Exception("failure"), ()])
+    udf_results=[
+        [[1, False], [2, False]],
+        [[1, True], [2, False]],
+        [[1, True], [2, True]],
+    ]
+    sim = Simulator(
+        nodes=4,
+        udf_results=udf_results,
+        create_script=create_script,
+    )
+    with pytest.raises(ExtractException) as ex:
+        sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
+    assert "1 of 4 nodes are still pending. IDs: [2]" == str(ex.value)

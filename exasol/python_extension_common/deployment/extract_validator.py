@@ -26,21 +26,15 @@ class ExtractException(Exception):
     """
 
 
-def manifest_path(bfs_path: bfs.path.PathLike) -> str | None:
-    parent = bfs.path.BucketPath(bfs_path._path.parent, bfs_path._bucket_api)
-    regex = re.compile(r"(.*)\.(tar|tgz|tar\.gz|zip|gzip)$")
-    match = regex.match(bfs_path.name)
-    if not match:
-        return None
-    manifest = parent / match.group(1) / MANIFEST_FILE
-    return manifest.as_udf_path()
-
-
 class ExtractValidator:
     """
     This validates that a given archive (e.g. tgz) has been extracted on
     all nodes of an Exasol database cluster by checking if MANIFEST_FILE
     exists.
+
+    The specified timeout applies to the max. total duration of both phases:
+    P1) creating the UDF script and P2) checking if the UDF in SLC can be
+    executed and finds extracted MANIFEST_FILE on each node.
     """
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
@@ -61,28 +55,19 @@ class ExtractValidator:
         UDFs.
 
         Much more a later statement "CREATE SCRIPT" will fail with an error
-        message.
-
-        Hence we need to use a retry here, as well.
-
-        Additionally we want to enable the user to specify a TOTAL timeout
-        covering both retry phases: P1) CREATE SCRIPT P2) Check if UDF in SLC
-        can be executed and finds extracted MANIFEST_FILE on each node of the database cluster.
+        message. Hence we need to use a retry here, as well.
         """
-        try:
-            self._pyexasol_conn.execute(
-                f"""
-                CREATE OR REPLACE {language_alias} SET SCRIPT
-                    {udf_name}(my_path VARCHAR(256))
-                    EMITS (node INTEGER, manifest BOOL) AS
-                import os
-                def run(ctx):
-                    ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
-                /
-                """
-            )
-        finally:
-            self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {udf_name}")
+        self._pyexasol_conn.execute(
+            f"""
+            CREATE OR REPLACE {language_alias} SET SCRIPT
+                {udf_name}(my_path VARCHAR(256))
+                EMITS (node INTEGER, manifest BOOL) AS
+            import os
+            def run(ctx):
+                ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
+            /
+            """
+        )
 
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
         result = self._pyexasol_conn.execute(
@@ -115,18 +100,20 @@ class ExtractValidator:
         nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()
         udf_name = _udf_name(schema)
         start = datetime.now()
-        for attempt in Retrying(
-                wait=wait_fixed(self._interval),
-                stop=stop_after_delay(self._timeout),
-                reraise=True):
-            with attempt:
-                self._create_manifest_udf(language_alias, udf_name)
-        elapsed = datetime.now() - start
-        remaining = self._timeout - elapsed
-        for attempt in Retrying(
-                wait=wait_fixed(self._interval),
-                stop=stop_after_delay(remaining),
-                reraise=True):
-            with attempt:
-                self._check_all_nodes(udf_name, nproc, manifest)
-
+        try:
+            for attempt in Retrying(
+                    wait=wait_fixed(self._interval),
+                    stop=stop_after_delay(self._timeout),
+                    reraise=True):
+                with attempt:
+                    self._create_manifest_udf(language_alias, udf_name)
+            elapsed = datetime.now() - start
+            remaining = self._timeout - elapsed
+            for attempt in Retrying(
+                    wait=wait_fixed(self._interval),
+                    stop=stop_after_delay(remaining),
+                    reraise=True):
+                with attempt:
+                    self._check_all_nodes(udf_name, nproc, manifest)
+        finally:
+            self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {udf_name}")
