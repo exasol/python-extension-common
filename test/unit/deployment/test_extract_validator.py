@@ -23,6 +23,7 @@ def bucket_path(path: str):
     bucket_api = bfs.MountedBucket("svc", "bkt")
     return bfs.path.BucketPath(path, bucket_api=bucket_api)
 
+
 @pytest.fixture
 def archive_bucket_path():
     return bucket_path("/folder/a.tgz")
@@ -105,12 +106,12 @@ def test_success(archive_bucket_path):
         nodes=4,
         udf_results=[
             [[1, False], [2, False]],
-            [[1, True], [2, False]],
-            [[1, True], [2, True]],
+            [[1, True ], [2, False]],
+            [[1, True ], [2, True ]],
         ])
     sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert sim.callback.call_args_list == [
-        call(4, [1,2]),
+        call(4, [1, 2]),
         call(4, [2]),
         call(4, []),
     ]
@@ -128,8 +129,8 @@ def test_reduced_timeout(archive_bucket_path):
     create_script = Mock(side_effect=[Exception("failure"), ()])
     udf_results=[
         [[1, False], [2, False]],
-        [[1, True], [2, False]],
-        [[1, True], [2, True]],
+        [[1, True ], [2, False]],
+        [[1, True ], [2, True ]],
     ]
     sim = Simulator(
         nodes=4,
