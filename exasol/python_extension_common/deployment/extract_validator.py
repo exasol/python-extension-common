@@ -37,6 +37,13 @@ class ExtractValidator:
     The specified timeout applies to the max. total duration of both phases:
     P1) creating the UDF script and P2) checking if the UDF in SLC can be
     executed and finds extracted MANIFEST_FILE on each node.
+
+    If a callback is specified then this function will be called multiple
+    times during detecting the MANIFEST_FILE on the nodes.
+
+    The callback is called with two arguments: the total number of nodes in
+    the database cluster as returned by nproc() and a list of the IDs of the
+    pending nodes on which the MANIFEST_FILE could not be found, yet.
     """
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
