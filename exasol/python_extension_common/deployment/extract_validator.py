@@ -56,6 +56,14 @@ class ExtractValidator:
         self._interval = interval
         self._callback = callback if callback else lambda x, y: None
 
+    def _create_manifest_udf_with_retry(self, language_alias: str, udf_name: str):
+        for attempt in Retrying(
+                wait=wait_fixed(self._interval),
+                stop=stop_after_delay(self._timeout),
+                reraise=True):
+            with attempt:
+                self._create_manifest_udf(language_alias, udf_name)
+
     def _create_manifest_udf(self, language_alias: str, udf_name: str):
         """
         The SQL statements "ALTER SESSION SET SCRIPT_LANGUAGES" and "ALTER
@@ -77,6 +85,14 @@ class ExtractValidator:
             /
             """
         )
+
+    def _check_all_nodes_with_retry(self, udf_name: str, nproc: int, manifest: str, timeout: timedelta):
+        for attempt in Retrying(
+                wait=wait_fixed(self._interval),
+                stop=stop_after_delay(timeout),
+                reraise=True):
+            with attempt:
+                self._check_all_nodes(udf_name, nproc, manifest)
 
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
         result = self._pyexasol_conn.execute(
@@ -106,19 +122,9 @@ class ExtractValidator:
         udf_name = _udf_name(schema, language_alias)
         start = datetime.now()
         try:
-            for attempt in Retrying(
-                    wait=wait_fixed(self._interval),
-                    stop=stop_after_delay(self._timeout),
-                    reraise=True):
-                with attempt:
-                    self._create_manifest_udf(language_alias, udf_name)
+            self._create_manifest_udf_with_retry(language_alias, udf_name)
             elapsed = datetime.now() - start
             remaining = self._timeout - elapsed
-            for attempt in Retrying(
-                    wait=wait_fixed(self._interval),
-                    stop=stop_after_delay(remaining),
-                    reraise=True):
-                with attempt:
-                    self._check_all_nodes(udf_name, nproc, manifest)
+            self._check_all_nodes_with_retry(udf_name, nproc, manifest, remaining)
         finally:
             self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {udf_name}")
