@@ -96,7 +96,7 @@ def test_create_script_failure(archive_bucket_path):
     create_script = Mock(side_effect=Exception("failed to create UDF script"))
     sim = Simulator(nodes=4, udf_results=[], create_script=create_script)
     with pytest.raises(Exception, match="failed to create UDF script") as ex:
-        assert sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
+        sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
 
 
 def test_failure(archive_bucket_path):
