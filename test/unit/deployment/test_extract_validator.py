@@ -75,7 +75,7 @@ class Simulator:
         })
         return ExtractValidator(
             pyexasol_connection=Mock(execute=connection.execute),
-            timeout=timedelta(seconds=2),
+            timeout=timedelta(seconds=10),
             interval=timedelta(seconds=1),
             callback=self.callback,
         )
@@ -113,7 +113,7 @@ def test_create_script_failure(archive_bucket_path):
     create_script = Mock(side_effect=Exception("failed to create UDF script"))
     sim = Simulator(nodes=4, udf_results=[], create_script=create_script)
     with pytest.raises(Exception, match="failed to create UDF script") as ex:
-        with mock_tenacity_wait([0.001]):
+        with mock_tenacity_wait([1]):
             sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
 
 
@@ -126,7 +126,7 @@ def test_failure(archive_bucket_path):
             [[1, False]],
         ])
     with pytest.raises(ExtractException) as ex:
-        with mock_tenacity_wait([0.001], [0.002, 0.004]):
+        with mock_tenacity_wait([1], [2, 4]):
             sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert "1 of 4 nodes are still pending. IDs: [1]" == str(ex.value)
 
@@ -139,7 +139,7 @@ def test_success(archive_bucket_path):
             [[1, True ], [2, False]],
             [[1, True ], [2, True ]],
         ])
-    with mock_tenacity_wait([0.001], [0.002, 0.004]):
+    with mock_tenacity_wait([1], [2, 4]):
         sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert sim.callback.call_args_list == [
         call(4, [1, 2]),
@@ -169,6 +169,6 @@ def test_reduced_timeout(archive_bucket_path):
         create_script=create_script,
     )
     with pytest.raises(ExtractException) as ex:
-        with mock_tenacity_wait([0.001], [0.002, 0.004]):
+        with mock_tenacity_wait([1], [2, 4]):
             sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert "1 of 4 nodes are still pending. IDs: [2]" == str(ex.value)
