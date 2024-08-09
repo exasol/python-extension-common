@@ -10,6 +10,15 @@ from exasol.python_extension_common.deployment.language_container_deployer impor
 from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 
 
+def bucket_path(path: str):
+    bucket_api = bfs.MountedBucket("svc", "bkt")
+    return bfs.path.BucketPath(path, bucket_api=bucket_api)
+
+
+def equal(a: bfs.path.BucketPath, b: bfs.path.BucketPath) -> bool:
+    return (a._path, a._bucket_api) == (b._path, b._bucket_api)
+
+
 @pytest.fixture(scope='module')
 def container_file_name() -> str:
     return 'container_xyz.tar.gz'
@@ -43,7 +52,7 @@ def mock_pyexasol_conn() -> ExaConnection:
 
 
 @pytest.fixture
-def container_deployer(mock_pyexasol_conn, language_alias) -> LanguageContainerDeployer:
+def container_deployer1(mock_pyexasol_conn, language_alias) -> LanguageContainerDeployer:
     deployer = LanguageContainerDeployer(pyexasol_connection=mock_pyexasol_conn,
                                          language_alias=language_alias,
                                          bucketfs_path=create_autospec(bfs.path.PathLike))
@@ -52,15 +61,39 @@ def container_deployer(mock_pyexasol_conn, language_alias) -> LanguageContainerD
     deployer.activate_container = MagicMock()
     return deployer
 
+@pytest.fixture
+def sample_bucket_path():
+    return bucket_path("/")
 
-def test_slc_deployer_deploy(container_deployer, container_file_name, container_file_path):
+
+@pytest.fixture
+def container_deployer(
+        mock_pyexasol_conn,
+        language_alias,
+        sample_bucket_path,
+) -> LanguageContainerDeployer:
+    deployer = LanguageContainerDeployer(
+        pyexasol_connection=mock_pyexasol_conn,
+        language_alias=language_alias,
+        bucketfs_path=sample_bucket_path,
+        extract_validator=Mock(),
+    )
+    deployer.upload_container = MagicMock()
+    deployer.activate_container = MagicMock()
+    return deployer
+
+
+def test_slc_deployer_deploy(sample_bucket_path, container_deployer, container_file_name, container_file_path):
     container_deployer.run(container_file=container_file_path,
                            bucket_file_path=container_file_name,
                            alter_system=True,
                            allow_override=True,
                            wait_for_completion=False)
-    container_deployer.upload_container.assert_called_once_with(container_file_path,
-                                                                container_file_name)
+    method = container_deployer.upload_container
+    assert method.call_count == 1 \
+        and method.call_args.args[0] == container_file_path \
+        and equal(method.call_args.args[1], sample_bucket_path / container_file_name)
+
     expected_calls = [
         call(container_file_name, LanguageActivationLevel.Session, True),
         call(container_file_name, LanguageActivationLevel.System, True)
@@ -68,12 +101,21 @@ def test_slc_deployer_deploy(container_deployer, container_file_name, container_
     container_deployer.activate_container.assert_has_calls(expected_calls, any_order=True)
 
 
-def test_slc_deployer_upload(container_deployer, container_file_name, container_file_path):
+def test_slc_deployer_upload(
+        sample_bucket_path,
+        container_deployer,
+        container_file_name,
+        container_file_path,
+):
     container_deployer.run(container_file=container_file_path,
                            alter_system=False,
                            wait_for_completion=False)
-    container_deployer.upload_container.assert_called_once_with(container_file_path,
-                                                                container_file_name)
+
+    method = container_deployer.upload_container
+    assert method.call_count == 1 \
+        and method.call_args.args[0] == container_file_path \
+        and equal(method.call_args.args[1], sample_bucket_path / container_file_name)
+
     container_deployer.activate_container.assert_called_once_with(container_file_name,
                                                                   LanguageActivationLevel.Session,
                                                                   False)
@@ -163,14 +205,15 @@ def test_slc_deployer_get_language_definition(mock_udf_path,
     assert command == expected_command
 
 
-def test_extract_validator_called(mock_pyexasol_conn, language_alias, container_file):
-    bucket_file = Mock()
-    bucketfs_path = Mock(__truediv__=Mock(return_value=bucket_file))
-    deployer = LanguageContainerDeployer(
-        mock_pyexasol_conn,
-        language_alias,
-        bucketfs_path,
-        extract_validator=Mock(),
-    )
-    deployer.upload_container(container_file, None)
-    assert deployer._extract_validator.verify_all_nodes.call_args == call(bucket_file)
+def mock_deployer(pyexasol_conn, pylanguage_alias, bfs_path):
+    deployer = LanguageContainerDeployer(pyexasol_conn, language_alias, bfs_path)
+    deployer.upload_container = Mock()
+    deployer.activate_container = Mock()
+    return deployer
+
+
+def test_extract_validator_called(sample_bucket_path, container_deployer, container_file):
+    container_deployer.run(container_file, wait_for_completion=True)
+    expected = container_deployer._extract_validator.verify_all_nodes
+    assert expected.called \
+        and equal(expected.call_args.args[2], sample_bucket_path / container_file.name)

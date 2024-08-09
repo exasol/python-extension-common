@@ -8,10 +8,6 @@ from tenacity import Retrying
 from tenacity.wait import wait_fixed
 from tenacity.stop import stop_after_delay
 
-from exasol.python_extension_common.deployment.language_container_validator import (
-    temp_schema
-)
-
 MANIFEST_FILE = "exasol-manifest.json"
 
 
@@ -128,3 +124,4 @@ class ExtractValidator:
             self._check_all_nodes_with_retry(udf_name, nproc, manifest, remaining)
         finally:
             self._pyexasol_conn.execute(f"DROP SCRIPT IF EXISTS {udf_name}")
+
