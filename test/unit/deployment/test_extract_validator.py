@@ -82,7 +82,29 @@ class Simulator:
 
 
 @contextlib.contextmanager
-def mock_tenacity_wait(*wait_lists: List[int], max: int = 1000):
+def mock_tenacity_wait(*wait_lists: List[int|float], max: int = 1000):
+    """
+    This context mocks internals of library ``tenacity`` in order to
+    simulate waiting for timeouts in ``tenacity.Retrying()``. All specified
+    durations are interpreted as number of seconds which can be floats.
+
+    A test case may provide multiple lists of waiting periods to cover
+    multiple consecutive retry phases in the class under test, see
+    ``ExtractValidator`` for example.
+
+    mock_tenacity_wait([1, 2], [3, 4], max=100)
+
+    After all wait lists are exhausted, i.e. the mock simulated waiting for
+    the specified periods, the mock will constantly simulate
+    ``time.monotonic()`` to return the specified max time, typically making
+    tenacity detect a timeout.
+
+    Internally the mock needs to prefix each list of waiting periods with two
+    additional entries [0, 0] which are used by ``tenacity.Retrying()`` to
+    inititialize its start times in ``BaseRetrying.begin()`` and
+    ``RetryCallState.__init__()``, see
+    https://github.com/jd/tenacity/blob/main/tenacity/__init__.py.
+    """
     def expand(wait_lists):
         for waits in wait_lists:
             yield from [ 0, 0 ] + waits
