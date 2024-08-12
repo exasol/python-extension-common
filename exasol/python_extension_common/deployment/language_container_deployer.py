@@ -134,6 +134,9 @@ class LanguageContainerDeployer:
             self.run(Path(tmp_file.name), bucket_file_path, alter_system, allow_override,
                      wait_for_completion)
 
+    def _upload_path(self, bucket_file_path: str|None) -> bfs.path.PathLike:
+        return self._bucketfs_path / bucket_file_path
+
     def run(self, container_file: Optional[Path] = None,
             bucket_file_path: Optional[str] = None,
             alter_system: bool = True,
@@ -163,8 +166,7 @@ class LanguageContainerDeployer:
             bucket_file_path = container_file.name
 
         if container_file:
-            upload_path = self._bucketfs_path / bucket_file_path
-            self.upload_container(container_file, upload_path)
+            self.upload_container(container_file, bucket_file_path)
 
         # Activate the language container.
         if alter_system:
@@ -178,7 +180,7 @@ class LanguageContainerDeployer:
         if container_file and wait_for_completion:
             with temp_schema(self._pyexasol_conn) as schema:
                 self._extract_validator.verify_all_nodes(
-                    schema, self._language_alias, upload_path)
+                    schema, self._language_alias, self._upload_path(bucket_file_path))
 
         if not alter_system:
             message = dedent(f"""
@@ -193,18 +195,18 @@ class LanguageContainerDeployer:
             """)
             print(message)
 
-    def upload_container(self, container_file: Path, upload_path: bfs.path.PathLike) -> None:
+    def upload_container(self, container_file: Path, bucket_file_path: Optional[str] = None) -> None:
         """
         Upload the language container to the BucketFS.
 
-        container_file - Path of the container tar.gz file in a local file system.
-        upload_path    - bfs.path.PathLike where the container should be uploaded.
+        container_file   - Path of the container tar.gz file in a local file system.
+        bucket_file_path - Path within the designated bucket where the container should be uploaded.
         """
         if not container_file.is_file():
             raise RuntimeError(f"Container file {container_file} "
                                f"is not a file.")
         with open(container_file, "br") as f:
-            upload_path.write(f)
+            self._upload_path(bucket_file_path).write(f)
         logging.debug("Container is uploaded to bucketfs")
 
     def activate_container(self, bucket_file_path: str,

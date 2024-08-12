@@ -52,16 +52,6 @@ def mock_pyexasol_conn() -> ExaConnection:
 
 
 @pytest.fixture
-def container_deployer1(mock_pyexasol_conn, language_alias) -> LanguageContainerDeployer:
-    deployer = LanguageContainerDeployer(pyexasol_connection=mock_pyexasol_conn,
-                                         language_alias=language_alias,
-                                         bucketfs_path=create_autospec(bfs.path.PathLike))
-
-    deployer.upload_container = MagicMock()
-    deployer.activate_container = MagicMock()
-    return deployer
-
-@pytest.fixture
 def sample_bucket_path():
     return bucket_path("/")
 
@@ -83,17 +73,14 @@ def container_deployer(
     return deployer
 
 
-def test_slc_deployer_deploy(sample_bucket_path, container_deployer, container_file_name, container_file_path):
+def test_slc_deployer_deploy(container_deployer, container_file_name, container_file_path):
     container_deployer.run(container_file=container_file_path,
                            bucket_file_path=container_file_name,
                            alter_system=True,
                            allow_override=True,
                            wait_for_completion=False)
-    method = container_deployer.upload_container
-    assert method.call_count == 1 \
-        and method.call_args.args[0] == container_file_path \
-        and equal(method.call_args.args[1], sample_bucket_path / container_file_name)
-
+    container_deployer.upload_container.assert_called_once_with(container_file_path,
+                                                                container_file_name)
     expected_calls = [
         call(container_file_name, LanguageActivationLevel.Session, True),
         call(container_file_name, LanguageActivationLevel.System, True)
@@ -101,21 +88,12 @@ def test_slc_deployer_deploy(sample_bucket_path, container_deployer, container_f
     container_deployer.activate_container.assert_has_calls(expected_calls, any_order=True)
 
 
-def test_slc_deployer_upload(
-        sample_bucket_path,
-        container_deployer,
-        container_file_name,
-        container_file_path,
-):
+def test_slc_deployer_upload(container_deployer, container_file_name, container_file_path):
     container_deployer.run(container_file=container_file_path,
                            alter_system=False,
                            wait_for_completion=False)
-
-    method = container_deployer.upload_container
-    assert method.call_count == 1 \
-        and method.call_args.args[0] == container_file_path \
-        and equal(method.call_args.args[1], sample_bucket_path / container_file_name)
-
+    container_deployer.upload_container.assert_called_once_with(container_file_path,
+                                                                container_file_name)
     container_deployer.activate_container.assert_called_once_with(container_file_name,
                                                                   LanguageActivationLevel.Session,
                                                                   False)
