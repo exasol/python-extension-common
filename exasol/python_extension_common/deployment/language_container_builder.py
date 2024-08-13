@@ -43,8 +43,9 @@ def copy_slc_flavor(dest_dir: str | Path) -> None:
 
 class LanguageContainerBuilder:
 
-    def __init__(self, container_name: str):
+    def __init__(self, container_name: str, language_alias: str):
         self.container_name = container_name
+        self.language_alias = language_alias
         self._root_path: Path | None = None
         self._output_path: Path | None = None
 
@@ -52,12 +53,13 @@ class LanguageContainerBuilder:
 
         # Create a temporary working directory
         self._root_path = Path(tempfile.mkdtemp())
-        self._output_path = self._root_path / '.output'
-        self._output_path.mkdir()
         self.flavor_path = self._root_path / self.container_name
 
         # Copy the flavor into the working directory
         copy_slc_flavor(self.flavor_path)
+
+        # Write the language alias to the language definition
+        self._set_language_alias()
         return self
 
     def __exit__(self, *exc_details):
@@ -119,10 +121,25 @@ class LanguageContainerBuilder:
             export_path = self._root_path / '.export'
             if not export_path.exists():
                 export_path.mkdir()
+        if self._output_path is None:
+            self._output_path = self._root_path / '.output'
+            if not self._output_path.exists():
+                self._output_path.mkdir()
+
         export_result = api.export(flavor_path=(str(self.flavor_path),),
                                    output_directory=str(self._output_path),
                                    export_path=str(export_path))
         return export_result
+
+    def _set_language_alias(self) -> None:
+        """
+        Sets the language alias provided in the constractor to the language definition.
+        """
+        lang_def_path = self.flavor_base / 'language_definition'
+        lang_def_template = lang_def_path.read_text()
+        lang_def_text = lang_def_template.split("=", maxsplit=1)[1]
+        lang_def = f'{self.language_alias}={lang_def_text}'
+        lang_def_path.write_text(lang_def)
 
     def _add_requirements_to_flavor(self, project_directory: str | Path,
                                     requirement_filter: Callable[[str], bool] | None):

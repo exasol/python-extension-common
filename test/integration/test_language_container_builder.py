@@ -23,7 +23,8 @@ def test_language_container_builder(itde: config.TestConfig,
 
     with ExitStack() as stack:
         # Build the SLC
-        container_builder = stack.enter_context(LanguageContainerBuilder('test_container'))
+        container_builder = stack.enter_context(LanguageContainerBuilder(
+            'test_container', TEST_LANGUAGE_ALIAS))
         container_builder.prepare_flavor(project_directory)
         export_result = container_builder.export()
         export_info = export_result.export_infos[str(container_builder.flavor_path)]["release"]
