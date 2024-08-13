@@ -3,6 +3,7 @@ import exasol.bucketfs as bfs   # type: ignore
 import pyexasol     # type: ignore
 
 from datetime import datetime, timedelta
+from textwrap import dedent
 from typing import Callable, List
 from tenacity import Retrying
 from tenacity.wait import wait_fixed
@@ -70,8 +71,7 @@ class ExtractValidator:
         Much more a later statement "CREATE SCRIPT" will fail with an error
         message. Hence we need to use a retry here, as well.
         """
-        self._pyexasol_conn.execute(
-            f"""
+        self._pyexasol_conn.execute(dedent(f"""
             CREATE OR REPLACE {language_alias} SET SCRIPT
                 {udf_name}(my_path VARCHAR(256))
                 EMITS (node INTEGER, manifest BOOL) AS
@@ -80,7 +80,7 @@ class ExtractValidator:
                 ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
             /
             """
-        )
+        ))
 
     def _check_all_nodes_with_retry(self, udf_name: str, nproc: int, manifest: str, timeout: timedelta):
         for attempt in Retrying(
