@@ -129,11 +129,13 @@ class LanguageContainerBuilder:
     def _add_wheel_to_flavor(self, project_directory: str | Path):
 
         assert self._root_path is not None
-        dist_path = self._root_path / 'dist'
+        # A newer version of poetry would allow using the --output parameter in
+        # the build command. Then we could build the wheel in a temporary directory.
+        # With the version currently in use we have to do this inside the project.
+        dist_path = Path(project_directory) / "dist"
         if dist_path.exists():
             shutil.rmtree(dist_path)
-        subprocess.call(["poetry", "build", "--output", f'{dist_path}'],
-                        cwd=str(project_directory))
+        subprocess.call(["poetry", "build"], cwd=str(project_directory))
         wheels = list(dist_path.glob("*.whl"))
         if len(wheels) != 1:
             raise RuntimeError(f"Did not find exactly one wheel file in dist directory {dist_path}. "
