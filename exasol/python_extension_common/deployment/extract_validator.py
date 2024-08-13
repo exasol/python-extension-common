@@ -93,7 +93,7 @@ class ExtractValidator:
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
         result = self._pyexasol_conn.execute(
             f"""
-            SELECT {udf_name}({manifest})
+            SELECT {udf_name}('{manifest}')
             FROM VALUES BETWEEN 1 AND {nproc} t(i) GROUP BY i
             """
         ).fetchall()
