@@ -115,7 +115,7 @@ class ExtractValidator:
         """
         # manifest = f"{bfs_archive_path.as_udf_path()}/{MANIFEST_FILE}"
         manifest = "/exaudf/exaudfclient_py3"
-        nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()
+        nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()[0]
         udf_name = _udf_name(schema, language_alias)
         start = datetime.now()
         try:
