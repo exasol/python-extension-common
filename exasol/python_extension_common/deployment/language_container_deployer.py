@@ -346,7 +346,7 @@ class LanguageContainerDeployer:
                                                 path=path_in_bucket)
         else:
             raise ValueError('Incomplete parameter list. '
-                             'Please either provide the parameters [dns, db_user, '
+                             'Please either provide the parameters [dsn, db_user, '
                              'db_password, bucketfs_host, bucketfs_port, bucketfs_name, '
                              'bucket, bucketfs_user, bucketfs_password] for an On-Prem '
                              'database or [saas_url, saas_account_id, saas_database_id, '
