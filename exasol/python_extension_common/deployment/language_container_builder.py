@@ -8,28 +8,34 @@ from importlib import resources
 
 from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
 from exasol_script_languages_container_tool.lib import api            # type: ignore
-from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult           # type: ignore
+from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult     # type: ignore
 
 
 def exclude_cuda(line: str) -> bool:
     return not line.startswith("nvidia")
 
 
-def find_file_or_folder_backwards(name: str) -> Path:
-    current_path = Path(__file__).parent
-    result_path = None
+def find_path_backwards(target_path: str | Path, start_path: str | Path) -> Path:
+    """
+    An utility searching for a specified path backwards. It begins with the given start
+    path and checks if the target path is among its siblings. Then it moves to the parent
+    path and so on, until it reaches the root of the file structure. Raises a FileNotFound
+    error if the search is unsuccessful.
+    """
+    current_path = Path(start_path).parent
     while current_path != current_path.root:
-        result_path = Path(current_path, name)
+        result_path = Path(current_path, target_path)
         if result_path.exists():
-            break
+            return result_path
         current_path = current_path.parent
-    if result_path is not None and result_path.exists():
-        return result_path
-    else:
-        raise RuntimeError(f"Could not find {name} when searching backwards from {Path(__file__).parent}")
+    raise FileNotFoundError(f"Could not find {target_path} when searching backwards from {start_path}")
 
 
 def copy_slc_flavor(dest_dir: str | Path) -> None:
+    """
+    Copies the content of the language_container directory to the specified
+    destination directory.
+    """
     files = resources.files(__package__).joinpath('language_container')
     with resources.as_file(files) as pkg_dir:
         shutil.copytree(pkg_dir, dest_dir, dirs_exist_ok=True)
@@ -43,16 +49,14 @@ class LanguageContainerBuilder:
         self._output_path: Path | None = None
 
     def __enter__(self):
-        """
-        Creates a standard flavor template in a temporary directory.
 
-        Creates a temporary directory and the :container_name: subdirectory inside it.
-        Copies all files from the standard flavor in there.
-        """
+        # Create a temporary working directory
         self._root_path = Path(tempfile.mkdtemp())
         self._output_path = self._root_path / '.output'
         self._output_path.mkdir()
         self.flavor_path = self._root_path / self.container_name
+
+        # Copy the flavor into the working directory
         copy_slc_flavor(self.flavor_path)
         return self
 
@@ -68,17 +72,24 @@ class LanguageContainerBuilder:
             shutil.rmtree(self._root_path, ignore_errors=True)
             self._root_path = None
 
-    def read_file(self, file_name: str) -> str:
+    def read_file(self, file_name: str | Path) -> str:
         """
-        Reads the content of the specified file in the container directory.
+        Reads the content of the specified file in the flavor directory.
+        The provided file name should be relative to the flavor directory, e.g.
+        flavor_base/dependencies/Dockerfile
         """
-        return ''
+        file_path = self.flavor_path.joinpath(file_name)
+        return file_path.read_text()
 
-    def write_file(self, file_name: str, content: str) -> None:
+    def write_file(self, file_name: str | Path, content: str) -> None:
         """
-        Replaces the content of the specified file in the container directory.
+        Replaces the content of the specified file in the flavor directory.
         This allows making modifications to the standard flavor.
+        The provided file name should be relative to the flavor directory, e.g.
+        flavor_base/dependencies/Dockerfile
         """
+        file_path = self.flavor_path.joinpath(file_name)
+        file_path.write_text(content)
 
     @property
     def flavor_base(self):
@@ -86,7 +97,9 @@ class LanguageContainerBuilder:
 
     def prepare_flavor(self, project_directory: str | Path,
                        requirement_filter: Callable[[str], bool] | None = None):
-
+        """
+        Create the project's requirements.txt and the distribution wheel.
+        """
         self._add_requirements_to_flavor(project_directory, requirement_filter)
         self._add_wheel_to_flavor(project_directory)
 
@@ -113,7 +126,9 @@ class LanguageContainerBuilder:
 
     def _add_requirements_to_flavor(self, project_directory: str | Path,
                                     requirement_filter: Callable[[str], bool] | None):
-
+        """
+        Create the project's requirements.txt.
+        """
         assert self._root_path is not None
         dist_path = self._root_path / "requirements.txt"
         requirements_bytes = subprocess.check_output(["poetry", "export",
@@ -127,11 +142,14 @@ class LanguageContainerBuilder:
         requirements_file.write_text(requirements)
 
     def _add_wheel_to_flavor(self, project_directory: str | Path):
-
+        """
+        Create the project's distribution wheel.
+        """
         assert self._root_path is not None
         # A newer version of poetry would allow using the --output parameter in
         # the build command. Then we could build the wheel in a temporary directory.
-        # With the version currently in use we have to do this inside the project.
+        # With the version currently used in the Python Toolbox we have to do this
+        # inside the project.
         dist_path = Path(project_directory) / "dist"
         if dist_path.exists():
             shutil.rmtree(dist_path)
