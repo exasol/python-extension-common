@@ -2,6 +2,7 @@ from enum import Enum
 from textwrap import dedent
 from typing import List, Optional, Dict
 from pathlib import Path, PurePosixPath
+from datetime import timedelta
 import logging
 import tempfile
 import ssl
@@ -10,9 +11,8 @@ import pyexasol     # type: ignore
 import exasol.bucketfs as bfs   # type: ignore
 from exasol.saas.client.api_access import (get_connection_params, get_database_id)      # type: ignore
 
-from exasol.python_extension_common.deployment.language_container_validator import (
-    wait_language_container, temp_schema
-)
+from exasol.python_extension_common.deployment.temp_schema import temp_schema
+from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 
 
 logger = logging.getLogger(__name__)
@@ -92,11 +92,21 @@ class LanguageContainerDeployer:
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
                  language_alias: str,
-                 bucketfs_path: bfs.path.PathLike) -> None:
+                 bucketfs_path: bfs.path.PathLike,
+                 extract_validator: ExtractValidator|None = None,
+                 ) -> None:
 
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
+        if extract_validator:
+            self._extract_validator = extract_validator
+        else:
+            self._extract_validator = ExtractValidator(
+                pyexasol_connection,
+                timeout=timedelta(minutes=5),
+                interval=timedelta(seconds=10),
+            )
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
     def download_and_run(self, url: str,
@@ -123,6 +133,9 @@ class LanguageContainerDeployer:
 
             self.run(Path(tmp_file.name), bucket_file_path, alter_system, allow_override,
                      wait_for_completion)
+
+    def _upload_path(self, bucket_file_path: str|None) -> bfs.path.PathLike:
+        return self._bucketfs_path / bucket_file_path
 
     def run(self, container_file: Optional[Path] = None,
             bucket_file_path: Optional[str] = None,
@@ -162,10 +175,12 @@ class LanguageContainerDeployer:
         self.activate_container(bucket_file_path, LanguageActivationLevel.Session,
                                 allow_override)
 
-        # Maybe wait until the container becomes operational.
+        # Optionally wait until the container is extracted on all nodes of the
+        # database cluster.
         if container_file and wait_for_completion:
             with temp_schema(self._pyexasol_conn) as schema:
-                wait_language_container(self._pyexasol_conn, self._language_alias, schema)
+                self._extract_validator.verify_all_nodes(
+                    schema, self._language_alias, self._upload_path(bucket_file_path))
 
         if not alter_system:
             message = dedent(f"""
@@ -180,8 +195,7 @@ class LanguageContainerDeployer:
             """)
             print(message)
 
-    def upload_container(self, container_file: Path,
-                         bucket_file_path: Optional[str] = None) -> None:
+    def upload_container(self, container_file: Path, bucket_file_path: Optional[str] = None) -> None:
         """
         Upload the language container to the BucketFS.
 
@@ -192,8 +206,7 @@ class LanguageContainerDeployer:
             raise RuntimeError(f"Container file {container_file} "
                                f"is not a file.")
         with open(container_file, "br") as f:
-            file_path = self._bucketfs_path / bucket_file_path
-            file_path.write(f)
+            self._upload_path(bucket_file_path).write(f)
         logging.debug("Container is uploaded to bucketfs")
 
     def activate_container(self, bucket_file_path: str,
@@ -333,7 +346,7 @@ class LanguageContainerDeployer:
                                                 path=path_in_bucket)
         else:
             raise ValueError('Incomplete parameter list. '
-                             'Please either provide the parameters [dns, db_user, '
+                             'Please either provide the parameters [dsn, db_user, '
                              'db_password, bucketfs_host, bucketfs_port, bucketfs_name, '
                              'bucket, bucketfs_user, bucketfs_password] for an On-Prem '
                              'database or [saas_url, saas_account_id, saas_database_id, '

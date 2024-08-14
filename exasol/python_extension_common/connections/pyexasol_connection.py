@@ -53,7 +53,7 @@ def open_pyexasol_connection(
                                                            pat=saas_token)
     else:
         raise ValueError('Incomplete parameter list. '
-                         'Please either provide the parameters [dns, db_user, db_pass] '
+                         'Please either provide the parameters [dsn, db_user, db_pass] '
                          'for an On-Prem database or [saas_url, saas_account_id, '
                          'saas_database_id or saas_database_name, saas_token] '
                          'for a SaaS database.')
