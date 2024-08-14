@@ -59,75 +59,13 @@ def call_language_definition_deployer_cli(func,
     return result
 
 
-def test_language_container_deployer_cli_with_container_file(
-        itde: config.TestConfig,
-        connection_factory: Callable[[config.Exasol], ExaConnection],
-        container_path: str,
-        main_func
-):
-    with ExitStack() as stack:
-        pyexasol_connection = stack.enter_context(connection_factory(itde.db))
-        stack.enter_context(revert_language_settings(pyexasol_connection))
-        create_schema(pyexasol_connection, TEST_SCHEMA)
-        result = call_language_definition_deployer_cli(main_func,
-                                                       container_path=container_path,
-                                                       language_alias=TEST_LANGUAGE_ALIAS,
-                                                       exasol_config=itde.db,
-                                                       bucketfs_config=itde.bucketfs)
-        assert result.exit_code == 0
-        assert result.exception is None
-        assert result.stdout == ""
-        # In order to check that the uploaded container works we need a new pyexasol connection.
-        # The deployer should have activated the language container at the system level but that would
-        # not affect pre-existing sessions.
-        new_connection = stack.enter_context(connection_factory(itde.db))
-        assert_udf_running(new_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
-
-
-def test_language_container_deployer_cli_by_downloading_container(
-        itde: config.TestConfig,
-        connection_factory: Callable[[config.Exasol], ExaConnection],
-        container_version: str,
-        main_func
-):
-    with ExitStack() as stack:
-        pyexasol_connection = stack.enter_context(connection_factory(itde.db))
-        stack.enter_context(revert_language_settings(pyexasol_connection))
-        create_schema(pyexasol_connection, TEST_SCHEMA)
-        result = call_language_definition_deployer_cli(main_func,
-                                                       version=container_version,
-                                                       language_alias=TEST_LANGUAGE_ALIAS,
-                                                       exasol_config=itde.db,
-                                                       bucketfs_config=itde.bucketfs)
-        assert result.exit_code == 0
-        assert result.exception is None
-        assert result.stdout == ""
-        new_connection = stack.enter_context(connection_factory(itde.db))
-        assert_udf_running(new_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
-
-
-def test_language_container_deployer_cli_with_missing_container_option(
-        itde: config.TestConfig,
-        connection_factory: Callable[[config.Exasol], ExaConnection],
-        main_func
-):
-    with ExitStack() as stack:
-        pyexasol_connection = stack.enter_context(connection_factory(itde.db))
-        stack.enter_context(revert_language_settings(pyexasol_connection))
-        result = call_language_definition_deployer_cli(main_func,
-                                                       language_alias=TEST_LANGUAGE_ALIAS,
-                                                       bucketfs_config=itde.bucketfs,
-                                                       exasol_config=itde.db)
-        assert result.exit_code == 1
-        assert isinstance(result.exception, ValueError)
-
-
 def test_language_container_deployer_cli_with_check_cert(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_path: str,
         main_func
 ):
+    # TODO: Move to test/integration/test_language_container_deployer.py
     expected_exception_message = '[SSL: CERTIFICATE_VERIFY_FAILED]'
     with ExitStack() as stack:
         pyexasol_connection = stack.enter_context(connection_factory(itde.db))

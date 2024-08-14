@@ -34,7 +34,7 @@ def create_container_deployer(language_alias: str,
         pyexasol_connection, language_alias, bucketfs_path)
 
 
-def test_language_container_deployer(
+def test_container_file(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_path: str):
@@ -52,7 +52,7 @@ def test_language_container_deployer(
         assert_udf_running(pyexasol_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
 
 
-def test_language_container_deployer_alter_session(
+def test_alter_session(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_url: str,
@@ -77,7 +77,7 @@ def test_language_container_deployer_alter_session(
         assert_udf_running(new_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
 
 
-def test_language_container_deployer_activation_fail(
+def test_duplicate_language_alias_failure(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_path: str,
