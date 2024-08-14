@@ -1,5 +1,5 @@
 from pathlib import Path, PurePosixPath
-from unittest.mock import create_autospec, MagicMock, patch, call
+from unittest.mock import create_autospec, MagicMock, Mock, patch, call
 
 import pytest
 import exasol.bucketfs as bfs
@@ -7,6 +7,16 @@ from pyexasol import ExaConnection
 
 from exasol.python_extension_common.deployment.language_container_deployer import (
     LanguageContainerDeployer, LanguageActivationLevel)
+from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
+
+
+def bucket_path(path: str):
+    bucket_api = bfs.MountedBucket("svc", "bkt")
+    return bfs.path.BucketPath(path, bucket_api=bucket_api)
+
+
+def equal(a: bfs.path.BucketPath, b: bfs.path.BucketPath) -> bool:
+    return (a._path, a._bucket_api) == (b._path, b._bucket_api)
 
 
 @pytest.fixture(scope='module')
@@ -17,6 +27,13 @@ def container_file_name() -> str:
 @pytest.fixture(scope='module')
 def container_file_path(container_file_name) -> Path:
     return Path(container_file_name)
+
+
+@pytest.fixture
+def container_file(tmp_path, container_file_name) -> Path:
+    file = tmp_path / container_file_name
+    file.touch()
+    return file
 
 
 @pytest.fixture(scope='module')
@@ -35,11 +52,22 @@ def mock_pyexasol_conn() -> ExaConnection:
 
 
 @pytest.fixture
-def container_deployer(mock_pyexasol_conn, language_alias) -> LanguageContainerDeployer:
-    deployer = LanguageContainerDeployer(pyexasol_connection=mock_pyexasol_conn,
-                                         language_alias=language_alias,
-                                         bucketfs_path=create_autospec(bfs.path.PathLike))
+def sample_bucket_path():
+    return bucket_path("/")
 
+
+@pytest.fixture
+def container_deployer(
+        mock_pyexasol_conn,
+        language_alias,
+        sample_bucket_path,
+) -> LanguageContainerDeployer:
+    deployer = LanguageContainerDeployer(
+        pyexasol_connection=mock_pyexasol_conn,
+        language_alias=language_alias,
+        bucketfs_path=sample_bucket_path,
+        extract_validator=Mock(),
+    )
     deployer.upload_container = MagicMock()
     deployer.activate_container = MagicMock()
     return deployer
@@ -153,3 +181,17 @@ def test_slc_deployer_get_language_definition(mock_udf_path,
 
     command = container_deployer.get_language_definition(container_file_name)
     assert command == expected_command
+
+
+def mock_deployer(pyexasol_conn, pylanguage_alias, bfs_path):
+    deployer = LanguageContainerDeployer(pyexasol_conn, language_alias, bfs_path)
+    deployer.upload_container = Mock()
+    deployer.activate_container = Mock()
+    return deployer
+
+
+def test_extract_validator_called(sample_bucket_path, container_deployer, container_file):
+    container_deployer.run(container_file, wait_for_completion=True)
+    expected = container_deployer._extract_validator.verify_all_nodes
+    assert expected.called \
+        and equal(expected.call_args.args[2], sample_bucket_path / container_file.name)

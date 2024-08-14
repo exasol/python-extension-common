@@ -48,7 +48,7 @@ class ConnectionMock:
         return self
 
     def fetchone(self):
-        return next(self.values)
+        return [ next(self.values) ]
 
     def fetchall(self):
         return [ v for v in self.values ]
