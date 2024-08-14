@@ -80,7 +80,6 @@ def pyexasol_ssl_connection(config: config.Exasol):
 
 def test_cert_failure(
         itde: config.TestConfig,
-        ssl_connection,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_path: str):
     """
