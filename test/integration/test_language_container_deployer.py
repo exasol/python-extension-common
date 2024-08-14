@@ -1,5 +1,5 @@
 from typing import Callable
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import pytest
@@ -9,7 +9,9 @@ from exasol.pytest_itde import config
 import exasol.bucketfs as bfs
 
 from exasol.python_extension_common.deployment.language_container_deployer import (
-    LanguageContainerDeployer, LanguageActivationLevel)
+    LanguageContainerDeployer,
+    LanguageActivationLevel,
+)
 
 from test.utils.revert_language_settings import revert_language_settings
 from test.utils.db_utils import (create_schema, assert_udf_running)
@@ -51,15 +53,60 @@ def test_container_file(
         deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
         assert_udf_running(pyexasol_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
 
+import ssl
+from pyexasol import ExaConnectionFailedError
 
-def test_alter_session(
+@contextmanager
+# def ssl_connection(itde: config.TestConfig):
+def pyexasol_ssl_connection(config: config.Exasol):
+    # connection_factory(itde.db))
+    # config = itde.db
+    connection_params = {
+        "dsn": f"{config.host}:{config.port}",
+        "user": config.username,
+        "password": config.password,
+    )
+    websocket_sslopt = { "cert_reqs": ssl.CERT_REQUIRED }
+    # get_websocket_sslopt(use_ssl_cert_validation=True)
+    pyexasol_conn = pyexasol.connect(
+        **connection_params,
+        encryption=True,
+        websocket_sslopt=websocket_sslopt,
+    )
+    yield pyexasol_conn
+    pyexasol_conn.close()
+
+
+def test_cert_failure(
+        itde: config.TestConfig,
+        ssl_connection,
+        connection_factory: Callable[[config.Exasol], ExaConnection],
+        container_path: str):
+    """
+    Verifies that connecting with an invalid SSL certificate fails with an
+    exception.
+    """
+    with ExitStack() as stack:
+        pyexasol_connection = stack.enter_context(connection_factory(itde.db))
+        stack.enter_context(revert_language_settings(pyexasol_connection))
+        create_schema(pyexasol_connection, TEST_SCHEMA)
+        ssl_connection = stack.enter_context(pyexasol_ssl_connection(itde.db))
+        deployer = create_container_deployer(language_alias=TEST_LANGUAGE_ALIAS,
+                                             pyexasol_connection=ssl_connection,
+                                             bucketfs_config=itde.bucketfs)
+        with pytest.raises(ExaConnectionFailedError, match="[SSL: CERTIFICATE_VERIFY_FAILED]"):
+            deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
+
+
+def test_download_and_alter_session(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_url: str,
         container_name: str):
     """
-    Tests the deployment of a container in two stages - uploading the container
-    followed by activation at the Session level.
+    Tests the deployment of a container in two stages - uploading the
+    container followed by activation at the Session level. This test also
+    covers downloading a container file from a URL.
     """
     with ExitStack() as stack:
         pyexasol_connection = stack.enter_context(connection_factory(itde.db))
@@ -77,14 +124,14 @@ def test_alter_session(
         assert_udf_running(new_connection, TEST_LANGUAGE_ALIAS, TEST_SCHEMA)
 
 
-def test_duplicate_language_alias_failure(
+def test_disallow_override_makes_duplicate_alias_fail(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
         container_path: str,
         container_name: str):
     """
-    Tests that an attempt to activate a container using an alias that already exists
-    causes an exception if overriding is disallowed.
+    Tests that an attempt to activate a container fails with an exception
+    when disallowing override and using an alias that already exists.
     """
     with ExitStack() as stack:
         pyexasol_connection = stack.enter_context(connection_factory(itde.db))
