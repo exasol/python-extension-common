@@ -65,7 +65,7 @@ def pyexasol_ssl_connection(config: config.Exasol):
         "dsn": f"{config.host}:{config.port}",
         "user": config.username,
         "password": config.password,
-    )
+    }
     websocket_sslopt = { "cert_reqs": ssl.CERT_REQUIRED }
     # get_websocket_sslopt(use_ssl_cert_validation=True)
     pyexasol_conn = pyexasol.connect(
