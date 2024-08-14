@@ -59,24 +59,27 @@ def call_language_definition_deployer_cli(func,
     return result
 
 
-def test_language_container_deployer_cli_with_check_cert(
-        itde: config.TestConfig,
-        connection_factory: Callable[[config.Exasol], ExaConnection],
-        container_path: str,
-        main_func
-):
-    # TODO: Move to test/integration/test_language_container_deployer.py
-    expected_exception_message = '[SSL: CERTIFICATE_VERIFY_FAILED]'
-    with ExitStack() as stack:
-        pyexasol_connection = stack.enter_context(connection_factory(itde.db))
-        stack.enter_context(revert_language_settings(pyexasol_connection))
-        create_schema(pyexasol_connection, TEST_SCHEMA)
-        result = call_language_definition_deployer_cli(main_func,
-                                                       container_path=container_path,
-                                                       language_alias=TEST_LANGUAGE_ALIAS,
-                                                       exasol_config=itde.db,
-                                                       bucketfs_config=itde.bucketfs,
-                                                       use_ssl_cert_validation=True)
-        assert result.exit_code == 1
-        assert expected_exception_message in result.exception.args[0].message
-        assert isinstance(result.exception, ExaConnectionFailedError)
+# replaced by test_cert_failure
+# in test/integration/test_language_container_deployer.py
+
+# def test_language_container_deployer_cli_with_check_cert(
+#         itde: config.TestConfig,
+#         connection_factory: Callable[[config.Exasol], ExaConnection],
+#         container_path: str,
+#         main_func
+# ):
+#     # TODO: Move to test/integration/test_language_container_deployer.py
+#     expected_exception_message = '[SSL: CERTIFICATE_VERIFY_FAILED]'
+#     with ExitStack() as stack:
+#         pyexasol_connection = stack.enter_context(connection_factory(itde.db))
+#         stack.enter_context(revert_language_settings(pyexasol_connection))
+#         create_schema(pyexasol_connection, TEST_SCHEMA)
+#         result = call_language_definition_deployer_cli(main_func,
+#                                                        container_path=container_path,
+#                                                        language_alias=TEST_LANGUAGE_ALIAS,
+#                                                        exasol_config=itde.db,
+#                                                        bucketfs_config=itde.bucketfs,
+#                                                        use_ssl_cert_validation=True)
+#         assert result.exit_code == 1
+#         assert expected_exception_message in result.exception.args[0].message
+#         assert isinstance(result.exception, ExaConnectionFailedError)
