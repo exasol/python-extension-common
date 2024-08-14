@@ -3,6 +3,7 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import pytest
+import pyexasol
 
 from pyexasol import ExaConnection
 from exasol.pytest_itde import config
