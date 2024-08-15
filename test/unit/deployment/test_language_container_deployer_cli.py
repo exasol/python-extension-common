@@ -42,9 +42,6 @@ def test_deployer_cli_with_missing_container_option():
          "--db-user", "db-username",
          "--db-pass", "db-password",
          ])
-    # print(f'\nExitCode: {result.exit_code}')
-    # print(f'\nOutput:>{result.output}<')
-    # print(f'\nException: {type(result.exception)}: >{result.exception}<')
     assert result.exit_code == 1 and \
         isinstance(result.exception, ValueError) and \
         "Incomplete parameter list." in str(result.exception)
