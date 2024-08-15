@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import pytest
 
-from pyexasol import ExaConnection
+from pyexasol import ExaConnection, ExaConnectionFailedError
 from exasol.pytest_itde import config
 import exasol.bucketfs as bfs
 
