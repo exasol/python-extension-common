@@ -96,8 +96,9 @@ def mock_itde():
 
 
 from urllib.parse import urlparse
+# def test_cert_failure():
 # def test_cert_failure(itde: config.TestConfig, container_path: str):
-def test_cert_failure():
+def test_cert_failure(itde: config.TestConfig):
     """
     Verifies that connecting with an invalid SSL certificate fails with an
     exception.
