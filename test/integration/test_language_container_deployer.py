@@ -21,9 +21,12 @@ TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
 
 
-def create_container_deployer(language_alias: str,
-                              pyexasol_connection: ExaConnection,
-                              bucketfs_config: config.BucketFs) -> LanguageContainerDeployer:
+def create_container_deployer(
+        language_alias: str,
+        pyexasol_connection: ExaConnection,
+        bucketfs_config: config.BucketFs,
+        verify: bool = False,
+) -> LanguageContainerDeployer:
 
     bucketfs_path = bfs.path.build_path(backend=bfs.path.StorageBackend.onprem,
                                         url=bucketfs_config.url,
@@ -31,7 +34,7 @@ def create_container_deployer(language_alias: str,
                                         password=bucketfs_config.password,
                                         service_name="bfsdefault",
                                         bucket_name="default",
-                                        verify=False,
+                                        verify=verify,
                                         path="container")
     return LanguageContainerDeployer(
         pyexasol_connection, language_alias, bucketfs_path)
@@ -78,6 +81,32 @@ def pyexasol_ssl_connection(config: config.Exasol):
     pyexasol_conn.close()
 
 
+# from urllib.parse import urlparse
+# def test_cert_failure(itde: config.TestConfig, container_path: str):
+#     """
+#     Verifies that connecting with an invalid SSL certificate fails with an
+#     exception.
+#     """
+#     parsed_url = urlparse(itde.bucketfs.url)
+#     deployer = LanguageContainerDeployer.create(
+#         language_alias=TEST_LANGUAGE_ALIAS,
+#         dsn=f"{itde.db.host}:{itde.db.port}",
+#         db_user=itde.db.username,
+#         db_password=itde.db.password,
+#         bucketfs_name="bfsdefault",
+#         bucketfs_host=parsed_url.hostname,
+#         bucketfs_port=parsed_url.port,
+#         bucketfs_use_https=False,
+#         bucketfs_user=itde.bucketfs.username,
+#         bucketfs_password=itde.bucketfs.password,
+#         bucket="default",
+#         use_ssl_cert_validation=True,
+#         path_in_bucket="container",
+#         )
+#         with pytest.raises(ExaConnectionFailedError, match="[SSL: CERTIFICATE_VERIFY_FAILED]"):
+#             deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
+
+
 def test_cert_failure(
         itde: config.TestConfig,
         connection_factory: Callable[[config.Exasol], ExaConnection],
@@ -90,10 +119,11 @@ def test_cert_failure(
         pyexasol_connection = stack.enter_context(connection_factory(itde.db))
         stack.enter_context(revert_language_settings(pyexasol_connection))
         create_schema(pyexasol_connection, TEST_SCHEMA)
-        ssl_connection = stack.enter_context(pyexasol_ssl_connection(itde.db))
+        # ssl_connection = stack.enter_context(pyexasol_ssl_connection(itde.db))
         deployer = create_container_deployer(language_alias=TEST_LANGUAGE_ALIAS,
-                                             pyexasol_connection=ssl_connection,
-                                             bucketfs_config=itde.bucketfs)
+                                             pyexasol_connection=pyexasol_connection,
+                                             bucketfs_config=itde.bucketfs,
+                                             verify=True)
         with pytest.raises(ExaConnectionFailedError, match="[SSL: CERTIFICATE_VERIFY_FAILED]"):
             deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
 
