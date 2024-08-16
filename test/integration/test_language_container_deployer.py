@@ -87,9 +87,9 @@ def test_download_and_alter_session(
         container_url: str,
         container_name: str):
     """
-    Tests the deployment of a container in two stages - uploading the
-    container followed by activation at the Session level. This test also
-    covers downloading a container file from a URL.
+    Tests the deployment of a container in 3 stages - 1. download a
+    container file from a URL, 2. upload the file to the BucketFS and
+    3. activate it at the Session level.
     """
     with ExitStack() as stack:
         pyexasol_connection = stack.enter_context(connection_factory(itde.db))

@@ -111,7 +111,7 @@ def test_parameter_formatters_2params():
     assert ctx.params[CustomizableParameters.container_url.name] == 'http://my_server/1.3.2/cezar/my_stuff'
     assert ctx.params[CustomizableParameters.container_name.name] == 'downloaded-1.3.2'
 
-
+import re
 def test_deployer_cli_with_missing_container_option():
     result = click.testing.CliRunner().invoke(
         language_container_deployer_main,
@@ -124,7 +124,12 @@ def test_deployer_cli_with_missing_container_option():
          ])
     assert result.exit_code == 1 and \
         isinstance(result.exception, ValueError) and \
-        "Incomplete parameter list." in str(result.exception)
+        re.match((
+            "Incomplete parameter list."
+            ".*Please either provide the parameters"
+            ".*for an On-Prem database or"
+            ".*for a SaaS database."
+        ), str(result.exception))
 
 
 def test_default_values(container_file):

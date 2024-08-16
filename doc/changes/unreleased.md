@@ -22,4 +22,4 @@ This enables faster and more robust tests for the pure CLI-related features, fas
 
 # Refactoring
 
-* #51: Split CLI integration tests to unit tests with mock
+* #51: Split CLI integration tests
