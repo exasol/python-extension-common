@@ -1,10 +1,11 @@
 import os
 import pytest
-from unittest.mock import patch, create_autospec
+from unittest.mock import patch, create_autospec, Mock
 import click
+import click.testing
 
-from contextlib import ExitStack
-from click.testing import CliRunner
+from typing import Dict, List
+from contextlib import ExitStack, contextmanager
 from exasol.python_extension_common.deployment.language_container_deployer_cli import (
     _ParameterFormatters,
     CustomizableParameters,
@@ -12,6 +13,34 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
     SecretParams,
 )
 from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
+
+
+class CliRunner:
+    def __init__(self, deployer: Mock = Mock()):
+        self.deployer = deployer
+        self.context = deployer
+        self.create = None
+        self.result = None
+
+    def __enter__(self):
+        self.context = patch.object(
+            LanguageContainerDeployer,
+            "create",
+            return_value=self.deployer,
+            autospec=True,
+        )
+        self.create = self.context.__enter__()
+        return self
+
+    def run(self, *args: List[str]):
+        self.result = click.testing.CliRunner().invoke(
+            language_container_deployer_main,
+            list(args),
+        )
+        return self.result
+
+    def __exit__(self, type, value, traceback):
+        self.context.__exit__(type, value, traceback)
 
 
 @pytest.fixture
@@ -84,7 +113,7 @@ def test_parameter_formatters_2params():
 
 
 def test_deployer_cli_with_missing_container_option():
-    result = CliRunner().invoke(
+    result = click.testing.CliRunner().invoke(
         language_container_deployer_main,
         ["--language-alias", "PYTHON3_PEC_TESTS_CLI",
          "--bucketfs-user", "bfs-username",
@@ -112,13 +141,10 @@ def test_default_values(container_file):
         OptionMapper("use_ssl_cert_validation", True),
     ]
     deployer = create_autospec(LanguageContainerDeployer)
-    with patch.object(LanguageContainerDeployer,
-                      "create", return_value=deployer) as create:
-        result = CliRunner().invoke(
-            language_container_deployer_main,
-            ["--container-file", container_file])
+    with CliRunner(deployer) as runner:
+        runner.run("--container-file", container_file)
 
-    actual = create.call_args.kwargs
+    actual = runner.create.call_args.kwargs
     for o in create_options:
         assert actual[o.api_kwarg] == o.value
 
@@ -171,13 +197,9 @@ def test_cli_options_passed_to_create(container_file):
             yield str(o.value)
 
     cli_options = list(keys_and_values())
-    with patch.object(LanguageContainerDeployer, "create", autospec=True) as create:
-        result = CliRunner().invoke(
-            language_container_deployer_main,
-            ["--no-upload_container"] + cli_options )
-    # print(f'exit code: {result.exit_code}, output: >{result.output}<')
-    # print(f'exception: {result.exception}<')
-    actual = create.call_args.kwargs
+    with CliRunner() as runner:
+        runner.run("--no-upload_container", *cli_options)
+    actual = runner.create.call_args.kwargs
     for o in options:
         assert actual[o.api_kwarg] == o.value
 
@@ -192,11 +214,9 @@ def test_cli_options_passed_to_create(container_file):
         ])
 def test_secret_options_prompt(param, prompt):
     option = OptionMapper.from_secret_param(param, prompt=prompt)
-    with patch.object(LanguageContainerDeployer, "create", autospec=True) as create:
-        result = CliRunner().invoke(
-            language_container_deployer_main,
-            ["--no-upload_container", option.cli] )
-    assert result.output.startswith(option.prompt)
+    with CliRunner() as runner:
+        runner.run("--no-upload_container", option.cli)
+    assert runner.result.output.startswith(option.prompt)
 
 
 def test_secrets_from_env():
@@ -204,18 +224,26 @@ def test_secrets_from_env():
         OptionMapper.from_secret_param(p)
         for p in SecretParams
     ]
-    patch_env = { o.env: o.value for o in env_options }
+    patched_env = { o.env: o.value for o in env_options }
     with ExitStack() as stack:
-        stack.enter_context(patch.dict(os.environ, patch_env, clear=True))
-        create = stack.enter_context(patch.object(LanguageContainerDeployer, "create", autospec=True))
-        result = CliRunner().invoke(
-            language_container_deployer_main,
-            ["--no-upload_container"])
+        stack.enter_context(patch.dict(os.environ, patched_env, clear=True))
+        runner = stack.enter_context(CliRunner())
+        runner.run("--no-upload_container")
 
-    actual = create.call_args.kwargs
+    actual = runner.create.call_args.kwargs
     for o in env_options:
         assert actual[o.api_kwarg] == o.value
 
+
+def test_no_upload_container():
+    pass
+
+def test_container_file():
+    "Covered by test_default_values()"
+
+def test_container_url():
+    with CliRunner() as runner:
+        pass
 
 # Additionally there seems to be a file main.py missing that is wrapping the
 # command line.
