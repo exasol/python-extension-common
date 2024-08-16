@@ -197,11 +197,13 @@ def test_cli_options_passed_to_create(container_file):
             yield str(o.value)
 
     cli_options = list(keys_and_values())
-    with CliRunner() as runner:
+    deployer = create_autospec(LanguageContainerDeployer)
+    with CliRunner(deployer) as runner:
         runner.run("--no-upload_container", *cli_options)
     actual = runner.create.call_args.kwargs
     for o in options:
         assert actual[o.api_kwarg] == o.value
+    assert deployer.run.called
 
 
 @pytest.mark.parametrize(
@@ -236,14 +238,24 @@ def test_secrets_from_env():
 
 
 def test_no_upload_container():
-    pass
+    "Covered by test_cli_options_passed_to_create()"
+
 
 def test_container_file():
     "Covered by test_default_values()"
 
+
+@pytest.mark.skip(reason="Not implemented, yet")
 def test_container_url():
-    with CliRunner() as runner:
-        pass
+    """
+    For the following two arguments to LanguageContainerDeployer.create()
+    there are no corresponding CLI options defined:
+
+    - container_url: Optional[str] = None,
+    - container_name: Optional[str] = None):
+
+    Hence this test case currently cannot be run.
+    """
 
 # Additionally there seems to be a file main.py missing that is wrapping the
 # command line.
