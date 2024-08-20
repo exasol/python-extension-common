@@ -307,7 +307,7 @@ class LanguageContainerDeployer:
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
                ssl_private_key: Optional[str] = None,
-               extract_timeout: Optional[timedelta] = None) -> "LanguageContainerDeployer":
+               extract_timeout: timedelta = timedelta(seconds=10)) -> "LanguageContainerDeployer":
 
         # Infer where the database is - on-prem or SaaS.
         if all((dsn, db_user, db_password, bucketfs_host, bucketfs_port,
