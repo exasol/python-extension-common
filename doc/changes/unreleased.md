@@ -19,6 +19,7 @@ This enables faster and more robust tests for the pure CLI-related features, fas
 
 * #50: Created new implementation `ExtractValidator` for validating extraction of
 * #49: Integrated new `ExtractValidator` into `LanguageContainerDeployer`
+* #52: Added timeout options for SLC deployer to CLI
 
 # Refactoring
 

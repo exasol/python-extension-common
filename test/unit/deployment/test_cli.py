@@ -13,6 +13,7 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
     SecretParams,
 )
 from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
+from datetime import timedelta
 
 
 class CliRunner:
@@ -62,6 +63,7 @@ class OptionMapper:
             self,
             api: str,
             value: any = None,
+            cli_value: any = None,
             cli: str = None,
             env: str = None,
             prompt: str = None,
@@ -69,6 +71,7 @@ class OptionMapper:
         self.api_kwarg = api
         self.value = f"om_value_{api}" if value is None else value
         self.cli = cli or "--" + api.replace("_", "-")
+        self.cli_value = self.value if cli_value is None else cli_value
         self.env = env
         self.prompt = prompt
 
@@ -144,6 +147,8 @@ def test_default_values(container_file):
         OptionMapper("ssl_client_certificate", "", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", "", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", True),
+        OptionMapper("extract_timeout", cli="--extract-timeout-seconds",
+                     cli_value=10, value=timedelta(seconds=10)),
     ]
     deployer = create_autospec(LanguageContainerDeployer)
     with CliRunner(deployer) as runner:
@@ -187,11 +192,8 @@ def test_cli_options_passed_to_create(container_file):
         OptionMapper("ssl_client_certificate", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", False),
-        # For the following two arguments to
-        # LanguageContainerDeployer.create() there are no corresponding CLI
-        # options defined:
-        # - container_url: Optional[str] = None,
-        # - container_name: Optional[str] = None):
+        OptionMapper("extract_timeout", cli="--extract-timeout-seconds",
+                     cli_value=11, value=timedelta(seconds=11)),
     ]
     def keys_and_values():
         for o in options:
@@ -199,7 +201,7 @@ def test_cli_options_passed_to_create(container_file):
                 yield "--no-" + o.cli[2:]
                 continue
             yield o.cli
-            yield str(o.value)
+            yield str(o.cli_value)
 
     cli_options = list(keys_and_values())
     deployer = create_autospec(LanguageContainerDeployer)
@@ -261,6 +263,3 @@ def test_container_url():
 
     Hence this test case currently cannot be run.
     """
-
-# Additionally there seems to be a file main.py missing that is wrapping the
-# command line.

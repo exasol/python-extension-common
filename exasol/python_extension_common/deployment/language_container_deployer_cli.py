@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 import click
 from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
+from datetime import timedelta
 
 
 class CustomizableParameters(Enum):
@@ -152,6 +153,7 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
 @click.option('--alter-system/--no-alter-system', type=bool, default=True)
 @click.option('--allow-override/--disallow-override', type=bool, default=False)
 @click.option('--wait_for_completion/--no-wait_for_completion', type=bool, default=True)
+@click.option('--extract-timeout-seconds', type=int, default=10)
 def language_container_deployer_main(
         bucketfs_name: str,
         bucketfs_host: str,
@@ -179,6 +181,7 @@ def language_container_deployer_main(
         alter_system: bool,
         allow_override: bool,
         wait_for_completion: bool,
+        extract_timeout_seconds: int,
         container_url: Optional[str] = None,
         container_name: Optional[str] = None):
 
@@ -203,7 +206,8 @@ def language_container_deployer_main(
         ssl_trusted_ca=ssl_cert_path,
         ssl_client_certificate=ssl_client_cert_path,
         ssl_private_key=ssl_client_private_key,
-        use_ssl_cert_validation=use_ssl_cert_validation)
+        use_ssl_cert_validation=use_ssl_cert_validation,
+        extract_timeout=timedelta(seconds=extract_timeout_seconds))
 
     if not upload_container:
         deployer.run(alter_system=alter_system, allow_override=allow_override,

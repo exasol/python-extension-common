@@ -306,7 +306,8 @@ class LanguageContainerDeployer:
                path_in_bucket: str = '',
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
-               ssl_private_key: Optional[str] = None) -> "LanguageContainerDeployer":
+               ssl_private_key: Optional[str] = None,
+               extract_timeout: Optional[timedelta] = None) -> "LanguageContainerDeployer":
 
         # Infer where the database is - on-prem or SaaS.
         if all((dsn, db_user, db_password, bucketfs_host, bucketfs_port,
@@ -359,4 +360,5 @@ class LanguageContainerDeployer:
                                          encryption=True,
                                          websocket_sslopt=websocket_sslopt)
 
-        return cls(pyexasol_conn, language_alias, bucketfs_path)
+        extract_validator = ExtractValidator(pyexasol_conn, extract_timeout)
+        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
