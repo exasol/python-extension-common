@@ -87,6 +87,10 @@ def get_udf_path(bucket_base_path: bfs.path.PathLike, bucket_file: str) -> PureP
     return PurePosixPath(file_path.as_udf_path())
 
 
+def display_extract_progress(n: int, pending: List[int]):
+    logger.info(f"Verify extraction: {len(pending)} of {n} nodes pending, IDs: {pending}")
+
+
 class LanguageContainerDeployer:
 
     def __init__(self,
@@ -307,7 +311,9 @@ class LanguageContainerDeployer:
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
                ssl_private_key: Optional[str] = None,
-               extract_timeout: timedelta = timedelta(seconds=10)) -> "LanguageContainerDeployer":
+               extract_timeout: timedelta = timedelta(seconds=10),
+               display_progress: bool = False,
+               ) -> "LanguageContainerDeployer":
 
         # Infer where the database is - on-prem or SaaS.
         if all((dsn, db_user, db_password, bucketfs_host, bucketfs_port,
@@ -360,5 +366,6 @@ class LanguageContainerDeployer:
                                          encryption=True,
                                          websocket_sslopt=websocket_sslopt)
 
-        extract_validator = ExtractValidator(pyexasol_conn, extract_timeout)
+        callback = display_extract_progress if display_progress else None
+        extract_validator = ExtractValidator(pyexasol_conn, extract_timeout, callback=callback)
         return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)

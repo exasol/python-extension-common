@@ -147,8 +147,9 @@ def test_default_values(container_file):
         OptionMapper("ssl_client_certificate", "", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", "", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", True),
-        OptionMapper("extract_timeout", cli="--extract-timeout-seconds",
-                     cli_value=10, value=timedelta(seconds=10)),
+        OptionMapper("extract_timeout", cli="--extract-timeout-minutes",
+                     cli_value=5, value=timedelta(minutes=5)),
+        OptionMapper("display_progress", True),
     ]
     deployer = create_autospec(LanguageContainerDeployer)
     with CliRunner(deployer) as runner:
@@ -192,8 +193,9 @@ def test_cli_options_passed_to_create(container_file):
         OptionMapper("ssl_client_certificate", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", False),
-        OptionMapper("extract_timeout", cli="--extract-timeout-seconds",
-                     cli_value=11, value=timedelta(seconds=11)),
+        OptionMapper("extract_timeout", cli="--extract-timeout-minutes",
+                     cli_value=6, value=timedelta(minutes=6)),
+        OptionMapper("display_progress", False),
     ]
     def keys_and_values():
         for o in options:

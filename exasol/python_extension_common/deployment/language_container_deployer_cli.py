@@ -153,7 +153,9 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
 @click.option('--alter-system/--no-alter-system', type=bool, default=True)
 @click.option('--allow-override/--disallow-override', type=bool, default=False)
 @click.option('--wait_for_completion/--no-wait_for_completion', type=bool, default=True)
-@click.option('--extract-timeout-seconds', type=int, default=10)
+@click.option('--extract-timeout-minutes', type=int, default=5)
+# @click.option('--extract-check-interval-seconds', type=int, default=10)
+@click.option('--display-progress/--no-display-progress', type=bool, default=True)
 def language_container_deployer_main(
         bucketfs_name: str,
         bucketfs_host: str,
@@ -181,7 +183,8 @@ def language_container_deployer_main(
         alter_system: bool,
         allow_override: bool,
         wait_for_completion: bool,
-        extract_timeout_seconds: int,
+        extract_timeout_minutes: int,
+        display_progress: bool,
         container_url: Optional[str] = None,
         container_name: Optional[str] = None):
 
@@ -207,7 +210,9 @@ def language_container_deployer_main(
         ssl_client_certificate=ssl_client_cert_path,
         ssl_private_key=ssl_client_private_key,
         use_ssl_cert_validation=use_ssl_cert_validation,
-        extract_timeout=timedelta(seconds=extract_timeout_seconds))
+        extract_timeout=timedelta(minutes=extract_timeout_minutes),
+        display_progress=display_progress,
+    )
 
     if not upload_container:
         deployer.run(alter_system=alter_system, allow_override=allow_override,
