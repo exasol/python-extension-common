@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from importlib import resources
 
+# pylint: disable=E0401
 from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
 from exasol_script_languages_container_tool.lib import api            # type: ignore
 from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult     # type: ignore
@@ -94,8 +95,16 @@ class LanguageContainerBuilder:
         file_path.write_text(content)
 
     @property
-    def flavor_base(self):
+    def flavor_base(self) -> Path:
         return self.flavor_path / "flavor_base"
+
+    @property
+    def requirements_file(self) -> Path:
+        return self.flavor_base / "dependencies" / "requirements.txt"
+
+    @property
+    def wheel_target(self) -> Path:
+        return self.flavor_base / "release" / "dist"
 
     def prepare_flavor(self, project_directory: str | Path,
                        requirement_filter: Callable[[str], bool] | None = None):
@@ -144,19 +153,22 @@ class LanguageContainerBuilder:
     def _add_requirements_to_flavor(self, project_directory: str | Path,
                                     requirement_filter: Callable[[str], bool] | None):
         """
-        Create the project's requirements.txt.
+        Adds project's requirements to the requirements.txt file. Creates this file
+        if it doesn't exist.
         """
         assert self._root_path is not None
-        dist_path = self._root_path / "requirements.txt"
         requirements_bytes = subprocess.check_output(["poetry", "export",
-                                                      "--without-hashes", "--without-urls",
-                                                      "--output", f'{dist_path}'],
+                                                      "--without-hashes", "--without-urls"],
                                                      cwd=str(project_directory))
         requirements = requirements_bytes.decode("UTF-8")
         if requirement_filter is not None:
             requirements = "\n".join(filter(requirement_filter, requirements.splitlines()))
-        requirements_file = self.flavor_base / "dependencies" / "requirements.txt"
-        requirements_file.write_text(requirements)
+        # Make sure the content ends with a new line, so that other requirements can be
+        # added at the end of it.
+        if not requirements.endswith('\n'):
+            requirements += '\n'
+        with self.requirements_file.open(mode='a') as f:
+            return f.write(requirements)
 
     def _add_wheel_to_flavor(self, project_directory: str | Path):
         """
@@ -176,6 +188,5 @@ class LanguageContainerBuilder:
             raise RuntimeError(f"Did not find exactly one wheel file in dist directory {dist_path}. "
                                f"Found the following wheels: {wheels}")
         wheel = wheels[0]
-        wheel_target = self.flavor_base / "release" / "dist"
-        wheel_target.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(wheel, wheel_target / wheel.name)
+        self.wheel_target.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(wheel, self.wheel_target / wheel.name)

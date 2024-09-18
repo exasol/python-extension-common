@@ -23,3 +23,7 @@ This enables faster and more robust tests for the pure CLI-related features, fas
 # Refactoring
 
 * #51: Split CLI integration tests
+
+## Bug Fixing
+
+* #60: Fix handling pip requirements when creating an SLC

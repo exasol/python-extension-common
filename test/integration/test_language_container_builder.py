@@ -16,6 +16,29 @@ from test.integration.test_language_container_deployer import (
 )
 
 
+def test_prepare_flavor(tmp_path):
+    project_directory = find_path_backwards("pyproject.toml", __file__).parent
+
+    with LanguageContainerBuilder('test_container', TEST_LANGUAGE_ALIAS) as container_builder:
+        container_builder.prepare_flavor(project_directory)
+        assert container_builder.requirements_file.exists()
+        assert container_builder.requirements_file.stat().st_size > 0
+        assert container_builder.wheel_target.exists()
+        assert container_builder.wheel_target.is_dir()
+        assert any(container_builder.wheel_target.iterdir())
+
+
+def test_prepare_flavor_extra(tmp_path):
+    """Tests that requirements from multiple projects can be added together"""
+    project_directory = find_path_backwards("pyproject.toml", __file__).parent
+    dummy_req = 'xyz\n'
+    with LanguageContainerBuilder('test_container', TEST_LANGUAGE_ALIAS) as container_builder:
+        container_builder.requirements_file.write_text(dummy_req)
+        container_builder.prepare_flavor(project_directory)
+        assert container_builder.requirements_file.exists()
+        assert container_builder.requirements_file.stat().st_size > len(dummy_req)
+
+
 def test_language_container_builder(itde: config.TestConfig,
                                     connection_factory: Callable[[config.Exasol], ExaConnection],
                                     tmp_path):
