@@ -24,7 +24,8 @@ def find_path_backwards(target_path: str | Path, start_path: str | Path) -> Path
     error if the search is unsuccessful.
     """
     current_path = Path(start_path).parent
-    while current_path != current_path.root:
+    root = Path(current_path.root)
+    while current_path != root:
         result_path = Path(current_path, target_path)
         if result_path.exists():
             return result_path
