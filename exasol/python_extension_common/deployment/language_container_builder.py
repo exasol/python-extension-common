@@ -6,10 +6,9 @@ import tempfile
 from pathlib import Path
 from importlib import resources
 
-# pylint: disable=import-error
 from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
-from exasol_script_languages_container_tool.lib import api            # type: ignore
-from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult     # type: ignore
+from exasol.slc import api            # type: ignore
+from exasol.slc.models.export_container_result import ExportContainerResult     # type: ignore
 
 
 def exclude_cuda(line: str) -> bool:
