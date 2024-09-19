@@ -10,6 +10,10 @@ from tenacity.stop import stop_after_attempt
 
 @retry(reraise=True, stop=stop_after_attempt(3))
 def _create_random_schema(conn: pyexasol.ExaConnection, schema_name_length: int) -> str:
+    """
+    The function creates a schema with randomly generated name. It makes a few retries,
+    as it's theoretically possible to create a collision with an existing schema.
+    """
 
     schema = ''.join(random.choice(string.ascii_letters)
                      for _ in range(schema_name_length))
