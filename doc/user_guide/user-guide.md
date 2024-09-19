@@ -44,7 +44,7 @@ another source.
 | bucketfs-password            |   [x]   |      | Env. [BUCKETFS_PASSWORD]                          |
 | bucketfs-use-https           |   [x]   |      | Optional boolean, defaults to False               |
 | bucket                       |   [x]   |      |                                                   |
-| saas-url                     |         | [x]  |                                                   |
+| saas-url                     |         | [x]  | Env. [SAAS_HOST]                                  |
 | saas-account-id              |         | [x]  | Env. [SAAS_ACCOUNT_ID]                            |
 | saas-database-id             |         | [x]  | Optional, Env. [SAAS_DATABASE_ID]                 |
 | saas-database-name           |         | [x]  | Optional, provide if the database_id is unknown   |

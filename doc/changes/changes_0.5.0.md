@@ -26,4 +26,6 @@ This enables faster and more robust tests for the pure CLI-related features, fas
 
 ## Bug Fixing
 
-* #60: Fix handling pip requirements when creating an SLC
+* #60: Fixed handling pip requirements when creating an SLC.
+* #58: Fixed the bug in language_container_builder.find_path_backwards.
+*
