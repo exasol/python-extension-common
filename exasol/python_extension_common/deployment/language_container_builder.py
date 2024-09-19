@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from importlib import resources
 
-# pylint: disable=E0401
+# pylint: disable=import-error
 from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
 from exasol_script_languages_container_tool.lib import api            # type: ignore
 from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult     # type: ignore

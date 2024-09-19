@@ -1,4 +1,4 @@
-# pylint: disable=E0401
+# pylint: disable=import-error
 from exasol_script_languages_container_tool.lib.tasks.build.docker_flavor_image_task import DockerFlavorAnalyzeImageTask    # type: ignore
 
 

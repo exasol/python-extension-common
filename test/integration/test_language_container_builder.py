@@ -37,6 +37,7 @@ def test_prepare_flavor_extra(tmp_path):
         container_builder.prepare_flavor(project_directory)
         assert container_builder.requirements_file.exists()
         assert container_builder.requirements_file.stat().st_size > len(dummy_req)
+        assert container_builder.requirements_file.read_text().startswith(dummy_req)
 
 
 def test_language_container_builder(itde: config.TestConfig,
