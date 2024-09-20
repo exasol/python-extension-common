@@ -26,7 +26,6 @@ The integration tests now use the pytest plugin `pytest-exasol-backend`.
 
 * #51: Split CLI integration tests
 * #63: Removed the language_alias parameter from the LanguageContainerBuilder.
-* #48: Activated validation by verifying existence of file exasol-manifest.json 
 
 ## Bug Fixing
 
