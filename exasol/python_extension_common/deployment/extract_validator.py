@@ -113,8 +113,7 @@ class ExtractValidator:
         still nodes pending, for which the extraction could not be verified,
         yet.
         """
-        # manifest = f"{bfs_archive_path.as_udf_path()}/{MANIFEST_FILE}"
-        manifest = "/exaudf/exaudfclient_py3"
+        manifest = f"{bfs_archive_path.as_udf_path()}/{MANIFEST_FILE}"
         nproc = self._pyexasol_conn.execute("SELECT nproc()").fetchone()[0]
         udf_name = _udf_name(schema, language_alias)
         start = datetime.now()
