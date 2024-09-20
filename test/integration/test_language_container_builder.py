@@ -8,10 +8,10 @@ from exasol.python_extension_common.deployment.language_container_builder import
 from test.utils.db_utils import assert_udf_running
 
 
-def test_prepare_flavor(language_alias):
+def test_prepare_flavor():
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
 
-    with LanguageContainerBuilder('test_container', language_alias) as container_builder:
+    with LanguageContainerBuilder('test_container') as container_builder:
         container_builder.prepare_flavor(project_directory)
         assert container_builder.requirements_file.exists()
         assert container_builder.requirements_file.stat().st_size > 0
@@ -20,11 +20,11 @@ def test_prepare_flavor(language_alias):
         assert any(container_builder.wheel_target.iterdir())
 
 
-def test_prepare_flavor_extra(language_alias):
+def test_prepare_flavor_extra():
     """Tests that requirements from multiple projects can be added together"""
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
     dummy_req = 'xyz\n'
-    with LanguageContainerBuilder('test_container', language_alias) as container_builder:
+    with LanguageContainerBuilder('test_container') as container_builder:
         container_builder.requirements_file.write_text(dummy_req)
         container_builder.prepare_flavor(project_directory)
         assert container_builder.requirements_file.exists()
@@ -38,7 +38,7 @@ def test_language_container_builder(deployer_factory, db_schema, language_alias)
     with ExitStack() as stack:
         # Build the SLC
         container_builder = stack.enter_context(LanguageContainerBuilder(
-            'test_container', language_alias))
+            'test_container'))
         container_builder.prepare_flavor(project_directory)
         export_result = container_builder.export()
         export_info = export_result.export_infos[str(container_builder.flavor_path)]["release"]
