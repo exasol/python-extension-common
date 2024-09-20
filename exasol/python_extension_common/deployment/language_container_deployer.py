@@ -109,6 +109,10 @@ class LanguageContainerDeployer:
             )
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
+    @property
+    def pyexasol_connection(self) -> pyexasol.ExaConnection:
+        return self._pyexasol_conn
+
     def download_and_run(self, url: str,
                          bucket_file_path: str,
                          alter_system: bool = True,

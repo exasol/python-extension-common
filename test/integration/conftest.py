@@ -1,14 +1,18 @@
 from __future__ import annotations
-from typing import Any
-import os
 import pytest
 import click
 import requests
+from contextlib import ExitStack, contextmanager
+import pyexasol
+import exasol.bucketfs as bfs
 
-from exasol.saas.client.api_access import get_connection_params
-
+from exasol.python_extension_common.deployment.language_container_deployer import (
+    LanguageContainerDeployer,
+)
 from exasol.python_extension_common.deployment.language_container_deployer_cli import (
     language_container_deployer_main, slc_parameter_formatters, CustomizableParameters)
+from test.utils.revert_language_settings import revert_language_settings
+from test.utils.db_utils import create_schema
 
 
 SLC_NAME = "template-Exasol-all-python-3.10_release.tar.gz"
@@ -17,6 +21,9 @@ SLC_URL_FORMATTER = ("https://github.com/exasol/script-languages-release/release
                      "download/{version}/") + SLC_NAME
 
 VERSION = "8.0.0"
+
+TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
+TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
 
 
 @pytest.fixture
@@ -60,12 +67,29 @@ def container_path(tmpdir_factory, container_url, container_name) -> str:
     return slc_path
 
 
-@pytest.fixture(scope="session")
-def saas_connection_params(saas_host, saas_pat, saas_account_id, operational_saas_database_id) -> dict[str, Any]:
-    connection_params = get_connection_params(
-        host=saas_host,
-        account_id=saas_account_id,
-        database_id=operational_saas_database_id,
-        pat=saas_pat,
-    )
-    yield connection_params
+@pytest.fixture(scope='session')
+def db_schema() -> str:
+    return TEST_SCHEMA
+
+
+@pytest.fixture(scope='session')
+def language_alias() -> str:
+    return TEST_LANGUAGE_ALIAS
+
+
+@pytest.fixture(scope='session')
+def deployer_factory(
+        backend_aware_database_params,
+        backend_aware_bucketfs_params,
+        db_schema,
+        language_alias):
+    @contextmanager
+    def create_deployer(create_test_schema: bool = False):
+        with ExitStack() as stack:
+            pyexasol_connection = stack.enter_context(pyexasol.connect(**backend_aware_database_params))
+            bucketfs_path = bfs.path.build_path(**backend_aware_bucketfs_params)
+            stack.enter_context(revert_language_settings(pyexasol_connection))
+            if create_test_schema:
+                create_schema(pyexasol_connection, db_schema)
+            yield LanguageContainerDeployer(pyexasol_connection, language_alias, bucketfs_path)
+    return create_deployer
