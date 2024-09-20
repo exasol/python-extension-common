@@ -6,10 +6,9 @@ import tempfile
 from pathlib import Path
 from importlib import resources
 
-# pylint: disable=import-error
 from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
-from exasol_script_languages_container_tool.lib import api            # type: ignore
-from exasol_script_languages_container_tool.lib.tasks.export.export_containers import ExportContainerResult     # type: ignore
+from exasol.slc import api            # type: ignore
+from exasol.slc.models.export_container_result import ExportContainerResult     # type: ignore
 
 
 def exclude_cuda(line: str) -> bool:
@@ -24,7 +23,8 @@ def find_path_backwards(target_path: str | Path, start_path: str | Path) -> Path
     error if the search is unsuccessful.
     """
     current_path = Path(start_path).parent
-    while current_path != current_path.root:
+    root = Path(current_path.root)
+    while current_path != root:
         result_path = Path(current_path, target_path)
         if result_path.exists():
             return result_path
@@ -44,9 +44,8 @@ def copy_slc_flavor(dest_dir: str | Path) -> None:
 
 class LanguageContainerBuilder:
 
-    def __init__(self, container_name: str, language_alias: str):
+    def __init__(self, container_name: str):
         self.container_name = container_name
-        self.language_alias = language_alias
         self._root_path: Path | None = None
         self._output_path: Path | None = None
 
@@ -58,9 +57,6 @@ class LanguageContainerBuilder:
 
         # Copy the flavor into the working directory
         copy_slc_flavor(self.flavor_path)
-
-        # Write the language alias to the language definition
-        self._set_language_alias()
         return self
 
     def __exit__(self, *exc_details):
@@ -139,16 +135,6 @@ class LanguageContainerBuilder:
                                    output_directory=str(self._output_path),
                                    export_path=str(export_path))
         return export_result
-
-    def _set_language_alias(self) -> None:
-        """
-        Sets the language alias provided in the constractor to the language definition.
-        """
-        lang_def_path = self.flavor_base / 'language_definition'
-        lang_def_template = lang_def_path.read_text()
-        lang_def_text = lang_def_template.split("=", maxsplit=1)[1]
-        lang_def = f'{self.language_alias}={lang_def_text}'
-        lang_def_path.write_text(lang_def)
 
     def _add_requirements_to_flavor(self, project_directory: str | Path,
                                     requirement_filter: Callable[[str], bool] | None):
