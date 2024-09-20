@@ -19,7 +19,7 @@ def test_container_file(deployer_factory,
     """
     Tests the deployment of a container in one call, including the activation at the System level.
     """
-    with deployer_factory(True) as deployer:
+    with deployer_factory(create_test_schema=True) as deployer:
         deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
         assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
 
@@ -70,9 +70,9 @@ def test_download_and_alter_session(
     container file from a URL, 2. upload the file to the BucketFS and
     3. activate it at the Session level.
     """
-    with deployer_factory(True) as deployer1:
+    with deployer_factory(create_test_schema=True) as deployer1:
         deployer1.download_and_run(container_url, container_name, alter_system=False)
-        with deployer_factory(False) as deployer2:
+        with deployer_factory(create_test_schema=False) as deployer2:
             deployer2.activate_container(container_name, LanguageActivationLevel.Session, True)
             assert_udf_running(deployer2.pyexasol_connection, language_alias, db_schema)
 
@@ -85,9 +85,9 @@ def test_disallow_override_makes_duplicate_alias_fail(
     Tests that an attempt to activate a container fails with an exception
     when disallowing override and using an alias that already exists.
     """
-    with deployer_factory(True) as deployer1:
+    with deployer_factory(create_test_schema=True) as deployer1:
         deployer1.run(container_file=Path(container_path), alter_system=True, allow_override=True)
-        with deployer_factory(False) as deployer2:
+        with deployer_factory(create_test_schema=False) as deployer2:
             with pytest.raises(RuntimeError):
                 deployer2.activate_container(
                     bucket_file_path=container_name,

@@ -15,6 +15,8 @@ The existing integration tests have been split into
 
 This enables faster and more robust tests for the pure CLI-related features, faster turnaounds during development, and separation of concerns.
 
+The integration tests now use the pytest plugin `pytest-exasol-backend`.
+
 ## Features
 
 * #50: Created new implementation `ExtractValidator` for validating extraction of
@@ -28,4 +30,5 @@ This enables faster and more robust tests for the pure CLI-related features, fas
 
 * #60: Fixed handling pip requirements when creating an SLC.
 * #58: Fixed the bug in language_container_builder.find_path_backwards.
-*
+* #36: Added SAAS_HOST environment variable to the user guide.
+* #35: Restoring pre-existing schema in the temp_schema module.

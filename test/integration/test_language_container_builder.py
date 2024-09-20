@@ -8,7 +8,7 @@ from exasol.python_extension_common.deployment.language_container_builder import
 from test.utils.db_utils import assert_udf_running
 
 
-def test_prepare_flavor(tmp_path, language_alias):
+def test_prepare_flavor(language_alias):
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
 
     with LanguageContainerBuilder('test_container', language_alias) as container_builder:
@@ -20,7 +20,7 @@ def test_prepare_flavor(tmp_path, language_alias):
         assert any(container_builder.wheel_target.iterdir())
 
 
-def test_prepare_flavor_extra(tmp_path, language_alias):
+def test_prepare_flavor_extra(language_alias):
     """Tests that requirements from multiple projects can be added together"""
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
     dummy_req = 'xyz\n'
@@ -32,7 +32,7 @@ def test_prepare_flavor_extra(tmp_path, language_alias):
         assert container_builder.requirements_file.read_text().startswith(dummy_req)
 
 
-def test_language_container_builder(deployer_factory, db_schema, language_alias, tmp_path):
+def test_language_container_builder(deployer_factory, db_schema, language_alias):
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
 
     with ExitStack() as stack:
@@ -46,7 +46,7 @@ def test_language_container_builder(deployer_factory, db_schema, language_alias,
         container_file_path = Path(export_info.cache_file)
 
         # Deploy the SCL
-        deployer = stack.enter_context(deployer_factory(True))
+        deployer = stack.enter_context(deployer_factory(create_test_schema=True))
         deployer.run(container_file=Path(container_file_path), alter_system=True, allow_override=True)
 
         # Verify that the deployed SLC works.
