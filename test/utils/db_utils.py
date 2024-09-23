@@ -4,8 +4,12 @@ from pyexasol import ExaConnection
 
 
 def create_schema(pyexasol_connection: ExaConnection, schema: str):
-    pyexasol_connection.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
-    pyexasol_connection.execute(f"CREATE SCHEMA IF NOT EXISTS {schema};")
+    pyexasol_connection.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE;')
+    pyexasol_connection.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema}";')
+
+
+def open_schema(pyexasol_connection: ExaConnection, schema: str):
+    pyexasol_connection.execute(f'OPEN SCHEMA "{schema}";')
 
 
 def assert_udf_running(pyexasol_connection: ExaConnection, language_alias: str, schema: str):

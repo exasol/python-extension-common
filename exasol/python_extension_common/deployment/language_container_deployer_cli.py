@@ -144,6 +144,7 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
               prompt='DB password', prompt_required=False,
               hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
 @click.option('--language-alias', type=str, default="PYTHON3_EXT")
+@click.option('--schema', type=str, default="")
 @click.option('--ssl-cert-path', type=str, default="")
 @click.option('--ssl-client-cert-path', type=str, default="")
 @click.option('--ssl-client-private-key', type=str, default="")
@@ -171,6 +172,7 @@ def language_container_deployer_main(
         db_user: str,
         db_pass: str,
         language_alias: str,
+        schema: str,
         ssl_cert_path: str,
         ssl_client_cert_path: str,
         ssl_client_private_key: str,
@@ -200,6 +202,7 @@ def language_container_deployer_main(
         db_user=db_user,
         db_password=db_pass,
         language_alias=language_alias,
+        schema=schema,
         ssl_trusted_ca=ssl_cert_path,
         ssl_client_certificate=ssl_client_cert_path,
         ssl_private_key=ssl_client_private_key,
