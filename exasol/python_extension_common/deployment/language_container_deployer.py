@@ -108,7 +108,7 @@ class LanguageContainerDeployer:
         else:
             self._extract_validator = ExtractValidator(
                 pyexasol_connection,
-                timeout=timedelta(minutes=5),
+                timeout=timedelta(minutes=10),
                 interval=timedelta(seconds=10),
             )
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
