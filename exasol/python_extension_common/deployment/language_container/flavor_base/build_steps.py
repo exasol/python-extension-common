@@ -1,7 +1,4 @@
-from pathlib import Path
-from typing import Dict
-
-from exasol_script_languages_container_tool.lib.tasks.build.docker_flavor_image_task import DockerFlavorAnalyzeImageTask    # type: ignore
+from exasol.slc.internal.tasks.build.docker_flavor_image_task import DockerFlavorAnalyzeImageTask    # type: ignore
 
 
 class AnalyzeDependencies(DockerFlavorAnalyzeImageTask):
@@ -13,6 +10,7 @@ class AnalyzeDependencies(DockerFlavorAnalyzeImageTask):
 
     def get_path_in_flavor(self):
         return "flavor_base"
+
 
 class AnalyzeRelease(DockerFlavorAnalyzeImageTask):
     def get_build_step(self) -> str:
