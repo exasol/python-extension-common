@@ -3,9 +3,11 @@ import textwrap
 from pyexasol import ExaConnection
 
 
-def create_schema(pyexasol_connection: ExaConnection, schema: str):
+def create_schema(pyexasol_connection: ExaConnection, schema: str, open_test_schema: bool = True):
     pyexasol_connection.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE;')
-    pyexasol_connection.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema}";')
+    pyexasol_connection.execute(f'CREATE SCHEMA "{schema}";')
+    if not open_test_schema:
+        pyexasol_connection.execute("CLOSE SCHEMA;")
 
 
 def open_schema(pyexasol_connection: ExaConnection, schema: str):

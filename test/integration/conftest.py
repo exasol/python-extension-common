@@ -84,14 +84,14 @@ def deployer_factory(
         db_schema,
         language_alias):
     @contextmanager
-    def create_deployer(create_test_schema: bool = False, open_test_schema: bool = False):
+    def create_deployer(create_test_schema: bool = False, open_test_schema: bool = True):
         with ExitStack() as stack:
             pyexasol_connection = stack.enter_context(pyexasol.connect(**backend_aware_database_params))
             bucketfs_path = bfs.path.build_path(**backend_aware_bucketfs_params)
             stack.enter_context(revert_language_settings(pyexasol_connection))
             if create_test_schema:
-                create_schema(pyexasol_connection, db_schema)
-            if open_test_schema:
+                create_schema(pyexasol_connection, db_schema, open_test_schema)
+            elif open_test_schema:
                 open_schema(pyexasol_connection, db_schema)
             yield LanguageContainerDeployer(pyexasol_connection, language_alias, bucketfs_path)
     return create_deployer
