@@ -311,7 +311,7 @@ class LanguageContainerDeployer:
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
                ssl_private_key: Optional[str] = None,
-               extract_timeout: timedelta = timedelta(seconds=10),
+               extract_timeout: timedelta = timedelta(minutes=10),
                display_progress: bool = False,
                ) -> "LanguageContainerDeployer":
 

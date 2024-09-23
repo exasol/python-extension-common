@@ -153,7 +153,7 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
 @click.option('--alter-system/--no-alter-system', type=bool, default=True)
 @click.option('--allow-override/--disallow-override', type=bool, default=False)
 @click.option('--wait_for_completion/--no-wait_for_completion', type=bool, default=True)
-@click.option('--extract-timeout-minutes', type=int, default=5)
+@click.option('--extract-timeout-minutes', type=int, default=10)
 # @click.option('--extract-check-interval-seconds', type=int, default=10)
 @click.option('--display-progress/--no-display-progress', type=bool, default=True)
 def language_container_deployer_main(

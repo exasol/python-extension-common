@@ -148,7 +148,7 @@ def test_default_values(container_file):
         OptionMapper("ssl_private_key", "", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", True),
         OptionMapper("extract_timeout", cli="--extract-timeout-minutes",
-                     cli_value=5, value=timedelta(minutes=5)),
+                     cli_value=5, value=timedelta(minutes=10)),
         OptionMapper("display_progress", True),
     ]
     deployer = create_autospec(LanguageContainerDeployer)
