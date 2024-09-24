@@ -51,7 +51,7 @@ another source.
 | saas-token                   |         | [x]  | Env. [SAAS_TOKEN]                                       |
 | path-in-bucket               |   [x]   | [x]  |                                                         |
 | language-alias               |   [x]   | [x]  |                                                         |
-| schema                       |   [x]   | [x]  | Required if the user has no permission to create schema |
+| schema                       |   [x]   | [x]  | Required if the user has no permission to create a database schema |
 | version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub       |
 | container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file                |
 | ssl-cert-path                |   [x]   | [x]  | Optional                                                |
