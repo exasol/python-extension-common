@@ -12,7 +12,7 @@ from exasol.python_extension_common.deployment.language_container_deployer impor
 from exasol.python_extension_common.deployment.language_container_deployer_cli import (
     language_container_deployer_main, slc_parameter_formatters, CustomizableParameters)
 from test.utils.revert_language_settings import revert_language_settings
-from test.utils.db_utils import create_schema
+from test.utils.db_utils import create_schema, open_schema
 
 
 SLC_NAME = "template-Exasol-all-python-3.10_release.tar.gz"
@@ -84,12 +84,14 @@ def deployer_factory(
         db_schema,
         language_alias):
     @contextmanager
-    def create_deployer(create_test_schema: bool = False):
+    def create_deployer(create_test_schema: bool = False, open_test_schema: bool = True):
         with ExitStack() as stack:
             pyexasol_connection = stack.enter_context(pyexasol.connect(**backend_aware_database_params))
             bucketfs_path = bfs.path.build_path(**backend_aware_bucketfs_params)
             stack.enter_context(revert_language_settings(pyexasol_connection))
             if create_test_schema:
-                create_schema(pyexasol_connection, db_schema)
+                create_schema(pyexasol_connection, db_schema, open_test_schema)
+            elif open_test_schema:
+                open_schema(pyexasol_connection, db_schema)
             yield LanguageContainerDeployer(pyexasol_connection, language_alias, bucketfs_path)
     return create_deployer

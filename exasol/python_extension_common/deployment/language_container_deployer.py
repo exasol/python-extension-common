@@ -11,7 +11,7 @@ import pyexasol     # type: ignore
 import exasol.bucketfs as bfs   # type: ignore
 from exasol.saas.client.api_access import (get_connection_params, get_database_id)      # type: ignore
 
-from exasol.python_extension_common.deployment.temp_schema import temp_schema
+from exasol.python_extension_common.deployment.temp_schema import temp_schema, get_schema
 from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 
 
@@ -162,6 +162,9 @@ class LanguageContainerDeployer:
         allow_override   - If True the activation of a language container with the same alias will be
                            overriden, otherwise a RuntimeException will be thrown.
         wait_for_completion - If True will wait until the language container becomes operational.
+                            For this to work either of the two conditions should be met.
+                            The pyexasol connection should have an open schema, or
+                            The calling user should have a permission to create schema.
         """
 
         if not bucket_file_path:
@@ -182,9 +185,7 @@ class LanguageContainerDeployer:
         # Optionally wait until the container is extracted on all nodes of the
         # database cluster.
         if container_file and wait_for_completion:
-            with temp_schema(self._pyexasol_conn) as schema:
-                self._extract_validator.verify_all_nodes(
-                    schema, self._language_alias, self._upload_path(bucket_file_path))
+            self._wait_container_upload_completion(bucket_file_path)
 
         if not alter_system:
             message = dedent(f"""
@@ -248,6 +249,23 @@ class LanguageContainerDeployer:
             f"ALTER {alter_type.value} SET SCRIPT_LANGUAGES='{new_settings}';"
         return alter_command
 
+    def _wait_container_upload_completion(self, bucket_file_path: str):
+        """
+        The function waits till the container is fully uploaded and operational on all nodes.
+        It creates and then subsequently deletes a simple UDF that checks for the presence of
+        a certain file. This UDF is created in the current schema of the pyexasol connection
+        if one is open. Otherwise, a temporary schema will be created.
+        """
+        upload_path = self._upload_path(bucket_file_path)
+        schema = get_schema(self._pyexasol_conn)
+        if schema:
+            self._extract_validator.verify_all_nodes(
+                schema, self._language_alias, upload_path)
+        else:
+            with temp_schema(self._pyexasol_conn) as schema:
+                self._extract_validator.verify_all_nodes(
+                    schema, self._language_alias, upload_path)
+
     def _update_previous_language_settings(self, alter_type: LanguageActivationLevel,
                                            allow_override: bool,
                                            path_in_udf: PurePosixPath) -> str:
@@ -299,6 +317,7 @@ class LanguageContainerDeployer:
     @classmethod
     def create(cls,
                language_alias: str, dsn: Optional[str] = None,
+               schema: str = '',
                db_user: Optional[str] = None, db_password: Optional[str] = None,
                bucketfs_host: Optional[str] = None, bucketfs_port: Optional[int] = None,
                bucketfs_name: Optional[str] = None, bucket: Optional[str] = None,
@@ -360,6 +379,7 @@ class LanguageContainerDeployer:
                                                 ssl_client_certificate, ssl_private_key)
 
         pyexasol_conn = pyexasol.connect(**connection_params,
+                                         schema=schema,
                                          encryption=True,
                                          websocket_sslopt=websocket_sslopt)
 
