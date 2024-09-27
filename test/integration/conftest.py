@@ -20,7 +20,7 @@ SLC_NAME = "template-Exasol-all-python-3.10_release.tar.gz"
 SLC_URL_FORMATTER = ("https://github.com/exasol/script-languages-release/releases/"
                      "download/{version}/") + SLC_NAME
 
-VERSION = "8.0.0"
+VERSION = "8.3.0"
 
 TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
