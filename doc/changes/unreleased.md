@@ -2,4 +2,4 @@
 
 ## Features
 
-* #66: Implement a standard CLI command builder.
+* #66: Implement a standard CLI options builder.

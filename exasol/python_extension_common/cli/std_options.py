@@ -24,7 +24,7 @@ class ParameterFormatters:
     the update if the value of the parameter dressed with the callback is None.
     """
     def __init__(self):
-        self._formatters = {}
+        self._formatters : Dict[str, str] = {}
 
     def __call__(self, ctx: click.Context, param: click.Parameter, value: Any | None) -> Any | None:
 
