@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import pytest
 import exasol.bucketfs as bfs
 
@@ -19,7 +20,12 @@ def test_create_bucketfs_location_onprem(use_onprem,
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
+    parsed_url = urlparse(bucketfs_config.url)
+    host, port = parsed_url.netloc.split(":")
     kwargs = {
+        StdParams.bucketfs_host.name: host,
+        StdParams.bucketfs_port.name: port,
+        StdParams.bucketfs_use_https.name: parsed_url.scheme.lower() == 'https',
         StdParams.bucketfs_user.name: bucketfs_config.username,
         StdParams.bucketfs_password.name: bucketfs_config.password,
         StdParams.bucketfs_name.name: 'bfsdefault',
@@ -43,7 +49,8 @@ def test_create_bucketfs_location_saas_db_id(use_saas,
         StdParams.saas_url.name: saas_host,
         StdParams.saas_account_id.name: saas_account_id,
         StdParams.saas_database_id.name: backend_aware_saas_database_id,
-        StdParams.saas_token.name: saas_pat
+        StdParams.saas_token.name: saas_pat,
+        StdParams.path_in_bucket.name: 'test_path'
     }
     bfs_path = create_bucketfs_location(**kwargs)
     validate_bfs_path(bfs_path)
@@ -62,7 +69,8 @@ def test_create_bucketfs_location_saas_db_name(use_saas,
         StdParams.saas_url.name: saas_host,
         StdParams.saas_account_id.name: saas_account_id,
         StdParams.saas_database_name.name: database_name,
-        StdParams.saas_token.name: saas_pat
+        StdParams.saas_token.name: saas_pat,
+        StdParams.path_in_bucket.name: 'test_path'
     }
     bfs_path = create_bucketfs_location(**kwargs)
     validate_bfs_path(bfs_path)
