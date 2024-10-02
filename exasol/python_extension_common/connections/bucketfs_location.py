@@ -1,16 +1,18 @@
-from typing import Any, no_type_check
 import exasol.bucketfs as bfs   # type: ignore
 from exasol.saas.client.api_access import get_database_id   # type: ignore
 
-from exasol.python_extension_common.cli.std_options import StdParams
-
-
-@no_type_check
-def check_params(param_list: list[StdParams | list[StdParams]], param_kwargs: dict[str, Any]) -> bool:
-    pass
+from exasol.python_extension_common.cli.std_options import StdParams, check_params
 
 
 def create_bucketfs_location(**kwargs) -> bfs.path.PathLike:
+    """
+    Creates a BucketFS PathLike object using the data provided in the kwargs. These
+    can be parameters for the BucketFS either On-Prem or SaaS database. The parameters
+    should correspond to the CLI options defined in the cli/std_options.py.
+
+    Raises a ValueError if the provided parameters are insufficient for either
+    On-Prem or SaaS cases.
+    """
 
     path_in_bucket = kwargs.get(StdParams.path_in_bucket.name, '')
 
