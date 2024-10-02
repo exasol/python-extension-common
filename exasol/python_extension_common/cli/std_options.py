@@ -236,3 +236,37 @@ def select_std_options(tags: StdTags | list[StdTags] | str,
     return [create_std_option(std_param, **option_params(std_param),
                               callback=formatters.get(std_param))
             for std_param in filtered_params]
+
+
+def check_params(std_params: StdParams | list[StdParams | list[StdParams]],
+                 param_kwargs: dict[str, Any]) -> bool:
+    """
+    Checks if the kwargs contain specified StdParams keys. The intention is to verify
+    if the options provided by the user via a CLI are sufficient to perform a certain
+    operation. An option value of any type other than boolean is considered valid if
+    converted to boolean it evaluates to True. All boolean values found in the kwargs
+    are considered valid.
+
+    The keys shall be provided in a list that represents a logical expression in the
+    Conjunctive Normal Form (CNF). Any logical expression can be transformed to the CNF
+    using De Morgan's rules. An expression is presented as a 2d list with conjunctions
+    (AND) at the first level and disjunctions (OR) at the second. For example the list
+    [a, [b, c], d] reads as "a AND (b OR c) AND d".
+
+    Parameters:
+    std_params:
+        Required options. This can be either a single option or a list of options
+        representing a logical expression.
+    param_kwargs:
+        A dictionary of provided values (kwargs).
+    """
+    def check_param(std_param: StdParams | list[StdParams]) -> bool:
+        if isinstance(std_param, list):
+            return any(check_param(std_param_i) for std_param_i in std_param)
+        return ((std_param.name in param_kwargs) and
+                (isinstance(param_kwargs[std_param.name], bool) or
+                 bool(param_kwargs[std_param.name])))
+
+    if isinstance(std_params, list):
+        return all(check_param(std_param) for std_param in std_params)
+    return check_param(std_params)
