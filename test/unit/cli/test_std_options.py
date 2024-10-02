@@ -1,13 +1,16 @@
 import os
 import click
 from click.testing import CliRunner
+import pytest
+
 from exasol.python_extension_common.cli.std_options import (
     ParameterFormatters,
     SECRET_DISPLAY,
     StdTags,
     StdParams,
     create_std_option,
-    select_std_options
+    select_std_options,
+    check_params
 )
 
 
@@ -120,3 +123,47 @@ def test_hidden_opt_with_envar():
         runner.invoke(cmd)
     finally:
         os.environ.pop(envar_name)
+
+
+@pytest.mark.parametrize(
+    ['std_params', 'param_kwargs', 'expected_result'],
+    [
+        (
+            [StdParams.dsn, StdParams.db_user],
+            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+            True
+        ),
+        (
+            [StdParams.dsn, StdParams.db_user],
+            {StdParams.dsn.name: 'my_dsn', StdParams.db_password.name: 'my_password'},
+            False
+        ),
+        (
+            [StdParams.dsn, StdParams.db_user],
+            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: ''},
+            False
+        ),
+        (
+            [[StdParams.dsn, StdParams.db_user], [StdParams.saas_url, StdParams.saas_account_id]],
+            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+            False,
+        ),
+        (
+            [[StdParams.dsn, StdParams.saas_url], [StdParams.db_user, StdParams.saas_account_id]],
+            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+            True,
+        ),
+        (
+            [StdParams.dsn, StdParams.use_ssl_cert_validation],
+            {StdParams.dsn.name: 'my_dsn', StdParams.use_ssl_cert_validation.name: False},
+            True
+        ),
+        (
+            StdParams.dsn,
+            {StdParams.dsn.name: 'my_dsn', StdParams.use_ssl_cert_validation.name: False},
+            True
+        )
+    ]
+)
+def test_check_params(std_params, param_kwargs, expected_result):
+    assert check_params(std_params, param_kwargs) == expected_result
