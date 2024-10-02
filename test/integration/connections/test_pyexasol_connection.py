@@ -19,7 +19,8 @@ def test_open_pyexasol_connection_onprem(use_onprem,
     kwargs = {
         StdParams.dsn.name: f'{exasol_config.host}:{exasol_config.port}',
         StdParams.db_user.name: exasol_config.username,
-        StdParams.db_password.name: exasol_config.password
+        StdParams.db_password.name: exasol_config.password,
+        StdParams.use_ssl_cert_validation.name: False
     }
     with open_pyexasol_connection(**kwargs) as conn:
         validate_connection(conn)
