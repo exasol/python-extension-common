@@ -36,12 +36,12 @@ def onprem_params(exasol_config,
         StdParams.bucket.name: 'default',
         StdParams.use_ssl_cert_validation.name: False,
         StdParams.path_in_bucket.name: 'container',
-        StdParams.language_alias: language_alias
+        StdParams.language_alias.name: language_alias
     }
 
 
 def make_args_string(**kwargs) -> str:
-    return ' '.join(f'--{k} {v}' for k, v in kwargs.items())
+    return ' '.join(f'--{k} "{v}"' for k, v in kwargs.items())
 
 
 def test_slc_deployer_cli_onprem_url(use_onprem,
@@ -65,7 +65,7 @@ def test_slc_deployer_cli_onprem_url(use_onprem,
     cli_callback = LanguageContainerDeployerCli(
         container_url_arg=CONTAINER_URL_ARG,
         container_name_arg=CONTAINER_NAME_ARG)
-    extra_params = {StdParams.version: container_version}
+    extra_params = {StdParams.version.name: container_version}
     args = make_args_string(**onprem_params, **extra_params)
 
     cmd = click.Command('deploy_slc', params=opts, callback=cli_callback)
@@ -88,7 +88,7 @@ def test_slc_deployer_cli_onprem_file(use_onprem,
     opts = select_std_options(
         [StdTags.DB | StdTags.ONPREM, StdTags.BFS | StdTags.ONPREM, StdTags.SLC])
     cli_callback = LanguageContainerDeployerCli()
-    extra_params = {StdParams.container_file: container_path}
+    extra_params = {StdParams.container_file.name: container_path}
     args = make_args_string(**onprem_params, **extra_params)
 
     cmd = click.Command('deploy_slc', params=opts, callback=cli_callback)
