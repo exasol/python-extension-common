@@ -10,14 +10,15 @@ from exasol.python_extension_common.connections.pyexasol_connection import (
     open_pyexasol_connection)
 from exasol.python_extension_common.cli.language_container_deployer_cli import (
     LanguageContainerDeployerCli)
-from test.utils.db_utils import (assert_udf_running, open_schema)
+from test.utils.db_utils import (assert_udf_running, create_schema)
 
 CONTAINER_URL_ARG = 'container_url'
 CONTAINER_NAME_ARG = 'container_name'
 
 
-@pytest.fixture
-def onprem_params(exasol_config,
+@pytest.fixture(scope='session')
+def onprem_params(backend_aware_onprem_database,
+                  exasol_config,
                   bucketfs_config,
                   language_alias) -> dict[str, Any]:
 
@@ -40,12 +41,27 @@ def onprem_params(exasol_config,
     }
 
 
+@pytest.fixture(scope='session')
+def saas_params(saas_host,
+                saas_pat,
+                saas_account_id,
+                backend_aware_saas_database_id,
+                language_alias) -> dict[str, Any]:
+    return {
+        StdParams.saas_url.name: saas_host,
+        StdParams.saas_account_id.name: saas_account_id,
+        StdParams.saas_database_id.name: backend_aware_saas_database_id,
+        StdParams.saas_token.name: saas_pat,
+        StdParams.path_in_bucket.name: 'container',
+        StdParams.language_alias.name: language_alias
+    }
+
+
 def make_args_string(**kwargs) -> str:
     return ' '.join(f'--{k} "{v}"' for k, v in kwargs.items())
 
 
 def test_slc_deployer_cli_onprem_url(use_onprem,
-                                     backend_aware_onprem_database,
                                      container_version,
                                      container_name,
                                      container_url_formatter,
@@ -73,12 +89,11 @@ def test_slc_deployer_cli_onprem_url(use_onprem,
     runner.invoke(cmd, args=args)
 
     with open_pyexasol_connection(**onprem_params) as conn:
-        open_schema(conn, db_schema)
+        create_schema(conn, db_schema)
         assert_udf_running(conn, language_alias, db_schema)
 
 
 def test_slc_deployer_cli_onprem_file(use_onprem,
-                                      backend_aware_onprem_database,
                                       container_path,
                                       language_alias,
                                       db_schema,
@@ -97,5 +112,5 @@ def test_slc_deployer_cli_onprem_file(use_onprem,
     runner.invoke(cmd, args=args)
 
     with open_pyexasol_connection(**onprem_params) as conn:
-        open_schema(conn, db_schema)
+        create_schema(conn, db_schema)
         assert_udf_running(conn, language_alias, db_schema)
