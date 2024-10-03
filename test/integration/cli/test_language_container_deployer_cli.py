@@ -1,4 +1,5 @@
 from typing import Any
+from contextlib import ExitStack
 from urllib.parse import urlparse
 import pytest
 import click
@@ -11,6 +12,7 @@ from exasol.python_extension_common.connections.pyexasol_connection import (
 from exasol.python_extension_common.cli.language_container_deployer_cli import (
     LanguageContainerDeployerCli)
 from test.utils.db_utils import (assert_udf_running, create_schema)
+from test.utils.revert_language_settings import revert_language_settings
 
 CONTAINER_URL_ARG = 'container_url'
 CONTAINER_NAME_ARG = 'container_name'
@@ -67,6 +69,10 @@ def slc_cli_args(language_alias) -> dict[str, Any]:
 @pytest.fixture
 def deploy_command(container_name,
                    container_url_formatter) -> click.Command:
+    """
+    This is a blueprint for creating an isolated click Command
+    for the language container deployment.
+    """
     ver_formatter = ParameterFormatters()
     ver_formatter.set_formatter(CONTAINER_URL_ARG, container_url_formatter)
     ver_formatter.set_formatter(CONTAINER_NAME_ARG, container_name)
@@ -96,12 +102,19 @@ def run_deploy_command(deploy_command: click.Command,
                        language_alias: str,
                        db_schema: str,
                        **db_kwargs):
-    runner = CliRunner()
-    runner.invoke(deploy_command, args=arg_string, catch_exceptions=False)
 
-    with open_pyexasol_connection(**db_kwargs) as conn:
-        create_schema(conn, db_schema)
-        assert_udf_running(conn, language_alias, db_schema)
+    with ExitStack() as stack:
+        conn_before = stack.enter_context(open_pyexasol_connection(**db_kwargs))
+        stack.enter_context(revert_language_settings(conn_before))
+
+        runner = CliRunner()
+        runner.invoke(deploy_command, args=arg_string, catch_exceptions=False)
+
+        # We have to open another connection because the language settings on
+        # the previously opened connection are unaffected by the slc deployment.
+        conn_after = stack.enter_context(open_pyexasol_connection(**db_kwargs))
+        create_schema(conn_after, db_schema)
+        assert_udf_running(conn_after, language_alias, db_schema)
 
 
 def test_slc_deployer_cli_onprem_url(use_onprem,
@@ -132,3 +145,33 @@ def test_slc_deployer_cli_onprem_file(use_onprem,
     extra_cli_args = {StdParams.container_file.name: container_path}
     arg_string = make_args_string(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
     run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **onprem_cli_args)
+
+
+def test_slc_deployer_cli_saas_url(use_saas,
+                                   container_version,
+                                   language_alias,
+                                   db_schema,
+                                   deploy_command,
+                                   saas_cli_args,
+                                   slc_cli_args):
+    if not use_saas:
+        pytest.skip("The test is not configured to run in SaaS.")
+
+    extra_cli_args = {StdParams.version.name: container_version}
+    arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **saas_cli_args)
+
+
+def test_slc_deployer_cli_saas_file(use_saas,
+                                    container_path,
+                                    language_alias,
+                                    db_schema,
+                                    deploy_command,
+                                    saas_cli_args,
+                                    slc_cli_args):
+    if not use_saas:
+        pytest.skip("The test is not configured to run in SaaS.")
+
+    extra_cli_args = {StdParams.container_file.name: container_path}
+    arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **saas_cli_args)
