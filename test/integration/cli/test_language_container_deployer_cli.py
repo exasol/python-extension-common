@@ -10,7 +10,7 @@ from exasol.python_extension_common.connections.pyexasol_connection import (
     open_pyexasol_connection)
 from exasol.python_extension_common.cli.language_container_deployer_cli import (
     LanguageContainerDeployerCli)
-from test.utils.db_utils import assert_udf_running
+from test.utils.db_utils import (assert_udf_running, open_schema)
 
 CONTAINER_URL_ARG = 'container_url'
 CONTAINER_NAME_ARG = 'container_name'
@@ -73,6 +73,7 @@ def test_slc_deployer_cli_onprem_url(use_onprem,
     runner.invoke(cmd, args=args)
 
     with open_pyexasol_connection(**onprem_params) as conn:
+        open_schema(conn, db_schema)
         assert_udf_running(conn, language_alias, db_schema)
 
 
@@ -96,4 +97,5 @@ def test_slc_deployer_cli_onprem_file(use_onprem,
     runner.invoke(cmd, args=args)
 
     with open_pyexasol_connection(**onprem_params) as conn:
+        open_schema(conn, db_schema)
         assert_udf_running(conn, language_alias, db_schema)
