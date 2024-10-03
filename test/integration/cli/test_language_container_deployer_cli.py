@@ -56,9 +56,9 @@ def saas_cli_args(saas_host,
 @pytest.fixture(scope='session')
 def slc_cli_args(language_alias) -> dict[str, Any]:
     return {
-        StdParams.alter_system: True,
-        StdParams.allow_override: True,
-        StdParams.wait_for_completion: True,
+        StdParams.alter_system.name: True,
+        StdParams.allow_override.name: True,
+        StdParams.wait_for_completion.name: True,
         StdParams.path_in_bucket.name: 'container',
         StdParams.language_alias.name: language_alias
     }
