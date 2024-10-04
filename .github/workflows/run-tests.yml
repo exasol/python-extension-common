@@ -40,4 +40,4 @@ jobs:
           SAAS_ACCOUNT_ID: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID }}
           SAAS_PAT: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_PAT }}
         run:
-          poetry run nox -s integration-tests -- -- --db-version ${{ inputs.exasol-version}} --backend onprem
+          poetry run nox -s integration-tests -- -- --db-version ${{ inputs.exasol-version}} --backend all
