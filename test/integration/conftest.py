@@ -1,11 +1,14 @@
 from __future__ import annotations
+from typing import Any
 import pytest
 import click
 import requests
+from urllib.parse import urlparse
 from contextlib import ExitStack, contextmanager
 import pyexasol
 import exasol.bucketfs as bfs
 
+from exasol.python_extension_common.cli.std_options import StdParams
 from exasol.python_extension_common.deployment.language_container_deployer import (
     LanguageContainerDeployer,
 )
@@ -95,3 +98,53 @@ def deployer_factory(
                 open_schema(pyexasol_connection, db_schema)
             yield LanguageContainerDeployer(pyexasol_connection, language_alias, bucketfs_path)
     return create_deployer
+
+
+@pytest.fixture(scope='session')
+def onprem_db_params(backend_aware_onprem_database,
+                     exasol_config) -> dict[str, Any]:
+    return {
+        StdParams.dsn.name: f'{exasol_config.host}:{exasol_config.port}',
+        StdParams.db_user.name: exasol_config.username,
+        StdParams.db_password.name: exasol_config.password,
+        StdParams.use_ssl_cert_validation.name: False
+    }
+
+
+@pytest.fixture(scope='session')
+def onprem_bfs_params(backend_aware_onprem_database,
+                      bucketfs_config) -> dict[str, Any]:
+    parsed_url = urlparse(bucketfs_config.url)
+    host, port = parsed_url.netloc.split(":")
+    return {
+        StdParams.bucketfs_host.name: host,
+        StdParams.bucketfs_port.name: port,
+        StdParams.bucketfs_use_https.name: parsed_url.scheme.lower() == 'https',
+        StdParams.bucketfs_user.name: bucketfs_config.username,
+        StdParams.bucketfs_password.name: bucketfs_config.password,
+        StdParams.bucketfs_name.name: 'bfsdefault',
+        StdParams.bucket.name: 'default',
+        StdParams.use_ssl_cert_validation.name: False
+    }
+
+
+@pytest.fixture(scope='session')
+def saas_params_id(saas_host,
+                   saas_pat,
+                   saas_account_id,
+                   backend_aware_saas_database_id) -> dict[str, Any]:
+    return {
+        StdParams.saas_url.name: saas_host,
+        StdParams.saas_account_id.name: saas_account_id,
+        StdParams.saas_database_id.name: backend_aware_saas_database_id,
+        StdParams.saas_token.name: saas_pat,
+    }
+
+
+@pytest.fixture(scope='session')
+def saas_params_name(saas_params_id,
+                     database_name) -> dict[str, Any]:
+    saas_params = dict(saas_params_id)
+    saas_params.pop(StdParams.saas_database_id.name)
+    saas_params[StdParams.saas_database_name.name] = database_name
+    return saas_params
