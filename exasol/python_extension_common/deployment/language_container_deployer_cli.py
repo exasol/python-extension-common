@@ -4,6 +4,7 @@ import re
 from enum import Enum
 from pathlib import Path
 import click
+import warnings
 from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
 
 
@@ -183,6 +184,12 @@ def language_container_deployer_main(
         wait_for_completion: bool,
         container_url: Optional[str] = None,
         container_name: Optional[str] = None):
+    warnings.warn(
+        "language_container_deployer_main() function is deprecated and will be removed "
+        "in a future version. For CLI use the LanguageContainerDeployerCli class instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
 
     deployer = LanguageContainerDeployer.create(
         bucketfs_name=bucketfs_name,
