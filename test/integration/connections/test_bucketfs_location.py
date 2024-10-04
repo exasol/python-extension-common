@@ -11,7 +11,7 @@ from exasol.python_extension_common.connections.bucketfs_location import (
     create_bucketfs_location,
     create_bucketfs_conn_object,
     create_bucketfs_location_from_conn_object,
-    ConnObjectData)
+    ConnectionInfo)
 
 TEST_FILE_CONTENT = b'A rose by any other name would smell as sweet.'
 
@@ -27,8 +27,8 @@ def rubbish_params() -> dict[str, Any]:
 
 @contextmanager
 def write_test_file(bfs_path: bfs.path.PathLike) -> None:
-    bfs_path.write(TEST_FILE_CONTENT)
     try:
+        bfs_path.write(TEST_FILE_CONTENT)
         yield
     finally:
         # We cannot reuse the same path, in subsequent tests because of the
@@ -44,7 +44,7 @@ def validate_test_file(bfs_path: bfs.path.PathLike) -> None:
 
 def validate_conn_object(pyexasol_connection: pyexasol.ExaConnection,
                          conn_name: str,
-                         conn_obj: ConnObjectData):
+                         conn_obj: ConnectionInfo):
     bfs_path = create_bucketfs_location_from_conn_object(conn_obj)
     validate_test_file(bfs_path)
 
@@ -99,8 +99,12 @@ def test_create_bucketfs_conn_object_onprem(write_conn_object_mock,
     extra_params = {StdParams.path_in_bucket.name: 'test_create_conn_object'}
     bfs_path = create_bucketfs_location(**onprem_bfs_params, **extra_params)
     with write_test_file(bfs_path):
+        # onprem_db_params and onprem_bfs_params have one item in common -
+        # use_ssl_cert_validation, so we need to take a union before using them as kwargs.
+        onprem_params = dict(onprem_db_params)
+        onprem_params.update(onprem_bfs_params)
         create_bucketfs_conn_object(conn_name='ONPREM_TEST_BFS',
-                                    **onprem_db_params, **onprem_bfs_params, **extra_params)
+                                    **onprem_params, **extra_params)
 
 
 @patch('exasol.python_extension_common.connections.bucketfs_location.write_bucketfs_conn_object')

@@ -109,7 +109,7 @@ def create_bucketfs_location(**kwargs) -> bfs.path.PathLike:
 
 
 @dataclass
-class ConnObjectData:
+class ConnectionInfo:
     """
     This is not a connection object. It's just a structure to keep together the data
     required for creating a BucketFs connection object. Useful for testing.
@@ -127,7 +127,7 @@ def _to_json_str(bucketfs_params: dict[str, Any], selected: list[str]) -> str:
 
 def write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
                                conn_name: str,
-                               conn_obj: ConnObjectData) -> None:
+                               conn_obj: ConnectionInfo) -> None:
 
     query = (f"CREATE OR REPLACE  CONNECTION {conn_name} "
              f"TO '{conn_obj.to}' "
@@ -157,7 +157,7 @@ def create_bucketfs_conn_object_onprem(pyexasol_connection: pyexasol.ExaConnecti
     conn_password = _to_json_str(bucketfs_params, ['password'])
 
     write_bucketfs_conn_object(pyexasol_connection, conn_name,
-                               ConnObjectData(conn_to, conn_user, conn_password))
+                               ConnectionInfo(conn_to, conn_user, conn_password))
 
 
 def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection,
@@ -180,7 +180,7 @@ def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection
     conn_password = _to_json_str(bucketfs_params, ['pat'])
 
     write_bucketfs_conn_object(pyexasol_connection, conn_name,
-                               ConnObjectData(conn_to, conn_user, conn_password))
+                               ConnectionInfo(conn_to, conn_user, conn_password))
 
 
 def create_bucketfs_conn_object(conn_name: str, **kwargs) -> None:
