@@ -30,8 +30,7 @@ def onprem_params(backend_aware_onprem_database,
         StdParams.bucketfs_password.name: bucketfs_config.password,
         StdParams.bucketfs_name.name: 'bfsdefault',
         StdParams.bucket.name: 'default',
-        StdParams.use_ssl_cert_validation.name: False,
-        StdParams.path_in_bucket.name: 'test_path'
+        StdParams.use_ssl_cert_validation.name: False
     }
 
 
@@ -45,7 +44,6 @@ def saas_params_with_id(saas_host,
         StdParams.saas_account_id.name: saas_account_id,
         StdParams.saas_database_id.name: backend_aware_saas_database_id,
         StdParams.saas_token.name: saas_pat,
-        StdParams.path_in_bucket.name: 'test_path'
     }
 
 
@@ -73,6 +71,9 @@ def write_test_file(bfs_path: bfs.path.PathLike) -> None:
     try:
         yield
     finally:
+        # We cannot reuse the same path, in subsequent tests because of the
+        # temporary lock bucket-fs places on deleted files, but it's useful
+        # to delete the file anyway to avoid potential false-positives.
         bfs_path.rm()
 
 
@@ -93,7 +94,8 @@ def test_create_bucketfs_location_onprem(use_onprem,
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
-    bfs_path = create_bucketfs_location(**onprem_params)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_location'}
+    bfs_path = create_bucketfs_location(**onprem_params, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
 
@@ -103,7 +105,8 @@ def test_create_bucketfs_location_saas_db_id(use_saas,
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    bfs_path = create_bucketfs_location(**saas_params_with_id)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_location_with_id'}
+    bfs_path = create_bucketfs_location(**saas_params_with_id, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
 
@@ -113,7 +116,8 @@ def test_create_bucketfs_location_saas_db_name(use_saas,
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    bfs_path = create_bucketfs_location(**saas_params_with_name)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_location_with_name'}
+    bfs_path = create_bucketfs_location(**saas_params_with_name, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
 
@@ -131,9 +135,11 @@ def test_create_bucketfs_conn_object_onprem(write_conn_object_mock,
         pytest.skip("The test is not configured to use ITDE.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    bfs_path = create_bucketfs_location(**onprem_params)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_conn_object'}
+    bfs_path = create_bucketfs_location(**onprem_params, **extra_params)
     with write_test_file(bfs_path):
-        create_bucketfs_conn_object(conn_name='ONPREM_TEST_BFS', **onprem_params)
+        create_bucketfs_conn_object(conn_name='ONPREM_TEST_BFS',
+                                    **onprem_params, **extra_params)
 
 
 @patch('exasol.python_extension_common.connections.bucketfs_location.write_bucketfs_conn_object')
@@ -144,9 +150,11 @@ def test_create_bucketfs_conn_object_saas_db_id(write_conn_object_mock,
         pytest.skip("The test is not configured to use SaaS.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    bfs_path = create_bucketfs_location(**saas_params_with_id)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_conn_object_with_id'}
+    bfs_path = create_bucketfs_location(**saas_params_with_id, **extra_params)
     with write_test_file(bfs_path):
-        create_bucketfs_conn_object(conn_name='SAAS_TEST_BFS_WITH_ID', **saas_params_with_id)
+        create_bucketfs_conn_object(conn_name='SAAS_TEST_BFS_WITH_ID',
+                                    **saas_params_with_id, **extra_params)
 
 
 @patch('exasol.python_extension_common.connections.bucketfs_location.write_bucketfs_conn_object')
@@ -157,9 +165,11 @@ def test_create_bucketfs_conn_object_saas_db_name(write_conn_object_mock,
         pytest.skip("The test is not configured to use SaaS.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    bfs_path = create_bucketfs_location(**saas_params_with_name)
+    extra_params = {StdParams.path_in_bucket.name: 'test_create_conn_object_with_name'}
+    bfs_path = create_bucketfs_location(**saas_params_with_name, **extra_params)
     with write_test_file(bfs_path):
-        create_bucketfs_conn_object(conn_name='SAAS_TEST_BFS_WITH_NAME', **saas_params_with_name)
+        create_bucketfs_conn_object(conn_name='SAAS_TEST_BFS_WITH_NAME',
+                                    **saas_params_with_name, **extra_params)
 
 
 def test_create_bucketfs_conn_object_error(rubbish_params):
