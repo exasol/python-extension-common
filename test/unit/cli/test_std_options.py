@@ -102,6 +102,29 @@ def test_select_std_options_with_override():
     assert not opts[StdParams.alter_system.name].default
 
 
+def test_select_std_options_with_formatter():
+    container_url_arg = 'container_url'
+    container_name_arg = 'container_name'
+    url_format = "https://my_service_url/{version}/page"
+    name_format = "my_service_name"
+    version = '4.5.6'
+    expected_url = url_format.format(version=version)
+    expected_name = name_format
+
+    def func(**kwargs):
+        assert kwargs[container_name_arg] == expected_name
+        assert kwargs[container_url_arg] == expected_url
+
+    ver_formatter = ParameterFormatters()
+    ver_formatter.set_formatter(container_url_arg, url_format)
+    ver_formatter.set_formatter(container_name_arg, name_format)
+
+    opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatter})
+    cmd = click.Command('do_something', params=opts, callback=func)
+    runner = CliRunner()
+    runner.invoke(cmd, args=f'--version {version}', catch_exceptions=False, standalone_mode=False)
+
+
 def test_hidden_opt_with_envar():
     """
     This test checks the mechanism of providing a value of a confidential parameter

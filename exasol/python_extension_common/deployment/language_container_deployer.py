@@ -7,6 +7,7 @@ import logging
 import tempfile
 import ssl
 import requests     # type: ignore
+import warnings
 import pyexasol     # type: ignore
 import exasol.bucketfs as bfs   # type: ignore
 from exasol.saas.client.api_access import (get_connection_params, get_database_id)      # type: ignore
@@ -330,7 +331,12 @@ class LanguageContainerDeployer:
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
                ssl_private_key: Optional[str] = None) -> "LanguageContainerDeployer":
-
+        warnings.warn(
+            "create() function is deprecated and will be removed in a future version. "
+            "For CLI use the LanguageContainerDeployerCli class instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         # Infer where the database is - on-prem or SaaS.
         if all((dsn, db_user, db_password, bucketfs_host, bucketfs_port,
                 bucketfs_name, bucket, bucketfs_user, bucketfs_password)):
