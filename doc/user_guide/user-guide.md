@@ -15,10 +15,10 @@ similar to the one below.
   python -m <exasol_extension>.deploy language-container <options>
   ```
 
-The name of the script (```<exasol_extension>.deploy``` in the above command) can vary from one extension to another.
-Please check the user guide of a particular extension. The rest of the command line will have a common format. It
-will include the command - ```language-container``` - and selected options. The choice of options is primarily
-determined by the storage backend being used - On-Prem or SaaS.
+The name of the script (```<exasol_extension>.deploy``` in the above command) and the command name
+(e.g. ```language-container```) can vary from one extension to another. Please check the user guide of a particular
+extension. The rest of the command line will have a common format. It will include some of the options defined below.
+The choice of options is primarily determined by the storage backend being used - On-Prem or SaaS.
 
 ### List of options
 
@@ -55,13 +55,13 @@ another source.
 | version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub       |
 | container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file                |
 | ssl-cert-path                |   [x]   | [x]  | Optional                                                |
-| [no_]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                      |
 | ssl-client-cert-path         |   [x]   |      | Optional                                                |
 | ssl-client-private-key       |   [x]   |      | Optional                                                |
-| [no_]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                      |
-| [no_]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                      |
-| [dis]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False                     |
-| [no_]wait_for_completion     |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False                     |
+| [no-]wait_for_completion     |   [x]   | [x]  | Optional boolean, defaults to True                      |
 
 ### Container selection
 

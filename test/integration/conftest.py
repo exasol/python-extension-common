@@ -14,27 +14,32 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
 from test.utils.revert_language_settings import revert_language_settings
 from test.utils.db_utils import create_schema, open_schema
 
-
-SLC_NAME = "template-Exasol-all-python-3.10_release.tar.gz"
-
-SLC_URL_FORMATTER = ("https://github.com/exasol/script-languages-release/releases/"
-                     "download/{version}/") + SLC_NAME
-
 VERSION = "8.0.0"
 
 TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
 
 
+@pytest.fixture(scope='session')
+def container_name() -> str:
+    return "template-Exasol-all-python-3.10_release.tar.gz"
+
+
+@pytest.fixture(scope='session')
+def container_url_formatter(container_name) -> str:
+    return ("https://github.com/exasol/script-languages-release/releases/"
+            "download/{version}/") + container_name
+
+
 @pytest.fixture
-def main_func():
+def main_func(slc_name, slc_url_formatter):
 
     @click.group()
     def fake_main():
         pass
 
-    slc_parameter_formatters.set_formatter(CustomizableParameters.container_url, SLC_URL_FORMATTER)
-    slc_parameter_formatters.set_formatter(CustomizableParameters.container_name, SLC_NAME)
+    slc_parameter_formatters.set_formatter(CustomizableParameters.container_url, container_url_formatter)
+    slc_parameter_formatters.set_formatter(CustomizableParameters.container_name, container_name)
 
     fake_main.add_command(language_container_deployer_main)
     return fake_main
@@ -46,13 +51,8 @@ def container_version() -> str:
 
 
 @pytest.fixture(scope='session')
-def container_name() -> str:
-    return SLC_NAME
-
-
-@pytest.fixture(scope='session')
-def container_url(container_version) -> str:
-    return SLC_URL_FORMATTER.format(version=VERSION)
+def container_url(container_url_formatter, container_version) -> str:
+    return container_url_formatter.format(version=container_version)
 
 
 @pytest.fixture(scope='session')
