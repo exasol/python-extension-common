@@ -54,7 +54,7 @@ def _convert_onprem_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
            f"{bfs_params[StdParams.bucketfs_host.name]}:"
            f"{bfs_params[StdParams.bucketfs_port.name]}")
     return {
-        'backend': bfs.path.StorageBackend.onprem,
+        'backend': bfs.path.StorageBackend.onprem.name,
         'url': url,
         'username': bfs_params[StdParams.bucketfs_user.name],
         'password': bfs_params[StdParams.bucketfs_password.name],
@@ -82,7 +82,7 @@ def _convert_saas_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
                             database_name=bfs_params[StdParams.saas_database_name.name]
                         ))
     return {
-        'backend': bfs.path.StorageBackend.saas,
+        'backend': bfs.path.StorageBackend.saas.name,
         'url': saas_url,
         'account_id': saas_account_id,
         'database_id': saas_database_id,
@@ -198,8 +198,8 @@ def create_bucketfs_conn_object(conn_name: str, **kwargs) -> None:
             create_bucketfs_conn_object_onprem(pyexasol_connection, conn_name,
                                                _convert_onprem_bfs_params(kwargs))
         else:
-            create_bucketfs_conn_object_onprem(pyexasol_connection, conn_name,
-                                               _convert_saas_bfs_params(kwargs))
+            create_bucketfs_conn_object_saas(pyexasol_connection, conn_name,
+                                             _convert_saas_bfs_params(kwargs))
 
 
 def create_bucketfs_location_from_conn_object(conn_obj) -> bfs.path.PathLike:
