@@ -122,7 +122,7 @@ def test_select_std_options_with_formatter():
     opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatter})
     cmd = click.Command('do_something', params=opts, callback=func)
     runner = CliRunner()
-    runner.invoke(cmd, args=f'--version {version}')
+    runner.invoke(cmd, args=f'--version {version}', catch_exceptions=False, standalone_mode=False)
 
 
 def test_hidden_opt_with_envar():

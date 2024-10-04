@@ -51,7 +51,7 @@ def saas_cli_args(saas_host,
         StdParams.saas_url.name: saas_host,
         StdParams.saas_account_id.name: saas_account_id,
         StdParams.saas_database_id.name: backend_aware_saas_database_id,
-        StdParams.saas_token.name: saas_pat,
+        StdParams.saas_token.name: saas_pat
     }
 
 
@@ -66,20 +66,26 @@ def slc_cli_args(language_alias) -> dict[str, Any]:
     }
 
 
-@pytest.fixture
-def deploy_command(container_name,
-                   container_url_formatter) -> click.Command:
+def create_deploy_command(backend_tag: StdTags,
+                          container_name: str | None = None,
+                          container_url_formatter: str | None = None) -> click.Command:
     """
     This is a blueprint for creating an isolated click Command
     for the language container deployment.
+
+    backend_tag should be either StdTags.ONPREM or StdTags.SAAS.
     """
-    ver_formatter = ParameterFormatters()
-    ver_formatter.set_formatter(CONTAINER_URL_ARG, container_url_formatter)
-    ver_formatter.set_formatter(CONTAINER_NAME_ARG, container_name)
+    if container_name and container_url_formatter:
+        ver_formatter = ParameterFormatters()
+        ver_formatter.set_formatter(CONTAINER_URL_ARG, container_url_formatter)
+        ver_formatter.set_formatter(CONTAINER_NAME_ARG, container_name)
+        formatters = {StdParams.version: ver_formatter}
+    else:
+        formatters = None
 
     opts = select_std_options(
-        [StdTags.DB | StdTags.ONPREM, StdTags.BFS | StdTags.ONPREM, StdTags.SLC],
-        formatters={StdParams.version: ver_formatter})
+        [StdTags.DB | backend_tag, StdTags.BFS | backend_tag, StdTags.SLC],
+        formatters=formatters)
     cli_callback = LanguageContainerDeployerCli(
         container_url_arg=CONTAINER_URL_ARG,
         container_name_arg=CONTAINER_NAME_ARG)
@@ -101,77 +107,86 @@ def run_deploy_command(deploy_command: click.Command,
                        arg_string: str,
                        language_alias: str,
                        db_schema: str,
-                       **db_kwargs):
+                       db_params: dict[str, Any]):
 
     with ExitStack() as stack:
-        conn_before = stack.enter_context(open_pyexasol_connection(**db_kwargs))
+        conn_before = stack.enter_context(open_pyexasol_connection(**db_params))
         stack.enter_context(revert_language_settings(conn_before))
 
         runner = CliRunner()
-        runner.invoke(deploy_command, args=arg_string, catch_exceptions=False)
+        runner.invoke(deploy_command, args=arg_string,
+                      catch_exceptions=False, standalone_mode=False)
 
         # We have to open another connection because the language settings on
         # the previously opened connection are unaffected by the slc deployment.
-        conn_after = stack.enter_context(open_pyexasol_connection(**db_kwargs))
+        conn_after = stack.enter_context(open_pyexasol_connection(**db_params))
         create_schema(conn_after, db_schema)
         assert_udf_running(conn_after, language_alias, db_schema)
 
 
 def test_slc_deployer_cli_onprem_url(use_onprem,
                                      container_version,
+                                     container_name,
+                                     container_url_formatter,
                                      language_alias,
                                      db_schema,
-                                     deploy_command,
                                      onprem_cli_args,
                                      slc_cli_args):
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
+    deploy_command = create_deploy_command(StdTags.ONPREM,
+                                           container_name=container_name,
+                                           container_url_formatter=container_url_formatter)
     extra_cli_args = {StdParams.version.name: container_version}
     arg_string = make_args_string(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
-    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **onprem_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, onprem_cli_args)
 
 
 def test_slc_deployer_cli_onprem_file(use_onprem,
                                       container_path,
                                       language_alias,
                                       db_schema,
-                                      deploy_command,
                                       onprem_cli_args,
                                       slc_cli_args):
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
+    deploy_command = create_deploy_command(StdTags.ONPREM)
     extra_cli_args = {StdParams.container_file.name: container_path}
     arg_string = make_args_string(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
-    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **onprem_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, onprem_cli_args)
 
 
 def test_slc_deployer_cli_saas_url(use_saas,
                                    container_version,
+                                   container_name,
+                                   container_url_formatter,
                                    language_alias,
                                    db_schema,
-                                   deploy_command,
                                    saas_cli_args,
                                    slc_cli_args):
     if not use_saas:
         pytest.skip("The test is not configured to run in SaaS.")
 
+    deploy_command = create_deploy_command(StdTags.SAAS,
+                                           container_name=container_name,
+                                           container_url_formatter=container_url_formatter)
     extra_cli_args = {StdParams.version.name: container_version}
     arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
-    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **saas_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, saas_cli_args)
 
 
 def test_slc_deployer_cli_saas_file(use_saas,
                                     container_path,
                                     language_alias,
                                     db_schema,
-                                    deploy_command,
                                     saas_cli_args,
                                     slc_cli_args):
     if not use_saas:
         pytest.skip("The test is not configured to run in SaaS.")
 
+    deploy_command = create_deploy_command(StdTags.SAAS)
     extra_cli_args = {StdParams.container_file.name: container_path}
     arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
-    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, **saas_cli_args)
+    run_deploy_command(deploy_command, arg_string, language_alias, db_schema, saas_cli_args)
