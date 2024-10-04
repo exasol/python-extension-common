@@ -114,7 +114,7 @@ class ConnectionInfo:
     This is not a connection object. It's just a structure to keep together the data
     required for creating a BucketFs connection object. Useful for testing.
     """
-    to: str
+    address: str
     user: str
     password: str
 
@@ -130,7 +130,7 @@ def write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
                                conn_obj: ConnectionInfo) -> None:
 
     query = (f"CREATE OR REPLACE  CONNECTION {conn_name} "
-             f"TO '{conn_obj.to}' "
+             f"TO '{conn_obj.address}' "
              f"USER '{conn_obj.user}' "
              f"IDENTIFIED BY '{conn_obj.password}'")
     pyexasol_connection.execute(query)
