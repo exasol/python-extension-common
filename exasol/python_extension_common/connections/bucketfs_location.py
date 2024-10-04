@@ -1,5 +1,6 @@
 from typing import Any
 from enum import Enum, auto
+from dataclasses import dataclass
 import json
 import pyexasol     # type: ignore
 import exasol.bucketfs as bfs   # type: ignore
@@ -107,22 +108,31 @@ def create_bucketfs_location(**kwargs) -> bfs.path.PathLike:
         return bfs.path.build_path(**_convert_saas_bfs_params(kwargs))
 
 
+@dataclass
+class ConnObjectData:
+    """
+    This is not a connection object. It's just a structure to keep together the data
+    required for creating a BucketFs connection object. Useful for testing.
+    """
+    to: str
+    user: str
+    password: str
+
+
 def _to_json_str(bucketfs_params: dict[str, Any], selected: list[str]) -> str:
     filtered_kwargs = {k: v for k, v in bucketfs_params.items()
                        if (k in selected) and (v is not None)}
     return json.dumps(filtered_kwargs)
 
 
-def _write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
-                                conn_name: str,
-                                conn_to: str,
-                                conn_user: str,
-                                conn_password: str) -> None:
+def write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
+                               conn_name: str,
+                               conn_obj: ConnObjectData) -> None:
 
     query = (f"CREATE OR REPLACE  CONNECTION {conn_name} "
-             f"TO '{conn_to}' "
-             f"USER '{conn_user}' "
-             f"IDENTIFIED BY '{conn_password}'")
+             f"TO '{conn_obj.to}' "
+             f"USER '{conn_obj.user}' "
+             f"IDENTIFIED BY '{conn_obj.password}'")
     pyexasol_connection.execute(query)
 
 
@@ -146,8 +156,8 @@ def create_bucketfs_conn_object_onprem(pyexasol_connection: pyexasol.ExaConnecti
     conn_user = _to_json_str(bucketfs_params, ['username'])
     conn_password = _to_json_str(bucketfs_params, ['password'])
 
-    _write_bucketfs_conn_object(pyexasol_connection, conn_name,
-                                conn_to, conn_user, conn_password)
+    write_bucketfs_conn_object(pyexasol_connection, conn_name,
+                               ConnObjectData(conn_to, conn_user, conn_password))
 
 
 def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection,
@@ -169,8 +179,8 @@ def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection
     conn_user = _to_json_str(bucketfs_params, ['account_id', 'database_id'])
     conn_password = _to_json_str(bucketfs_params, ['pat'])
 
-    _write_bucketfs_conn_object(pyexasol_connection, conn_name,
-                                conn_to, conn_user, conn_password)
+    write_bucketfs_conn_object(pyexasol_connection, conn_name,
+                               ConnObjectData(conn_to, conn_user, conn_password))
 
 
 def create_bucketfs_conn_object(conn_name: str, **kwargs) -> None:
