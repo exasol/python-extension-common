@@ -48,8 +48,7 @@ class LanguageContainerDeployerCli:
                          alter_system=alter_system,
                          allow_override=allow_override,
                          wait_for_completion=wait_for_completion)
-        elif (self._container_url_arg and self._container_name_arg and
-              kwargs[self._container_url_arg] and kwargs[self._container_name_arg]):
+        elif kwargs.get(self._container_url_arg) and kwargs.get(self._container_name_arg):
             deployer.download_and_run(kwargs[self._container_url_arg],
                                       kwargs[self._container_name_arg],
                                       alter_system=alter_system,
