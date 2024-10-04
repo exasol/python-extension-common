@@ -9,20 +9,25 @@ from exasol.python_extension_common.cli.std_options import StdParams, check_para
 from exasol.python_extension_common.connections.pyexasol_connection import open_pyexasol_connection
 
 
-class DBType(Enum):
+class _Backend(Enum):
     onprem = auto()
     saas = auto()
 
 
-def _infer_db_type(bfs_params: dict[str, Any]) -> DBType:
+def _infer_backend(bfs_params: dict[str, Any]) -> _Backend:
+    """
+    Infers the backend from the provided dictionary of CLI parameters.
+    Raises a ValueError if the collection of CLI parameters is insufficient to access
+    the BucketFS on either of the backends.
+    """
 
     if check_params([StdParams.bucketfs_host, StdParams.bucketfs_port,
                      StdParams.bucket, StdParams.bucketfs_user, StdParams.bucketfs_password],
                     bfs_params):
-        return DBType.onprem
+        return _Backend.onprem
     elif check_params([StdParams.saas_url, StdParams.saas_account_id, StdParams.saas_token,
                        [StdParams.saas_database_id, StdParams.saas_database_name]], bfs_params):
-        return DBType.saas
+        return _Backend.saas
 
     raise ValueError(
         'Incomplete parameter list. Please either provide the parameters ['
@@ -37,6 +42,10 @@ def _infer_db_type(bfs_params: dict[str, Any]) -> DBType:
 
 
 def _convert_onprem_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
+    """
+    Converts OnPrem BucketFS parameters from the CLI format to the format expected
+    by the exasol.bucketfs.path.build_path.
+    """
 
     net_service = ('https' if bfs_params.get(StdParams.bucketfs_use_https.name, True)
                    else 'http')
@@ -56,6 +65,10 @@ def _convert_onprem_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
 
 
 def _convert_saas_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
+    """
+    Converts SaaS BucketFS parameters from the CLI format to the format expected
+    by the exasol.bucketfs.path.build_path.
+    """
 
     saas_url = bfs_params[StdParams.saas_url.name]
     saas_account_id = bfs_params[StdParams.saas_account_id.name]
@@ -77,27 +90,27 @@ def _convert_saas_bfs_params(bfs_params: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _to_json_str(bucketfs_params: dict[str, Any], selected: list[str]) -> str:
-    filtered_kwargs = {k: v for k, v in bucketfs_params.items()
-                       if (k in selected) and (v is not None)}
-    return json.dumps(filtered_kwargs)
-
-
 def create_bucketfs_location(**kwargs) -> bfs.path.PathLike:
     """
     Creates a BucketFS PathLike object using the data provided in the kwargs. These
-    can be parameters for the BucketFS either On-Prem or SaaS database. The parameters
-    should correspond to the CLI options defined in the cli/std_options.py.
+    can be parameters for the BucketFS at either On-Prem or SaaS database. The input
+    parameters should correspond to the CLI options defined in the cli/std_options.py.
 
     Raises a ValueError if the provided parameters are insufficient for either
     On-Prem or SaaS cases.
     """
 
-    db_type = _infer_db_type(kwargs)
-    if db_type == DBType.onprem:
+    db_type = _infer_backend(kwargs)
+    if db_type == _Backend.onprem:
         return bfs.path.build_path(**_convert_onprem_bfs_params(kwargs))
     else:
         return bfs.path.build_path(**_convert_saas_bfs_params(kwargs))
+
+
+def _to_json_str(bucketfs_params: dict[str, Any], selected: list[str]) -> str:
+    filtered_kwargs = {k: v for k, v in bucketfs_params.items()
+                       if (k in selected) and (v is not None)}
+    return json.dumps(filtered_kwargs)
 
 
 def _write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
@@ -116,6 +129,18 @@ def _write_bucketfs_conn_object(pyexasol_connection: pyexasol.ExaConnection,
 def create_bucketfs_conn_object_onprem(pyexasol_connection: pyexasol.ExaConnection,
                                        conn_name: str,
                                        bucketfs_params: dict[str, Any]) -> None:
+    """
+    Creates in the database a connection object encapsulating the BucketFS parameters
+    for an OnPrem backend.
+
+    Parameters:
+    pyexasol_connection:
+        DB connection.
+    conn_name:
+        Name for the connection object.
+    bucketfs_params:
+        OnPrem BucketFS parameters in the format of the exasol.bucketfs.path.build_path.
+    """
     conn_to = _to_json_str(bucketfs_params, [
         'backend', 'url', 'service_name', 'bucket_name', 'path', 'verify'])
     conn_user = _to_json_str(bucketfs_params, ['username'])
@@ -128,6 +153,18 @@ def create_bucketfs_conn_object_onprem(pyexasol_connection: pyexasol.ExaConnecti
 def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection,
                                      conn_name: str,
                                      bucketfs_params: dict[str, Any]) -> None:
+    """
+    Creates in the database a connection object encapsulating the BucketFS parameters
+    for a SaaS backend.
+
+    Parameters:
+    pyexasol_connection:
+        DB connection.
+    conn_name:
+        Name for the connection object.
+    bucketfs_params:
+        SaaS BucketFS parameters in the format of the exasol.bucketfs.path.build_path.
+    """
     conn_to = _to_json_str(bucketfs_params, ['backend', 'url', 'path'])
     conn_user = _to_json_str(bucketfs_params, ['account_id', 'database_id'])
     conn_password = _to_json_str(bucketfs_params, ['pat'])
@@ -138,10 +175,16 @@ def create_bucketfs_conn_object_saas(pyexasol_connection: pyexasol.ExaConnection
 
 def create_bucketfs_conn_object(conn_name: str, **kwargs) -> None:
     """
+    Creates in the database a connection object encapsulating the provided BucketFS
+    parameters. These can be parameters for either On-Prem or SaaS database. They
+    should correspond to the CLI options defined in the cli/std_options.py.
+
+    Raises a ValueError if the provided parameters are insufficient for either
+    On-Prem or SaaS cases.
     """
     with open_pyexasol_connection(**kwargs) as pyexasol_connection:
-        db_type = _infer_db_type(kwargs)
-        if db_type == DBType.onprem:
+        db_type = _infer_backend(kwargs)
+        if db_type == _Backend.onprem:
             create_bucketfs_conn_object_onprem(pyexasol_connection, conn_name,
                                                _convert_onprem_bfs_params(kwargs))
         else:
@@ -151,7 +194,8 @@ def create_bucketfs_conn_object(conn_name: str, **kwargs) -> None:
 
 def create_bucketfs_location_from_conn_object(conn_obj) -> bfs.path.PathLike:
     """
-    Create BucketFS PathLike object using data contained in the provided connection object.
+    Creates a BucketFS PathLike object using data contained in the provided connection
+    object.
     """
 
     bfs_params = json.loads(conn_obj.address)
