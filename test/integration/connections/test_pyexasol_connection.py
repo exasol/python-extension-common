@@ -11,55 +11,29 @@ def validate_connection(conn: pyexasol.ExaConnection) -> None:
 
 
 def test_open_pyexasol_connection_onprem(use_onprem,
-                                         backend_aware_onprem_database,
-                                         exasol_config):
+                                         onprem_db_params):
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
-    kwargs = {
-        StdParams.dsn.name: f'{exasol_config.host}:{exasol_config.port}',
-        StdParams.db_user.name: exasol_config.username,
-        StdParams.db_password.name: exasol_config.password,
-        StdParams.use_ssl_cert_validation.name: False
-    }
-    with open_pyexasol_connection(**kwargs) as conn:
+    with open_pyexasol_connection(**onprem_db_params) as conn:
         validate_connection(conn)
 
 
 def test_open_pyexasol_connection_saas_db_id(use_saas,
-                                             saas_host,
-                                             saas_pat,
-                                             saas_account_id,
-                                             backend_aware_saas_database_id):
+                                             saas_params_id):
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    kwargs = {
-        StdParams.saas_url.name: saas_host,
-        StdParams.saas_account_id.name: saas_account_id,
-        StdParams.saas_database_id.name: backend_aware_saas_database_id,
-        StdParams.saas_token.name: saas_pat
-    }
-    with open_pyexasol_connection(**kwargs) as conn:
+    with open_pyexasol_connection(**saas_params_id) as conn:
         validate_connection(conn)
 
 
 def test_open_pyexasol_connection_saas_db_name(use_saas,
-                                               saas_host,
-                                               saas_pat,
-                                               saas_account_id,
-                                               backend_aware_saas_database_id,
-                                               database_name):
+                                               saas_params_name):
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    kwargs = {
-        StdParams.saas_url.name: saas_host,
-        StdParams.saas_account_id.name: saas_account_id,
-        StdParams.saas_database_name.name: database_name,
-        StdParams.saas_token.name: saas_pat
-    }
-    with open_pyexasol_connection(**kwargs) as conn:
+    with open_pyexasol_connection(**saas_params_name) as conn:
         validate_connection(conn)
 
 
