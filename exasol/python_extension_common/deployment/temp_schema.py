@@ -22,18 +22,18 @@ def _create_random_schema(conn: pyexasol.ExaConnection, schema_name_length: int)
     return schema
 
 
-def _get_schema(conn: pyexasol.ExaConnection) -> str | None:
+def get_schema(conn: pyexasol.ExaConnection) -> str | None:
     return conn.execute(f"SELECT CURRENT_SCHEMA;").fetchval()
 
 
-def _set_schema(conn: pyexasol.ExaConnection, schema: str | None):
+def set_schema(conn: pyexasol.ExaConnection, schema: str | None):
     if schema:
         conn.execute(f'OPEN SCHEMA "{schema}";')
     else:
         conn.execute("CLOSE SCHEMA;")
 
 
-def _delete_schema(conn: pyexasol.ExaConnection, schema: str) -> None:
+def delete_schema(conn: pyexasol.ExaConnection, schema: str) -> None:
     sql = f'DROP SCHEMA IF EXISTS "{schema}" CASCADE;'
     conn.execute(query=sql)
 
@@ -50,11 +50,11 @@ def temp_schema(conn: pyexasol.ExaConnection,
     conn                - pyexasol connection.
     schema_name_length  - Number of characters in the temporary schema name.
     """
-    current_schema = _get_schema(conn)
+    current_schema = get_schema(conn)
     schema = ''
     try:
         schema = _create_random_schema(conn, schema_name_length)
         yield schema
     finally:
-        _delete_schema(conn, schema)
-        _set_schema(conn, current_schema)
+        delete_schema(conn, schema)
+        set_schema(conn, current_schema)

@@ -9,6 +9,7 @@ from exasol.python_extension_common.deployment.language_container_deployer impor
     LanguageContainerDeployer,
     LanguageActivationLevel,
 )
+from exasol.python_extension_common.deployment.temp_schema import get_schema
 from test.utils.db_utils import assert_udf_running
 
 
@@ -19,8 +20,24 @@ def test_container_file(deployer_factory,
     """
     Tests the deployment of a container in one call, including the activation at the System level.
     """
-    with deployer_factory(create_test_schema=True) as deployer:
+    with deployer_factory(create_test_schema=True, open_test_schema=False) as deployer:
         deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
+        # Make sure the deployer's connection doesn't have an open schema.
+        assert not get_schema(deployer.pyexasol_connection)
+        assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
+
+
+def test_container_file_no_temp_schema(deployer_factory,
+                                       db_schema,
+                                       language_alias,
+                                       container_path):
+    """
+    Tests the deployment of a container without creating a temporary schema for the upload completion test.
+    """
+    with deployer_factory(create_test_schema=True, open_test_schema=True) as deployer:
+        deployer.run(container_file=Path(container_path), alter_system=True, allow_override=True)
+        # Make sure the deployer's connection has an open schema.
+        assert get_schema(deployer.pyexasol_connection)
         assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
 
 

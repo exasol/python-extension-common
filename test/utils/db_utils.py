@@ -3,9 +3,15 @@ import textwrap
 from pyexasol import ExaConnection
 
 
-def create_schema(pyexasol_connection: ExaConnection, schema: str):
-    pyexasol_connection.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
-    pyexasol_connection.execute(f"CREATE SCHEMA IF NOT EXISTS {schema};")
+def create_schema(pyexasol_connection: ExaConnection, schema: str, open_test_schema: bool = True):
+    pyexasol_connection.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE;')
+    pyexasol_connection.execute(f'CREATE SCHEMA "{schema}";')
+    if not open_test_schema:
+        pyexasol_connection.execute("CLOSE SCHEMA;")
+
+
+def open_schema(pyexasol_connection: ExaConnection, schema: str):
+    pyexasol_connection.execute(f'OPEN SCHEMA "{schema}";')
 
 
 def assert_udf_running(pyexasol_connection: ExaConnection, language_alias: str, schema: str):

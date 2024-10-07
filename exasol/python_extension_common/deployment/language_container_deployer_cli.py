@@ -4,6 +4,7 @@ import re
 from enum import Enum
 from pathlib import Path
 import click
+import warnings
 from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
 from datetime import timedelta
 
@@ -145,6 +146,7 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
               prompt='DB password', prompt_required=False,
               hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
 @click.option('--language-alias', type=str, default="PYTHON3_EXT")
+@click.option('--schema', type=str, default="")
 @click.option('--ssl-cert-path', type=str, default="")
 @click.option('--ssl-client-cert-path', type=str, default="")
 @click.option('--ssl-client-private-key', type=str, default="")
@@ -175,6 +177,7 @@ def language_container_deployer_main(
         db_user: str,
         db_pass: str,
         language_alias: str,
+        schema: str,
         ssl_cert_path: str,
         ssl_client_cert_path: str,
         ssl_client_private_key: str,
@@ -187,6 +190,12 @@ def language_container_deployer_main(
         display_progress: bool,
         container_url: Optional[str] = None,
         container_name: Optional[str] = None):
+    warnings.warn(
+        "language_container_deployer_main() function is deprecated and will be removed "
+        "in a future version. For CLI use the LanguageContainerDeployerCli class instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
 
     deployer = LanguageContainerDeployer.create(
         bucketfs_name=bucketfs_name,
@@ -206,6 +215,7 @@ def language_container_deployer_main(
         db_user=db_user,
         db_password=db_pass,
         language_alias=language_alias,
+        schema=schema,
         ssl_trusted_ca=ssl_cert_path,
         ssl_client_certificate=ssl_client_cert_path,
         ssl_private_key=ssl_client_private_key,

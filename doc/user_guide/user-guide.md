@@ -15,10 +15,10 @@ similar to the one below.
   python -m <exasol_extension>.deploy language-container <options>
   ```
 
-The name of the script (```<exasol_extension>.deploy``` in the above command) can vary from one extension to another.
-Please check the user guide of a particular extension. The rest of the command line will have a common format. It
-will include the command - ```language-container``` - and selected options. The choice of options is primarily
-determined by the storage backend being used - On-Prem or SaaS.
+The name of the script (```<exasol_extension>.deploy``` in the above command) and the command name
+(e.g. ```language-container```) can vary from one extension to another. Please check the user guide of a particular
+extension. The rest of the command line will have a common format. It will include some of the options defined below.
+The choice of options is primarily determined by the storage backend being used - On-Prem or SaaS.
 
 ### List of options
 
@@ -32,35 +32,36 @@ an option in the command line, without providing its value. In this case, the co
 interactively. For long values, such as the SaaS account id, it is more practical to copy/paste the value from
 another source.
 
-| Option name                  | On-Prem | SaaS | Comment                                           |
-|:-----------------------------|:-------:|:----:|:--------------------------------------------------|
-| dsn                          |   [x]   |      | i.e. <db_host:db_port>                            |
-| db-user                      |   [x]   |      |                                                   |
-| db-pass                      |   [x]   |      | Env. [DB_PASSWORD]                                |
-| bucketfs-name                |   [x]   |      |                                                   |
-| bucketfs-host                |   [x]   |      |                                                   |
-| bucketfs-port                |   [x]   |      |                                                   |
-| bucketfs-user                |   [x]   |      |                                                   |
-| bucketfs-password            |   [x]   |      | Env. [BUCKETFS_PASSWORD]                          |
-| bucketfs-use-https           |   [x]   |      | Optional boolean, defaults to False               |
-| bucket                       |   [x]   |      |                                                   |
-| saas-url                     |         | [x]  | Env. [SAAS_HOST]                                  |
-| saas-account-id              |         | [x]  | Env. [SAAS_ACCOUNT_ID]                            |
-| saas-database-id             |         | [x]  | Optional, Env. [SAAS_DATABASE_ID]                 |
-| saas-database-name           |         | [x]  | Optional, provide if the database_id is unknown   |
-| saas-token                   |         | [x]  | Env. [SAAS_TOKEN]                                 |
-| path-in-bucket               |   [x]   | [x]  |                                                   |
-| language-alias               |   [x]   | [x]  |                                                   |
-| version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub |
-| container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file          |
-| ssl-cert-path                |   [x]   | [x]  | Optional                                          |
-| [no_]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                |
-| ssl-client-cert-path         |   [x]   |      | Optional                                          |
-| ssl-client-private-key       |   [x]   |      | Optional                                          |
-| [no_]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                |
-| [no_]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                |
-| [dis]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False               |
-| [no_]wait_for_completion     |   [x]   | [x]  | Optional boolean, defaults to True                |
+| Option name                  | On-Prem | SaaS | Comment                                                 |
+|:-----------------------------|:-------:|:----:|:--------------------------------------------------------|
+| dsn                          |   [x]   |      | i.e. <db_host:db_port>                                  |
+| db-user                      |   [x]   |      |                                                         |
+| db-pass                      |   [x]   |      | Env. [DB_PASSWORD]                                      |
+| bucketfs-name                |   [x]   |      |                                                         |
+| bucketfs-host                |   [x]   |      |                                                         |
+| bucketfs-port                |   [x]   |      |                                                         |
+| bucketfs-user                |   [x]   |      |                                                         |
+| bucketfs-password            |   [x]   |      | Env. [BUCKETFS_PASSWORD]                                |
+| bucketfs-use-https           |   [x]   |      | Optional boolean, defaults to False                     |
+| bucket                       |   [x]   |      |                                                         |
+| saas-url                     |         | [x]  | Env. [SAAS_HOST]                                        |
+| saas-account-id              |         | [x]  | Env. [SAAS_ACCOUNT_ID]                                  |
+| saas-database-id             |         | [x]  | Optional, Env. [SAAS_DATABASE_ID]                       |
+| saas-database-name           |         | [x]  | Optional, provide if the database_id is unknown         |
+| saas-token                   |         | [x]  | Env. [SAAS_TOKEN]                                       |
+| path-in-bucket               |   [x]   | [x]  |                                                         |
+| language-alias               |   [x]   | [x]  |                                                         |
+| schema                       |   [x]   | [x]  | Required if the user has no permission to create a database schema |
+| version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub       |
+| container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file                |
+| ssl-cert-path                |   [x]   | [x]  | Optional                                                |
+| [no-]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| ssl-client-cert-path         |   [x]   |      | Optional                                                |
+| ssl-client-private-key       |   [x]   |      | Optional                                                |
+| [no-]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| [no-]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False                     |
+| [no-]wait_for_completion     |   [x]   | [x]  | Optional boolean, defaults to True                      |
 
 ### Container selection
 
