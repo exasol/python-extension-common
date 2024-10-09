@@ -152,9 +152,9 @@ _std_options = {
     StdParams.upload_container: {'type': bool, 'default': True},
     StdParams.alter_system: {'type': bool, 'default': True},
     StdParams.allow_override: {'type': bool, 'default': False},
-    StdParams.wait_for_completion: {'type': bool, 'default': True}
-    StdParams.extract_timeout_minutes: {'type': int, 'default': 10}
-    StdParams.display_progress: {'type': bool, 'default': True}
+    StdParams.wait_for_completion: {'type': bool, 'default': True},
+    StdParams.extract_timeout_minutes: {'type': int, 'default': 10},
+    StdParams.display_progress: {'type': bool, 'default': True},
 }
 
 
