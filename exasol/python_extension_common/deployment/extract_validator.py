@@ -45,7 +45,7 @@ class ExtractValidator:
     def __init__(self,
                  pyexasol_connection: pyexasol.ExaConnection,
                  timeout: timedelta,
-                 interval: timedelta = timedelta(seconds=10),
+                 interval: timedelta = timedelta(seconds=30),
                  callback: Callable[[int, List[int]], None] | None = None,
                  ) -> None:
         self._pyexasol_conn = pyexasol_connection
