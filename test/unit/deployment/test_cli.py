@@ -254,14 +254,15 @@ def test_container_file():
     "Covered by test_default_values()"
 
 
-@pytest.mark.skip(reason="Not implemented, yet")
+@pytest.mark.skip(reason="Test case to be implemented in derived applications")
 def test_container_url():
     """
     For the following two arguments to LanguageContainerDeployer.create()
-    there are no corresponding CLI options defined:
+    the corresponding CLI options need to defined in actual CLI applications
+    using ``language_container_deployer_main()``
 
     - container_url: Optional[str] = None,
     - container_name: Optional[str] = None):
 
-    Hence this test case currently cannot be run.
+    Hence there is no related test case in the current file.
     """
