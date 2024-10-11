@@ -10,6 +10,7 @@ from exasol.python_extension_common.cli.std_options import (
     StdParams,
     create_std_option,
     select_std_options,
+    get_cli_arg,
     check_params
 )
 
@@ -57,6 +58,12 @@ def test_create_std_option_secret():
     assert opt.hide_input
     assert not opt.prompt_required
     assert opt.default == SECRET_DISPLAY
+
+
+def test_create_std_option_arbitrary_name():
+    opt_name = 'xyz'
+    opt = create_std_option(opt_name, type=str)
+    assert opt.name == opt_name
 
 
 def test_select_std_options():
@@ -149,6 +156,19 @@ def test_hidden_opt_with_envar():
 
 
 @pytest.mark.parametrize(
+    ['std_param', 'param_value', 'expected_result'],
+    [
+        (StdParams.db_user, 'Me', '--db-user "Me"'),
+        ('user_rating', 5, '--user-rating "5"'),
+        (StdParams.use_ssl_cert_validation, True, '--use-ssl-cert-validation'),
+        (StdParams.use_ssl_cert_validation, False, '--no-use-ssl-cert-validation')
+    ]
+)
+def test_get_cli_arg(std_param, param_value, expected_result):
+    assert get_cli_arg(std_param, param_value) == expected_result
+
+
+@pytest.mark.parametrize(
     ['std_params', 'param_kwargs', 'expected_result'],
     [
         (
@@ -185,7 +205,19 @@ def test_hidden_opt_with_envar():
             StdParams.dsn,
             {StdParams.dsn.name: 'my_dsn', StdParams.use_ssl_cert_validation.name: False},
             True
-        )
+        ),
+        (
+                [[StdParams.dsn.name, StdParams.db_user.name],
+                 [StdParams.saas_url.name, StdParams.saas_account_id.name]],
+                {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+                False,
+        ),
+        (
+                [[StdParams.dsn.name, StdParams.saas_url.name],
+                 [StdParams.db_user.name, StdParams.saas_account_id.name]],
+                {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+                True,
+        ),
     ]
 )
 def test_check_params(std_params, param_kwargs, expected_result):
