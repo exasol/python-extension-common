@@ -261,6 +261,13 @@ def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
     return f'--{option_name} "{param_value}"'
 
 
+def kwargs_to_cli_args(**kwargs) -> str:
+    """
+    Rolls out kwargs into a CLI arg string.
+    """
+    return ' '.join(get_cli_arg(k, v) for k, v in kwargs.items())
+
+
 def check_params(std_params: StdParamOrName | list[StdParamOrName | list[StdParamOrName]],
                  param_kwargs: dict[str, Any]) -> bool:
     """

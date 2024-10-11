@@ -11,6 +11,7 @@ from exasol.python_extension_common.cli.std_options import (
     create_std_option,
     select_std_options,
     get_cli_arg,
+    kwargs_to_cli_args,
     check_params
 )
 
@@ -166,6 +167,13 @@ def test_hidden_opt_with_envar():
 )
 def test_get_cli_arg(std_param, param_value, expected_result):
     assert get_cli_arg(std_param, param_value) == expected_result
+
+
+def test_kwargs_to_cli_args():
+    arg_string = kwargs_to_cli_args(use_rgb=True, colour='Blue', compress_image=False)
+    arg_set = set(arg_string.split())
+    expected_set = {'--use-rgb', '--colour', '"Blue"', '--no-compress-image'}
+    assert arg_set == expected_set
 
 
 @pytest.mark.parametrize(
