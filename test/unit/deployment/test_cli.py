@@ -147,7 +147,7 @@ def test_default_values(container_file):
         OptionMapper("ssl_client_certificate", "", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", "", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", True),
-        OptionMapper("extract_timeout", cli="--extract-timeout-minutes",
+        OptionMapper("deploy_timeout", cli="--deploy-timeout-minutes",
                      cli_value=5, value=timedelta(minutes=10)),
         OptionMapper("display_progress", True),
     ]
@@ -193,7 +193,7 @@ def test_cli_options_passed_to_create(container_file):
         OptionMapper("ssl_client_certificate", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", False),
-        OptionMapper("extract_timeout", cli="--extract-timeout-minutes",
+        OptionMapper("deploy_timeout", cli="--deploy-timeout-minutes",
                      cli_value=6, value=timedelta(minutes=6)),
         OptionMapper("display_progress", False),
     ]
