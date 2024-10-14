@@ -4,21 +4,21 @@
 
 An extension would typically use [UDF scripts](https://docs.exasol.com/db/latest/database_concepts/udf_scripts.htm)
 to enable certain custom functionality within a database. In most cases, UDF scripts must be backed by a
-[Script Language Container (SLC)](https://github.com/exasol/script-languages-release/), that must be installed in the
+[Script Language Container (SLC)](https://github.com/exasol/script-languages-release/), that needs to be installed in the
 Exasol Database. An SLC allows the installation of the chosen programming language and necessary dependencies in the
 Exasol Database.
 
-The language container for a particular Extension gets downloaded and installed by executing a deployment script
-similar to the one below.
+The deployment of the language container is typically included in the installation of the Extension. It should also
+be possible to install the SLC separately using the same or a different CLI command. Please check the user guide of
+a particular extension for details. Below is an example of an extension installation command.
 
   ```buildoutcfg
-  python -m <exasol_extension>.deploy language-container <options>
+  python -m <exasol_extension>.deploy <options>
   ```
 
-The name of the script (```<exasol_extension>.deploy``` in the above command) and the command name
-(e.g. ```language-container```) can vary from one extension to another. Please check the user guide of a particular
-extension. The rest of the command line will have a common format. It will include some of the options defined below.
-The choice of options is primarily determined by the storage backend being used - On-Prem or SaaS.
+The name of the script (```<exasol_extension>.deploy``` in the above command) can vary from one extension to another.
+The rest of the command line will have a common format. It will include some of the options defined below. The choice
+of options is primarily determined by the storage backend being used - On-Prem or SaaS.
 
 ### List of options
 
@@ -32,36 +32,38 @@ an option in the command line, without providing its value. In this case, the co
 interactively. For long values, such as the SaaS account id, it is more practical to copy/paste the value from
 another source.
 
-| Option name                  | On-Prem | SaaS | Comment                                                 |
-|:-----------------------------|:-------:|:----:|:--------------------------------------------------------|
-| dsn                          |   [x]   |      | i.e. <db_host:db_port>                                  |
-| db-user                      |   [x]   |      |                                                         |
-| db-pass                      |   [x]   |      | Env. [DB_PASSWORD]                                      |
-| bucketfs-name                |   [x]   |      |                                                         |
-| bucketfs-host                |   [x]   |      |                                                         |
-| bucketfs-port                |   [x]   |      |                                                         |
-| bucketfs-user                |   [x]   |      |                                                         |
-| bucketfs-password            |   [x]   |      | Env. [BUCKETFS_PASSWORD]                                |
-| bucketfs-use-https           |   [x]   |      | Optional boolean, defaults to False                     |
-| bucket                       |   [x]   |      |                                                         |
-| saas-url                     |         | [x]  | Env. [SAAS_HOST]                                        |
-| saas-account-id              |         | [x]  | Env. [SAAS_ACCOUNT_ID]                                  |
-| saas-database-id             |         | [x]  | Optional, Env. [SAAS_DATABASE_ID]                       |
-| saas-database-name           |         | [x]  | Optional, provide if the database_id is unknown         |
-| saas-token                   |         | [x]  | Env. [SAAS_TOKEN]                                       |
-| path-in-bucket               |   [x]   | [x]  |                                                         |
-| language-alias               |   [x]   | [x]  |                                                         |
+| Option name                  | On-Prem | SaaS | Comment                                                            |
+|:-----------------------------|:-------:|:----:|:-------------------------------------------------------------------|
+| dsn                          |   [x]   |      | i.e. <db_host:db_port>                                             |
+| db-user                      |   [x]   |      |                                                                    |
+| db-pass                      |   [x]   |      | Env. [DB_PASSWORD]                                                 |
+| bucketfs-name                |   [x]   |      |                                                                    |
+| bucketfs-host                |   [x]   |      |                                                                    |
+| bucketfs-port                |   [x]   |      |                                                                    |
+| bucketfs-user                |   [x]   |      |                                                                    |
+| bucketfs-password            |   [x]   |      | Env. [BUCKETFS_PASSWORD]                                           |
+| bucketfs-use-https           |   [x]   |      | Optional boolean, defaults to False                                |
+| bucket                       |   [x]   |      |                                                                    |
+| saas-url                     |         | [x]  | Env. [SAAS_HOST]                                                   |
+| saas-account-id              |         | [x]  | Env. [SAAS_ACCOUNT_ID]                                             |
+| saas-database-id             |         | [x]  | Optional, Env. [SAAS_DATABASE_ID]                                  |
+| saas-database-name           |         | [x]  | Optional, provide if the database_id is unknown                    |
+| saas-token                   |         | [x]  | Env. [SAAS_TOKEN]                                                  |
+| path-in-bucket               |   [x]   | [x]  |                                                                    |
+| language-alias               |   [x]   | [x]  |                                                                    |
 | schema                       |   [x]   | [x]  | Required if the user has no permission to create a database schema |
-| version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub       |
-| container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file                |
-| ssl-cert-path                |   [x]   | [x]  | Optional                                                |
-| [no-]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                      |
-| ssl-client-cert-path         |   [x]   |      | Optional                                                |
-| ssl-client-private-key       |   [x]   |      | Optional                                                |
-| [no-]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                      |
-| [no-]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                      |
-| [no-]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False                     |
-| [no-]wait_for_completion     |   [x]   | [x]  | Optional boolean, defaults to True                      |
+| version                      |   [x]   | [x]  | Optional, provide for downloading SLC from GitHub                  |
+| container-file               |   [x]   | [x]  | Optional, provide for uploading SLC file                           |
+| ssl-cert-path                |   [x]   | [x]  | Optional                                                           |
+| [no-]use-ssl-cert-validation |   [x]   | [x]  | Optional boolean, defaults to True                                 |
+| ssl-client-cert-path         |   [x]   |      | Optional                                                           |
+| ssl-client-private-key       |   [x]   |      | Optional                                                           |
+| [no-]upload-container        |   [x]   | [x]  | Optional boolean, defaults to True                                 |
+| [no-]alter-system            |   [x]   | [x]  | Optional boolean, defaults to True                                 |
+| [no-]allow-override          |   [x]   | [x]  | Optional boolean, defaults to False                                |
+| [no-]wait-for-completion     |   [x]   | [x]  | Optional boolean, defaults to True                                 |
+| deploy-timeout-minutes       |   [x]   | [x]  | Defaults to 10 minutes.                                            |
+| [no-]display-progress        |   [x]   | [x]  | Optional boolean, defaults to True                                 |
 
 ### Container selection
 
@@ -109,3 +111,13 @@ has already been uploaded one can use the `--no-upload-container` option to skip
 By default, overriding language activation is not permitted. If a language with the same alias has already
 been activated the command will result in an error. The activation can be overridden with the use of
 the `--allow-override` option.
+
+## BucketFS connection object
+
+Some extensions require the user to create a BucketFS connection object encapsulating the BucketFS credentials.
+The creation of such an object in the database would also be a part of the extension installation. Like the
+language container, the connection object can be created separately, using the same or a different command.
+Please check the documentation of a particular extension for details.
+
+Most of the options listed above in the Language Container Deployer sections are also relevant for the creation
+of the connection object, should it be performed in a separate command.

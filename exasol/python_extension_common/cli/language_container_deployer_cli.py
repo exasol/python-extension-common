@@ -1,6 +1,8 @@
 from pathlib import Path
+from datetime import timedelta
 
-from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
+from exasol.python_extension_common.deployment.language_container_deployer import (
+    LanguageContainerDeployer, display_extract_progress, ExtractValidator)
 from exasol.python_extension_common.connections.pyexasol_connection import open_pyexasol_connection
 from exasol.python_extension_common.connections.bucketfs_location import create_bucketfs_location
 from exasol.python_extension_common.cli.std_options import StdParams
@@ -35,10 +37,17 @@ class LanguageContainerDeployerCli:
         alter_system = kwargs[StdParams.alter_system.name]
         allow_override = kwargs[StdParams.allow_override.name]
         wait_for_completion = kwargs[StdParams.wait_for_completion.name]
+        deploy_timeout_minutes = kwargs[StdParams.deploy_timeout_minutes.name]
+        display_progress = kwargs[StdParams.display_progress.name]
 
+        display_callback = display_extract_progress if display_progress else None
+        extract_validator = ExtractValidator(pyexasol_connection,
+                                             timedelta(minutes=deploy_timeout_minutes),
+                                             callback=display_callback)
         deployer = LanguageContainerDeployer(pyexasol_connection,
                                              language_alias,
-                                             bucketfs_location)
+                                             bucketfs_location,
+                                             extract_validator)
         if not upload_container:
             deployer.run(alter_system=alter_system,
                          allow_override=allow_override,
