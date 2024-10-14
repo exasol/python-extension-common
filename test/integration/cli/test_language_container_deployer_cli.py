@@ -6,7 +6,7 @@ import click
 from click.testing import CliRunner
 
 from exasol.python_extension_common.cli.std_options import (
-    StdTags, StdParams, ParameterFormatters, select_std_options)
+    StdTags, StdParams, ParameterFormatters, select_std_options, kwargs_to_cli_args)
 from exasol.python_extension_common.connections.pyexasol_connection import (
     open_pyexasol_connection)
 from exasol.python_extension_common.cli.language_container_deployer_cli import (
@@ -93,16 +93,6 @@ def create_deploy_command(backend_tag: StdTags,
     return click.Command('deploy_slc', params=opts, callback=cli_callback)
 
 
-def make_args_string(**kwargs) -> str:
-    def arg_string(k: str, v: Any):
-        k = k.replace("_", "-")
-        if isinstance(v, bool):
-            return f'--{k}' if v else f'--no-{k}'
-        return f'--{k} "{v}"'
-
-    return ' '.join(arg_string(k, v) for k, v in kwargs.items())
-
-
 def run_deploy_command(deploy_command: click.Command,
                        arg_string: str,
                        language_alias: str,
@@ -139,7 +129,7 @@ def test_slc_deployer_cli_onprem_url(use_onprem,
                                            container_name=container_name,
                                            container_url_formatter=container_url_formatter)
     extra_cli_args = {StdParams.version.name: container_version}
-    arg_string = make_args_string(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
+    arg_string = kwargs_to_cli_args(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
     run_deploy_command(deploy_command, arg_string, language_alias, db_schema, onprem_cli_args)
 
 
@@ -154,7 +144,7 @@ def test_slc_deployer_cli_onprem_file(use_onprem,
 
     deploy_command = create_deploy_command(StdTags.ONPREM)
     extra_cli_args = {StdParams.container_file.name: container_path}
-    arg_string = make_args_string(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
+    arg_string = kwargs_to_cli_args(**onprem_cli_args, **slc_cli_args, **extra_cli_args)
     run_deploy_command(deploy_command, arg_string, language_alias, db_schema, onprem_cli_args)
 
 
@@ -173,7 +163,7 @@ def test_slc_deployer_cli_saas_url(use_saas,
                                            container_name=container_name,
                                            container_url_formatter=container_url_formatter)
     extra_cli_args = {StdParams.version.name: container_version}
-    arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
+    arg_string = kwargs_to_cli_args(**saas_cli_args, **slc_cli_args, **extra_cli_args)
     run_deploy_command(deploy_command, arg_string, language_alias, db_schema, saas_cli_args)
 
 
@@ -188,5 +178,5 @@ def test_slc_deployer_cli_saas_file(use_saas,
 
     deploy_command = create_deploy_command(StdTags.SAAS)
     extra_cli_args = {StdParams.container_file.name: container_path}
-    arg_string = make_args_string(**saas_cli_args, **slc_cli_args, **extra_cli_args)
+    arg_string = kwargs_to_cli_args(**saas_cli_args, **slc_cli_args, **extra_cli_args)
     run_deploy_command(deploy_command, arg_string, language_alias, db_schema, saas_cli_args)
