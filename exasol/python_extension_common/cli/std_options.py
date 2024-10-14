@@ -118,6 +118,13 @@ class StdParams(Enum):
         self.tags = tags
 
 
+StdParamOrName = StdParams | str
+
+
+def _get_param_name(std_param: StdParamOrName) -> str:
+    return std_param if isinstance(std_param, str) else std_param.name
+
+
 """
 Standard options defined in the form of key-value pairs, where key is the option's
 StaParam key and the value is a kwargs for creating the click.Options(...).
@@ -135,7 +142,7 @@ _std_options = {
     StdParams.saas_database_id: {'type': str, 'hide_input': True},
     StdParams.saas_database_name: {'type': str},
     StdParams.saas_token: {'type': str, 'hide_input': True},
-    StdParams.path_in_bucket: {'type': str},
+    StdParams.path_in_bucket: {'type': str, 'default': ''},
     StdParams.container_file: {'type': click.Path(exists=True, file_okay=True)},
     StdParams.version: {'type': str, 'expose_value': False},
     StdParams.dsn: {'type': str},
@@ -172,23 +179,26 @@ def make_option_secret(option_params: dict[str, Any], prompt: str) -> None:
     option_params['callback'] = secret_callback
 
 
-def create_std_option(std_param: StdParams, **kwargs) -> click.Option:
+def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
     """
     Creates a Click option.
 
     Parameters:
     std_param:
-        The option's StdParam key.
+        The option's StdParam key or its name. If the name is provided it doesn't have
+        to be the name of a defined StdParams. It can be an arbitrary identifier which
+        will be passed to the callback function of the CLI command in the kwargs.
     kwargs:
         The option properties.
     """
-    option_name = std_param.name.replace('_', '-')
+    std_param_name = _get_param_name(std_param)
+    option_name = std_param_name.replace('_', '-')
     if kwargs.get('type') == bool:
         param_decls = [f'--{option_name}/--no-{option_name}']
     else:
         param_decls = [f'--{option_name}']
     if kwargs.get('hide_input', False):
-        make_option_secret(kwargs, prompt=std_param.name.replace('_', ' '))
+        make_option_secret(kwargs, prompt=std_param_name.replace('_', ' '))
     return click.Option(param_decls, **kwargs)
 
 
@@ -238,7 +248,27 @@ def select_std_options(tags: StdTags | list[StdTags] | str,
             for std_param in filtered_params]
 
 
-def check_params(std_params: StdParams | list[StdParams | list[StdParams]],
+def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
+    """
+    Makes a CLI args string from an option and its value.
+    An option can be given as either an StdParams or its string name.
+    For boolean values the args string takes the form --option-name/--no-option-name.
+    """
+
+    option_name = _get_param_name(std_param).replace("_", "-")
+    if isinstance(param_value, bool):
+        return f'--{option_name}' if param_value else f'--no-{option_name}'
+    return f'--{option_name} "{param_value}"'
+
+
+def kwargs_to_cli_args(**kwargs) -> str:
+    """
+    Rolls out kwargs into a CLI arg string.
+    """
+    return ' '.join(get_cli_arg(k, v) for k, v in kwargs.items())
+
+
+def check_params(std_params: StdParamOrName | list[StdParamOrName | list[StdParamOrName]],
                  param_kwargs: dict[str, Any]) -> bool:
     """
     Checks if the kwargs contain specified StdParams keys. The intention is to verify
@@ -256,16 +286,18 @@ def check_params(std_params: StdParams | list[StdParams | list[StdParams]],
     Parameters:
     std_params:
         Required options. This can be either a single option or a list of options
-        representing a logical expression.
+        representing a logical expression. An option can be given as either an StdParams
+        or its string name.
     param_kwargs:
         A dictionary of provided values (kwargs).
     """
-    def check_param(std_param: StdParams | list[StdParams]) -> bool:
+    def check_param(std_param: StdParamOrName | list[StdParamOrName]) -> bool:
         if isinstance(std_param, list):
             return any(check_param(std_param_i) for std_param_i in std_param)
-        return ((std_param.name in param_kwargs) and
-                (isinstance(param_kwargs[std_param.name], bool) or
-                 bool(param_kwargs[std_param.name])))
+        std_param_name = _get_param_name(std_param)
+        return ((std_param_name in param_kwargs) and
+                (isinstance(param_kwargs[std_param_name], bool) or
+                 bool(param_kwargs[std_param_name])))
 
     if isinstance(std_params, list):
         return all(check_param(std_param) for std_param in std_params)
