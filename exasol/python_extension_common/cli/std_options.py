@@ -113,6 +113,8 @@ class StdParams(Enum):
     alter_system = (StdTags.SLC, auto())
     allow_override = (StdTags.SLC, auto())
     wait_for_completion = (StdTags.SLC, auto())
+    deploy_timeout_minutes = (StdTags.SLC, auto())
+    display_progress = (StdTags.SLC, auto())
 
     def __init__(self, tags: StdTags, value):
         self.tags = tags
@@ -157,7 +159,9 @@ _std_options = {
     StdParams.upload_container: {'type': bool, 'default': True},
     StdParams.alter_system: {'type': bool, 'default': True},
     StdParams.allow_override: {'type': bool, 'default': False},
-    StdParams.wait_for_completion: {'type': bool, 'default': True}
+    StdParams.wait_for_completion: {'type': bool, 'default': True},
+    StdParams.deploy_timeout_minutes: {'type': int, 'default': 10},
+    StdParams.display_progress: {'type': bool, 'default': True},
 }
 
 
