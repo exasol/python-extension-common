@@ -335,7 +335,7 @@ class LanguageContainerDeployer:
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
                ssl_private_key: Optional[str] = None,
-               extract_timeout: timedelta = timedelta(minutes=10),
+               deploy_timeout: timedelta = timedelta(minutes=10),
                display_progress: bool = False,
                ) -> "LanguageContainerDeployer":
         warnings.warn(
@@ -397,5 +397,5 @@ class LanguageContainerDeployer:
                                          websocket_sslopt=websocket_sslopt)
 
         callback = display_extract_progress if display_progress else None
-        extract_validator = ExtractValidator(pyexasol_conn, extract_timeout, callback=callback)
+        extract_validator = ExtractValidator(pyexasol_conn, deploy_timeout, callback=callback)
         return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
