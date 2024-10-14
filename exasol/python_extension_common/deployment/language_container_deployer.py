@@ -88,6 +88,10 @@ def get_udf_path(bucket_base_path: bfs.path.PathLike, bucket_file: str) -> PureP
     return PurePosixPath(file_path.as_udf_path())
 
 
+def display_extract_progress(n: int, pending: List[int]):
+    logger.info(f"Verify extraction: {len(pending)} of {n} nodes pending, IDs: {pending}")
+
+
 class LanguageContainerDeployer:
 
     def __init__(self,
@@ -105,8 +109,8 @@ class LanguageContainerDeployer:
         else:
             self._extract_validator = ExtractValidator(
                 pyexasol_connection,
-                timeout=timedelta(minutes=5),
-                interval=timedelta(seconds=10),
+                timeout=timedelta(minutes=10),
+                interval=timedelta(seconds=30),
             )
         logger.debug("Init %s", LanguageContainerDeployer.__name__)
 
@@ -330,7 +334,10 @@ class LanguageContainerDeployer:
                path_in_bucket: str = '',
                use_ssl_cert_validation: bool = True, ssl_trusted_ca: Optional[str] = None,
                ssl_client_certificate: Optional[str] = None,
-               ssl_private_key: Optional[str] = None) -> "LanguageContainerDeployer":
+               ssl_private_key: Optional[str] = None,
+               deploy_timeout: timedelta = timedelta(minutes=10),
+               display_progress: bool = False,
+               ) -> "LanguageContainerDeployer":
         warnings.warn(
             "create() function is deprecated and will be removed in a future version. "
             "For CLI use the LanguageContainerDeployerCli class instead.",
@@ -389,4 +396,6 @@ class LanguageContainerDeployer:
                                          encryption=True,
                                          websocket_sslopt=websocket_sslopt)
 
-        return cls(pyexasol_conn, language_alias, bucketfs_path)
+        callback = display_extract_progress if display_progress else None
+        extract_validator = ExtractValidator(pyexasol_conn, deploy_timeout, callback=callback)
+        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
