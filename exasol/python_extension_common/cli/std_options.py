@@ -183,6 +183,24 @@ def make_option_secret(option_params: dict[str, Any], prompt: str) -> None:
     option_params['callback'] = secret_callback
 
 
+def get_opt_name(std_param: StdParamOrName) -> str:
+    """
+    Converts a parameter, e.g. "db_user", to the option definition, e.g. "--db-user"
+    """
+    std_param_name = _get_param_name(std_param)
+    return f'--{std_param_name.replace("_", "-")}'
+
+
+def get_bool_opt_name(std_param: StdParamOrName) -> str:
+    """
+    Converts a boolean parameter, e.g. "alter_system", to the option definition, e.g.
+    "--alter-system/--no-alter-system".
+    """
+    std_param_name = _get_param_name(std_param)
+    opt_name = std_param_name.replace("_", "-")
+    return f'--{opt_name}/--no-{opt_name}'
+
+
 def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
     """
     Creates a Click option.
@@ -195,14 +213,10 @@ def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
     kwargs:
         The option properties.
     """
-    std_param_name = _get_param_name(std_param)
-    option_name = std_param_name.replace('_', '-')
-    if kwargs.get('type') == bool:
-        param_decls = [f'--{option_name}/--no-{option_name}']
-    else:
-        param_decls = [f'--{option_name}']
+    param_decls = [get_bool_opt_name(std_param) if kwargs.get('type') == bool
+                   else get_opt_name(std_param)]
     if kwargs.get('hide_input', False):
-        make_option_secret(kwargs, prompt=std_param_name.replace('_', ' '))
+        make_option_secret(kwargs, prompt=_get_param_name(std_param).replace('_', ' '))
     return click.Option(param_decls, **kwargs)
 
 
