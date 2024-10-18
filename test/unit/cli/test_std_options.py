@@ -10,6 +10,8 @@ from exasol.python_extension_common.cli.std_options import (
     StdParams,
     create_std_option,
     select_std_options,
+    get_opt_name,
+    get_bool_opt_name,
     get_cli_arg,
     kwargs_to_cli_args,
     check_params
@@ -41,6 +43,14 @@ def test_parameter_formatters_2params():
     formatters(ctx, opt2, 'cezar')
     assert ctx.params[container_url_param] == 'http://my_server/1.3.2/cezar/my_stuff'
     assert ctx.params[container_name_param] == 'downloaded-1.3.2'
+
+
+def test_get_opt_name():
+    assert get_opt_name('db_user') == '--db-user'
+
+
+def test_get_bool_opt_name():
+    assert get_bool_opt_name('alter_system') == '--alter-system/--no-alter-system'
 
 
 def test_create_std_option():
