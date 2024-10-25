@@ -17,7 +17,7 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
 from test.utils.revert_language_settings import revert_language_settings
 from test.utils.db_utils import create_schema, open_schema
 
-VERSION = "8.0.0"
+VERSION = "8.3.0"
 
 TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
