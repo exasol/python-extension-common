@@ -16,7 +16,7 @@ jobs:
 
       - name: Build Documentation
         run: |
-          poetry run python -m nox -s build-docs
+          poetry run python -m nox -s docs:build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.4.1
