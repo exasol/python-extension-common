@@ -46,7 +46,7 @@ jobs:
         run: poetry run nox -s lint:code
 
       - name: Run type-check
-        run: poetry run nox -s ling:typing
+        run: poetry run nox -s lint:typing
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
