@@ -7,6 +7,7 @@
 ## Refactoring
 
 * #48: Activated validation by verifying existence of file exasol-manifest.json
+* #90: Updated poetry to 2.1.2
 
 ## Security Issues
 
