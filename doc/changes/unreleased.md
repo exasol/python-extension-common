@@ -11,4 +11,5 @@
 
 ## Security Issues
 
-Re-locked the dependencies (2025-02-11)
+* Re-locked the dependencies (2025-02-11)
+* #90 Re-locked the dependencies (2025-04-10)
