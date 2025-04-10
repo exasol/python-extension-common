@@ -1,7 +1,15 @@
-from typing import Any, no_type_check
 import os
 import re
-from enum import Flag, Enum, auto
+from enum import (
+    Enum,
+    Flag,
+    auto,
+)
+from typing import (
+    Any,
+    no_type_check,
+)
+
 import click
 
 
@@ -23,6 +31,7 @@ class ParameterFormatters:
     way to inject them directly into the cli. Also, the current implementation doesn't perform
     the update if the value of the parameter dressed with the callback is None.
     """
+
     def __init__(self):
         self._formatters: dict[str, str] = {}
 
@@ -36,8 +45,8 @@ class ParameterFormatters:
                 # before and after applying the regex, assuming the current parameter is 'version'.
                 # 'something-with-{version}/tailored-for-{user}' => 'something-with-{version}/tailored-for-{{user}}'
                 # We were looking for all occurrences of a pattern '{some_name}', where some_name is not version.
-                pattern = r'\{(?!' + (param.name or '') + r'\})\w+\}'
-                param_formatter = re.sub(pattern, lambda m: f'{{{m.group(0)}}}', param_formatter)
+                pattern = r"\{(?!" + (param.name or "") + r"\})\w+\}"
+                param_formatter = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", param_formatter)
                 kwargs = {param.name: value}
                 ctx.params[parameter_name] = param_formatter.format(**kwargs)
 
@@ -48,16 +57,16 @@ class ParameterFormatters:
         return value
 
     def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """ Sets a formatter for a customizable parameter. """
+        """Sets a formatter for a customizable parameter."""
         self._formatters[custom_parameter_name] = formatter
 
     def clear_formatters(self):
-        """ Deletes all formatters, mainly for testing purposes. """
+        """Deletes all formatters, mainly for testing purposes."""
         self._formatters.clear()
 
 
 # This text will be displayed instead of the actual value for a "secret" option.
-SECRET_DISPLAY = '***'
+SECRET_DISPLAY = "***"
 
 
 def secret_callback(ctx: click.Context, param: click.Option, value: Any):
@@ -85,6 +94,7 @@ class StdParams(Enum):
     """
     Standard option keys.
     """
+
     bucketfs_name = (StdTags.BFS | StdTags.ONPREM, auto())
     bucketfs_host = (StdTags.BFS | StdTags.ONPREM, auto())
     bucketfs_port = (StdTags.BFS | StdTags.ONPREM, auto())
@@ -132,36 +142,36 @@ Standard options defined in the form of key-value pairs, where key is the option
 StaParam key and the value is a kwargs for creating the click.Options(...).
 """
 _std_options = {
-    StdParams.bucketfs_name: {'type': str},
-    StdParams.bucketfs_host: {'type': str},
-    StdParams.bucketfs_port: {'type': int},
-    StdParams.bucketfs_use_https: {'type': bool, 'default': False},
-    StdParams.bucketfs_user: {'type': str},
-    StdParams.bucketfs_password: {'type': str, 'hide_input': True},
-    StdParams.bucket: {'type': str},
-    StdParams.saas_url: {'type': str, 'default': 'https://cloud.exasol.com'},
-    StdParams.saas_account_id: {'type': str, 'hide_input': True},
-    StdParams.saas_database_id: {'type': str, 'hide_input': True},
-    StdParams.saas_database_name: {'type': str},
-    StdParams.saas_token: {'type': str, 'hide_input': True},
-    StdParams.path_in_bucket: {'type': str, 'default': ''},
-    StdParams.container_file: {'type': click.Path(exists=True, file_okay=True)},
-    StdParams.version: {'type': str, 'expose_value': False},
-    StdParams.dsn: {'type': str},
-    StdParams.db_user: {'type': str},
-    StdParams.db_password: {'type': str, 'hide_input': True},
-    StdParams.language_alias: {'type': str},
-    StdParams.schema: {'type': str, 'default': ''},
-    StdParams.ssl_cert_path: {'type': str, 'default': ''},
-    StdParams.ssl_client_cert_path: {'type': str, 'default': ''},
-    StdParams.ssl_client_private_key: {'type': str, 'default': ''},
-    StdParams.use_ssl_cert_validation: {'type': bool, 'default': True},
-    StdParams.upload_container: {'type': bool, 'default': True},
-    StdParams.alter_system: {'type': bool, 'default': True},
-    StdParams.allow_override: {'type': bool, 'default': False},
-    StdParams.wait_for_completion: {'type': bool, 'default': True},
-    StdParams.deploy_timeout_minutes: {'type': int, 'default': 10},
-    StdParams.display_progress: {'type': bool, 'default': True},
+    StdParams.bucketfs_name: {"type": str},
+    StdParams.bucketfs_host: {"type": str},
+    StdParams.bucketfs_port: {"type": int},
+    StdParams.bucketfs_use_https: {"type": bool, "default": False},
+    StdParams.bucketfs_user: {"type": str},
+    StdParams.bucketfs_password: {"type": str, "hide_input": True},
+    StdParams.bucket: {"type": str},
+    StdParams.saas_url: {"type": str, "default": "https://cloud.exasol.com"},
+    StdParams.saas_account_id: {"type": str, "hide_input": True},
+    StdParams.saas_database_id: {"type": str, "hide_input": True},
+    StdParams.saas_database_name: {"type": str},
+    StdParams.saas_token: {"type": str, "hide_input": True},
+    StdParams.path_in_bucket: {"type": str, "default": ""},
+    StdParams.container_file: {"type": click.Path(exists=True, file_okay=True)},
+    StdParams.version: {"type": str, "expose_value": False},
+    StdParams.dsn: {"type": str},
+    StdParams.db_user: {"type": str},
+    StdParams.db_password: {"type": str, "hide_input": True},
+    StdParams.language_alias: {"type": str},
+    StdParams.schema: {"type": str, "default": ""},
+    StdParams.ssl_cert_path: {"type": str, "default": ""},
+    StdParams.ssl_client_cert_path: {"type": str, "default": ""},
+    StdParams.ssl_client_private_key: {"type": str, "default": ""},
+    StdParams.use_ssl_cert_validation: {"type": bool, "default": True},
+    StdParams.upload_container: {"type": bool, "default": True},
+    StdParams.alter_system: {"type": bool, "default": True},
+    StdParams.allow_override: {"type": bool, "default": False},
+    StdParams.wait_for_completion: {"type": bool, "default": True},
+    StdParams.deploy_timeout_minutes: {"type": int, "default": 10},
+    StdParams.display_progress: {"type": bool, "default": True},
 }
 
 
@@ -176,11 +186,11 @@ def make_option_secret(option_params: dict[str, Any], prompt: str) -> None:
     prompt:
         The prompt text for this option.
     """
-    option_params['hide_input'] = True
-    option_params['prompt'] = prompt
-    option_params['prompt_required'] = False
-    option_params['default'] = SECRET_DISPLAY
-    option_params['callback'] = secret_callback
+    option_params["hide_input"] = True
+    option_params["prompt"] = prompt
+    option_params["prompt_required"] = False
+    option_params["default"] = SECRET_DISPLAY
+    option_params["callback"] = secret_callback
 
 
 def get_opt_name(std_param: StdParamOrName) -> str:
@@ -198,7 +208,7 @@ def get_bool_opt_name(std_param: StdParamOrName) -> str:
     """
     std_param_name = _get_param_name(std_param)
     opt_name = std_param_name.replace("_", "-")
-    return f'--{opt_name}/--no-{opt_name}'
+    return f"--{opt_name}/--no-{opt_name}"
 
 
 def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
@@ -213,19 +223,21 @@ def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
     kwargs:
         The option properties.
     """
-    param_decls = [get_bool_opt_name(std_param) if kwargs.get('type') == bool
-                   else get_opt_name(std_param)]
-    if kwargs.get('hide_input', False):
-        make_option_secret(kwargs, prompt=_get_param_name(std_param).replace('_', ' '))
+    param_decls = [
+        get_bool_opt_name(std_param) if kwargs.get("type") == bool else get_opt_name(std_param)
+    ]
+    if kwargs.get("hide_input", False):
+        make_option_secret(kwargs, prompt=_get_param_name(std_param).replace("_", " "))
     return click.Option(param_decls, **kwargs)
 
 
 @no_type_check
-def select_std_options(tags: StdTags | list[StdTags] | str,
-                       exclude: StdParams | list[StdParams] | None = None,
-                       override: dict[StdParams, dict[str, Any]] | None = None,
-                       formatters: dict[StdParams, ParameterFormatters] | None = None
-                       ) -> list[click.Option]:
+def select_std_options(
+    tags: StdTags | list[StdTags] | str,
+    exclude: StdParams | list[StdParams] | None = None,
+    override: dict[StdParams, dict[str, Any]] | None = None,
+    formatters: dict[StdParams, ParameterFormatters] | None = None,
+) -> list[click.Option]:
     """
     Selects all or a subset of the defined standard Click options.
 
@@ -257,13 +269,14 @@ def select_std_options(tags: StdTags | list[StdTags] | str,
     def option_params(std_param: StdParams) -> dict[str, Any]:
         return override[std_param] if std_param in override else _std_options[std_param]
 
-    if tags == 'all':
+    if tags == "all":
         filtered_params = _std_options
     else:
         filtered_params = filter(options_filter, _std_options)
-    return [create_std_option(std_param, **option_params(std_param),
-                              callback=formatters.get(std_param))
-            for std_param in filtered_params]
+    return [
+        create_std_option(std_param, **option_params(std_param), callback=formatters.get(std_param))
+        for std_param in filtered_params
+    ]
 
 
 def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
@@ -275,7 +288,7 @@ def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
 
     option_name = _get_param_name(std_param).replace("_", "-")
     if isinstance(param_value, bool):
-        return f'--{option_name}' if param_value else f'--no-{option_name}'
+        return f"--{option_name}" if param_value else f"--no-{option_name}"
     return f'--{option_name} "{param_value}"'
 
 
@@ -283,11 +296,13 @@ def kwargs_to_cli_args(**kwargs) -> str:
     """
     Rolls out kwargs into a CLI arg string.
     """
-    return ' '.join(get_cli_arg(k, v) for k, v in kwargs.items())
+    return " ".join(get_cli_arg(k, v) for k, v in kwargs.items())
 
 
-def check_params(std_params: StdParamOrName | list[StdParamOrName | list[StdParamOrName]],
-                 param_kwargs: dict[str, Any]) -> bool:
+def check_params(
+    std_params: StdParamOrName | list[StdParamOrName | list[StdParamOrName]],
+    param_kwargs: dict[str, Any],
+) -> bool:
     """
     Checks if the kwargs contain specified StdParams keys. The intention is to verify
     if the options provided by the user via a CLI are sufficient to perform a certain
@@ -309,13 +324,14 @@ def check_params(std_params: StdParamOrName | list[StdParamOrName | list[StdPara
     param_kwargs:
         A dictionary of provided values (kwargs).
     """
+
     def check_param(std_param: StdParamOrName | list[StdParamOrName]) -> bool:
         if isinstance(std_param, list):
             return any(check_param(std_param_i) for std_param_i in std_param)
         std_param_name = _get_param_name(std_param)
-        return ((std_param_name in param_kwargs) and
-                (isinstance(param_kwargs[std_param_name], bool) or
-                 bool(param_kwargs[std_param_name])))
+        return (std_param_name in param_kwargs) and (
+            isinstance(param_kwargs[std_param_name], bool) or bool(param_kwargs[std_param_name])
+        )
 
     if isinstance(std_params, list):
         return all(check_param(std_param) for std_param in std_params)

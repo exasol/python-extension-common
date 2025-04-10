@@ -1,14 +1,19 @@
 from __future__ import annotations
-from typing import Callable
+
 import shutil
 import subprocess
 import tempfile
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
+from typing import Callable
 
-from exasol_integration_test_docker_environment.lib.docker.images.image_info import ImageInfo   # type: ignore
-from exasol.slc import api            # type: ignore
-from exasol.slc.models.export_container_result import ExportContainerResult     # type: ignore
+from exasol.slc import api  # type: ignore
+from exasol.slc.models.export_container_result import (
+    ExportContainerResult,  # type: ignore
+)
+from exasol_integration_test_docker_environment.lib.docker.images.image_info import (
+    ImageInfo,  # type: ignore
+)
 
 
 def exclude_cuda(line: str) -> bool:
@@ -29,7 +34,9 @@ def find_path_backwards(target_path: str | Path, start_path: str | Path) -> Path
         if result_path.exists():
             return result_path
         current_path = current_path.parent
-    raise FileNotFoundError(f"Could not find {target_path} when searching backwards from {start_path}")
+    raise FileNotFoundError(
+        f"Could not find {target_path} when searching backwards from {start_path}"
+    )
 
 
 def copy_slc_flavor(dest_dir: str | Path) -> None:
@@ -37,7 +44,7 @@ def copy_slc_flavor(dest_dir: str | Path) -> None:
     Copies the content of the language_container directory to the specified
     destination directory.
     """
-    files = resources.files(__package__).joinpath('language_container')
+    files = resources.files(__package__).joinpath("language_container")
     with resources.as_file(files) as pkg_dir:
         shutil.copytree(pkg_dir, dest_dir, dirs_exist_ok=True)
 
@@ -102,8 +109,9 @@ class LanguageContainerBuilder:
     def wheel_target(self) -> Path:
         return self.flavor_base / "release" / "dist"
 
-    def prepare_flavor(self, project_directory: str | Path,
-                       requirement_filter: Callable[[str], bool] | None = None):
+    def prepare_flavor(
+        self, project_directory: str | Path, requirement_filter: Callable[[str], bool] | None = None
+    ):
         """
         Create the project's requirements.txt and the distribution wheel.
         """
@@ -123,37 +131,40 @@ class LanguageContainerBuilder:
         """
         assert self._root_path is not None
         if not export_path:
-            export_path = self._root_path / '.export'
+            export_path = self._root_path / ".export"
             if not export_path.exists():
                 export_path.mkdir()
         if self._output_path is None:
-            self._output_path = self._root_path / '.output'
+            self._output_path = self._root_path / ".output"
             if not self._output_path.exists():
                 self._output_path.mkdir()
 
-        export_result = api.export(flavor_path=(str(self.flavor_path),),
-                                   output_directory=str(self._output_path),
-                                   export_path=str(export_path))
+        export_result = api.export(
+            flavor_path=(str(self.flavor_path),),
+            output_directory=str(self._output_path),
+            export_path=str(export_path),
+        )
         return export_result
 
-    def _add_requirements_to_flavor(self, project_directory: str | Path,
-                                    requirement_filter: Callable[[str], bool] | None):
+    def _add_requirements_to_flavor(
+        self, project_directory: str | Path, requirement_filter: Callable[[str], bool] | None
+    ):
         """
         Adds project's requirements to the requirements.txt file. Creates this file
         if it doesn't exist.
         """
         assert self._root_path is not None
-        requirements_bytes = subprocess.check_output(["poetry", "export",
-                                                      "--without-hashes", "--without-urls"],
-                                                     cwd=str(project_directory))
+        requirements_bytes = subprocess.check_output(
+            ["poetry", "export", "--without-hashes", "--without-urls"], cwd=str(project_directory)
+        )
         requirements = requirements_bytes.decode("UTF-8")
         if requirement_filter is not None:
             requirements = "\n".join(filter(requirement_filter, requirements.splitlines()))
         # Make sure the content ends with a new line, so that other requirements can be
         # added at the end of it.
-        if not requirements.endswith('\n'):
-            requirements += '\n'
-        with self.requirements_file.open(mode='a') as f:
+        if not requirements.endswith("\n"):
+            requirements += "\n"
+        with self.requirements_file.open(mode="a") as f:
             return f.write(requirements)
 
     def _add_wheel_to_flavor(self, project_directory: str | Path):
@@ -171,8 +182,10 @@ class LanguageContainerBuilder:
         subprocess.call(["poetry", "build"], cwd=str(project_directory))
         wheels = list(dist_path.glob("*.whl"))
         if len(wheels) != 1:
-            raise RuntimeError(f"Did not find exactly one wheel file in dist directory {dist_path}. "
-                               f"Found the following wheels: {wheels}")
+            raise RuntimeError(
+                f"Did not find exactly one wheel file in dist directory {dist_path}. "
+                f"Found the following wheels: {wheels}"
+            )
         wheel = wheels[0]
         self.wheel_target.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(wheel, self.wheel_target / wheel.name)

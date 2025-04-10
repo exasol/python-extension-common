@@ -1,20 +1,28 @@
 import contextlib
 import logging
-import pytest
 import re
-import exasol.bucketfs as bfs   # type: ignore
-from pyexasol import ExaConnection
-
-from typing import Any, Dict, List
-from unittest.mock import Mock, call, patch
 from datetime import timedelta
+from typing import (
+    Any,
+    Dict,
+    List,
+)
+from unittest.mock import (
+    Mock,
+    call,
+    patch,
+)
+
+import exasol.bucketfs as bfs  # type: ignore
+import pytest
+from pyexasol import ExaConnection
+from tenacity import RetryError
 
 from exasol.python_extension_common.deployment.extract_validator import (
-    ExtractValidator,
     ExtractException,
+    ExtractValidator,
     _udf_name,
 )
-from tenacity import RetryError
 
 LOG = logging.getLogger(__name__)
 
@@ -48,31 +56,32 @@ class ConnectionMock:
         return self
 
     def fetchone(self):
-        return [ next(self.values) ]
+        return [next(self.values)]
 
     def fetchall(self):
-        return [ v for v in self.values ]
+        return [v for v in self.values]
 
 
 class Simulator:
-    def __init__(self, nodes: int, udf_results: List[List[any]],
-                 create_script=()):
+    def __init__(self, nodes: int, udf_results: List[List[any]], create_script=()):
         self.create_script = create_script
         self.nodes = nodes
         self.udf = Mock(side_effect=udf_results)
-        self.callback = Mock(side_effect = self._callback)
+        self.callback = Mock(side_effect=self._callback)
 
     def _callback(self, n, pending):
         LOG.debug(f"{len(pending)} of {n} nodes pending: {pending}")
 
     @property
     def testee(self):
-        connection = ConnectionMock({
-            r"CREATE .* SCRIPT": self.create_script,
-            r"(CREATE|DROP) ": (),
-            r"SELECT nproc\(\)": [ self.nodes ],
-            r'SELECT .*_manifest_': self.udf,
-        })
+        connection = ConnectionMock(
+            {
+                r"CREATE .* SCRIPT": self.create_script,
+                r"(CREATE|DROP) ": (),
+                r"SELECT nproc\(\)": [self.nodes],
+                r"SELECT .*_manifest_": self.udf,
+            }
+        )
         return ExtractValidator(
             pyexasol_connection=Mock(execute=connection.execute),
             timeout=timedelta(seconds=10),
@@ -82,7 +91,7 @@ class Simulator:
 
 
 @contextlib.contextmanager
-def mock_tenacity_wait(*wait_lists: List[int|float], max: int = 1000):
+def mock_tenacity_wait(*wait_lists: List[int | float], max: int = 1000):
     """
     This context mocks internals of library ``tenacity`` in order to
     simulate waiting for timeouts in ``tenacity.Retrying()``. All specified
@@ -105,11 +114,13 @@ def mock_tenacity_wait(*wait_lists: List[int|float], max: int = 1000):
     ``RetryCallState.__init__()``, see
     https://github.com/jd/tenacity/blob/main/tenacity/__init__.py.
     """
+
     def expand(wait_lists):
         for waits in wait_lists:
-            yield from [ 0, 0 ] + waits
+            yield from [0, 0] + waits
 
     durations = expand(wait_lists)
+
     def mock():
         try:
             return next(durations)
@@ -126,7 +137,8 @@ def mock_tenacity_wait(*wait_lists: List[int|float], max: int = 1000):
     [
         (None, r'"alias_manifest_[0-9]+"'),
         ("schema", r'"schema"\."alias_manifest_[0-9]+"'),
-    ])
+    ],
+)
 def test_udf_name(schema, expected):
     assert re.match(expected, _udf_name(schema, "alias"))
 
@@ -146,7 +158,8 @@ def test_failure(archive_bucket_path):
             [[1, False]],
             [[1, False]],
             [[1, False]],
-        ])
+        ],
+    )
     with pytest.raises(ExtractException) as ex:
         with mock_tenacity_wait([1], [2, 4]):
             sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
@@ -158,9 +171,10 @@ def test_success(archive_bucket_path):
         nodes=4,
         udf_results=[
             [[1, False], [2, False]],
-            [[1, True ], [2, False]],
-            [[1, True ], [2, True ]],
-        ])
+            [[1, True], [2, False]],
+            [[1, True], [2, True]],
+        ],
+    )
     with mock_tenacity_wait([1], [2, 4]):
         sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
     assert sim.callback.call_args_list == [
@@ -180,10 +194,10 @@ def test_reduced_timeout(archive_bucket_path):
     on all nodes.
     """
     create_script = Mock(side_effect=[Exception("failure"), ()])
-    udf_results=[
+    udf_results = [
         [[1, False], [2, False]],
-        [[1, True ], [2, False]],
-        [[1, True ], [2, True ]],
+        [[1, True], [2, False]],
+        [[1, True], [2, True]],
     ]
     sim = Simulator(
         nodes=4,
