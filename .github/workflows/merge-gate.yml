@@ -1,0 +1,38 @@
+name: Merge-Gate
+
+on:
+  workflow_call:
+
+jobs:
+
+  fast-checks:
+    name: Fast
+    uses: ./.github/workflows/checks.yml
+
+  slow-test-detection:
+    name: Run Integration Tests?
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Detect Slow Tests
+        run: true
+    environment:
+      slow-tests
+
+  slow-checks:
+    name: Run Integration Tests If Requested
+    uses: ./.github/workflows/slow-checks.yml
+    needs: [ slow-test-detection ]
+    secrets: inherit
+
+  # This job ensures inputs have been executed successfully.
+  approve-merge:
+    name: Allow Merge
+    runs-on: ubuntu-24.04
+    # If you need additional jobs to be part of the merge gate, add them below
+    needs: [ fast-checks, slow-checks ]
+
+    # Each job requires a step, so we added this dummy step.
+    steps:
+      - name: Approve
+        run: |
+          echo "Merge Approved"
