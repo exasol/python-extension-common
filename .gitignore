@@ -1,5 +1,7 @@
 .idea
 .html-documentation
+.build_output
+.coverage
 __pycache__
 
 TAGS
