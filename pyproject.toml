@@ -26,6 +26,9 @@ pytest = "^7.2.0"
 exasol-toolbox = "^1.0.1"
 pytest-exasol-backend = ">=0.3.0,<1.0.0"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
 [build-system]
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
