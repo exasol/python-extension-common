@@ -920,14 +920,14 @@ pydantic = ">=2.10.2,<3.0.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "1.0.0"
+version = "1.0.1"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-1.0.0-py3-none-any.whl", hash = "sha256:4f0e86c1464877e7537d15a57c61279ae4d7c3ccae5a9ce56489a379d6fc0809"},
-    {file = "exasol_toolbox-1.0.0.tar.gz", hash = "sha256:45d4858bf3a558663eadf0901ff3e91db72e769365e437ea5dedbf9bcfac6136"},
+    {file = "exasol_toolbox-1.0.1-py3-none-any.whl", hash = "sha256:69e2eaf0adaa7b3d7de24dffd4d0f06d4304a270416dc51e97a23965578cd85f"},
+    {file = "exasol_toolbox-1.0.1.tar.gz", hash = "sha256:19954ec725e24209b7babf473ecc33730be9d8c4e4cb1b5337c208a62edfb66e"},
 ]
 
 [package.dependencies]
@@ -3745,4 +3745,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "18719f771e385fa80d68a0ab50d056487ea201a82e75dac89be0cf493106c6ad"
+content-hash = "25770288f6e2103d8cfce895f8c90cd93be23d6c6f02bd8ec87dd84ef1fa4cbf"
