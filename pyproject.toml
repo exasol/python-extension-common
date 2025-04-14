@@ -1,11 +1,15 @@
-[tool.poetry]
+[project]
 name = "exasol-python-extension-common"
 version = "0.8.0"
 description = "A collection of common utilities for Exasol extensions."
-packages = [ {include = "exasol"}, ]
-authors = ["Mikhail Beck <mikhail.beck@exasol.com>"]
-license = "MIT"
+authors = [
+    {name="Mikhail Beck", email="mikhail.beck@exasol.com"},
+]
 readme = "README.md"
+license = "MIT"
+
+[tool.poetry]
+packages = [ {include = "exasol"}, ]
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
@@ -19,11 +23,14 @@ exasol-script-languages-container-tool = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
-exasol-toolbox = ">=0.16.0"
+exasol-toolbox = "^1.0.1"
 pytest-exasol-backend = ">=0.3.0,<1.0.0"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]

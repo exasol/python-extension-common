@@ -1,19 +1,32 @@
 import os
-import pytest
-from unittest.mock import patch, create_autospec, Mock
+from contextlib import (
+    ExitStack,
+    contextmanager,
+)
+from datetime import timedelta
+from typing import (
+    Dict,
+    List,
+)
+from unittest.mock import (
+    Mock,
+    create_autospec,
+    patch,
+)
+
 import click
 import click.testing
+import pytest
 
-from typing import Dict, List
-from contextlib import ExitStack, contextmanager
-from exasol.python_extension_common.deployment.language_container_deployer_cli import (
-    _ParameterFormatters,
-    CustomizableParameters,
-    language_container_deployer_main,
-    SecretParams,
+from exasol.python_extension_common.deployment.language_container_deployer import (
+    LanguageContainerDeployer,
 )
-from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
-from datetime import timedelta
+from exasol.python_extension_common.deployment.language_container_deployer_cli import (
+    CustomizableParameters,
+    SecretParams,
+    _ParameterFormatters,
+    language_container_deployer_main,
+)
 
 
 class CliRunner:
@@ -59,14 +72,15 @@ class OptionMapper:
     * sample value to be verified in a test case
     * environment variable (optional)
     """
+
     def __init__(
-            self,
-            api: str,
-            value: any = None,
-            cli_value: any = None,
-            cli: str = None,
-            env: str = None,
-            prompt: str = None,
+        self,
+        api: str,
+        value: any = None,
+        cli_value: any = None,
+        cli: str = None,
+        env: str = None,
+        prompt: str = None,
     ):
         self.api_kwarg = api
         self.value = f"om_value_{api}" if value is None else value
@@ -77,9 +91,9 @@ class OptionMapper:
 
     @classmethod
     def from_secret_param(
-            cls,
-            param: SecretParams,
-            prompt: str = None,
+        cls,
+        param: SecretParams,
+        prompt: str = None,
     ) -> "OptionMapper":
         name = param.name
         return cls(
@@ -89,50 +103,76 @@ class OptionMapper:
             prompt=prompt,
         )
 
+
 def test_parameter_formatters_1param():
-    cmd = click.Command('a_command')
+    cmd = click.Command("a_command")
     ctx = click.Context(cmd)
-    opt = click.Option(['--version'])
+    opt = click.Option(["--version"])
     formatters = _ParameterFormatters()
-    formatters.set_formatter(CustomizableParameters.container_url, 'http://my_server/{version}/my_stuff')
-    formatters.set_formatter(CustomizableParameters.container_name, 'downloaded')
-    formatters(ctx, opt, '1.3.2')
-    assert ctx.params[CustomizableParameters.container_url.name] == 'http://my_server/1.3.2/my_stuff'
-    assert ctx.params[CustomizableParameters.container_name.name] == 'downloaded'
+    formatters.set_formatter(
+        CustomizableParameters.container_url, "http://my_server/{version}/my_stuff"
+    )
+    formatters.set_formatter(CustomizableParameters.container_name, "downloaded")
+    formatters(ctx, opt, "1.3.2")
+    assert (
+        ctx.params[CustomizableParameters.container_url.name] == "http://my_server/1.3.2/my_stuff"
+    )
+    assert ctx.params[CustomizableParameters.container_name.name] == "downloaded"
 
 
 def test_parameter_formatters_2params():
-    cmd = click.Command('a_command')
+    cmd = click.Command("a_command")
     ctx = click.Context(cmd)
-    opt1 = click.Option(['--version'])
-    opt2 = click.Option(['--user'])
+    opt1 = click.Option(["--version"])
+    opt2 = click.Option(["--user"])
     formatters = _ParameterFormatters()
-    formatters.set_formatter(CustomizableParameters.container_url, 'http://my_server/{version}/{user}/my_stuff')
-    formatters.set_formatter(CustomizableParameters.container_name, 'downloaded-{version}')
-    formatters(ctx, opt1, '1.3.2')
-    formatters(ctx, opt2, 'cezar')
-    assert ctx.params[CustomizableParameters.container_url.name] == 'http://my_server/1.3.2/cezar/my_stuff'
-    assert ctx.params[CustomizableParameters.container_name.name] == 'downloaded-1.3.2'
+    formatters.set_formatter(
+        CustomizableParameters.container_url, "http://my_server/{version}/{user}/my_stuff"
+    )
+    formatters.set_formatter(CustomizableParameters.container_name, "downloaded-{version}")
+    formatters(ctx, opt1, "1.3.2")
+    formatters(ctx, opt2, "cezar")
+    assert (
+        ctx.params[CustomizableParameters.container_url.name]
+        == "http://my_server/1.3.2/cezar/my_stuff"
+    )
+    assert ctx.params[CustomizableParameters.container_name.name] == "downloaded-1.3.2"
+
 
 import re
+
+
 def test_deployer_cli_with_missing_container_option():
     result = click.testing.CliRunner().invoke(
         language_container_deployer_main,
-        ["--language-alias", "PYTHON3_PEC_TESTS_CLI",
-         "--bucketfs-user", "bfs-username",
-         "--bucketfs-password", "bfs-password",
-         "--dsn", "host:port",
-         "--db-user", "db-username",
-         "--db-pass", "db-password",
-         ])
-    assert result.exit_code == 1 and \
-        isinstance(result.exception, ValueError) and \
-        re.match((
-            "Incomplete parameter list."
-            ".*Please either provide the parameters"
-            ".*for an On-Prem database or"
-            ".*for a SaaS database."
-        ), str(result.exception))
+        [
+            "--language-alias",
+            "PYTHON3_PEC_TESTS_CLI",
+            "--bucketfs-user",
+            "bfs-username",
+            "--bucketfs-password",
+            "bfs-password",
+            "--dsn",
+            "host:port",
+            "--db-user",
+            "db-username",
+            "--db-pass",
+            "db-password",
+        ],
+    )
+    assert (
+        result.exit_code == 1
+        and isinstance(result.exception, ValueError)
+        and re.match(
+            (
+                "Incomplete parameter list."
+                ".*Please either provide the parameters"
+                ".*for an On-Prem database or"
+                ".*for a SaaS database."
+            ),
+            str(result.exception),
+        )
+    )
 
 
 def test_default_values(container_file):
@@ -147,8 +187,12 @@ def test_default_values(container_file):
         OptionMapper("ssl_client_certificate", "", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", "", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", True),
-        OptionMapper("deploy_timeout", cli="--deploy-timeout-minutes",
-                     cli_value=5, value=timedelta(minutes=10)),
+        OptionMapper(
+            "deploy_timeout",
+            cli="--deploy-timeout-minutes",
+            cli_value=5,
+            value=timedelta(minutes=10),
+        ),
         OptionMapper("display_progress", True),
     ]
     deployer = create_autospec(LanguageContainerDeployer)
@@ -193,10 +237,15 @@ def test_cli_options_passed_to_create(container_file):
         OptionMapper("ssl_client_certificate", cli="--ssl-client-cert-path"),
         OptionMapper("ssl_private_key", cli="--ssl-client-private-key"),
         OptionMapper("use_ssl_cert_validation", False),
-        OptionMapper("deploy_timeout", cli="--deploy-timeout-minutes",
-                     cli_value=6, value=timedelta(minutes=6)),
+        OptionMapper(
+            "deploy_timeout",
+            cli="--deploy-timeout-minutes",
+            cli_value=6,
+            value=timedelta(minutes=6),
+        ),
         OptionMapper("display_progress", False),
     ]
+
     def keys_and_values():
         for o in options:
             if o.value == False:
@@ -216,13 +265,15 @@ def test_cli_options_passed_to_create(container_file):
 
 
 @pytest.mark.parametrize(
-    "param, prompt", [
+    "param, prompt",
+    [
         (SecretParams.DB_PASSWORD, "DB password"),
         (SecretParams.BUCKETFS_PASSWORD, "BucketFS password"),
         (SecretParams.SAAS_ACCOUNT_ID, "SaaS account id"),
         (SecretParams.SAAS_DATABASE_ID, "SaaS database id"),
         (SecretParams.SAAS_TOKEN, "SaaS token"),
-        ])
+    ],
+)
 def test_secret_options_prompt(param, prompt):
     option = OptionMapper.from_secret_param(param, prompt=prompt)
     with CliRunner() as runner:
@@ -231,11 +282,8 @@ def test_secret_options_prompt(param, prompt):
 
 
 def test_secrets_from_env():
-    env_options = [
-        OptionMapper.from_secret_param(p)
-        for p in SecretParams
-    ]
-    patched_env = { o.env: o.value for o in env_options }
+    env_options = [OptionMapper.from_secret_param(p) for p in SecretParams]
+    patched_env = {o.env: o.value for o in env_options}
     with ExitStack() as stack:
         stack.enter_context(patch.dict(os.environ, patched_env, clear=True))
         runner = stack.enter_context(CliRunner())

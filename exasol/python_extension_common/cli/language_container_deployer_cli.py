@@ -1,11 +1,18 @@
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
-from exasol.python_extension_common.deployment.language_container_deployer import (
-    LanguageContainerDeployer, display_extract_progress, ExtractValidator)
-from exasol.python_extension_common.connections.pyexasol_connection import open_pyexasol_connection
-from exasol.python_extension_common.connections.bucketfs_location import create_bucketfs_location
 from exasol.python_extension_common.cli.std_options import StdParams
+from exasol.python_extension_common.connections.bucketfs_location import (
+    create_bucketfs_location,
+)
+from exasol.python_extension_common.connections.pyexasol_connection import (
+    open_pyexasol_connection,
+)
+from exasol.python_extension_common.deployment.language_container_deployer import (
+    ExtractValidator,
+    LanguageContainerDeployer,
+    display_extract_progress,
+)
 
 
 class LanguageContainerDeployerCli:
@@ -20,9 +27,9 @@ class LanguageContainerDeployerCli:
     Hence, we don't want to assume any particular names in the callback function.
     """
 
-    def __init__(self,
-                 container_url_arg: str | None = None,
-                 container_name_arg: str | None = None) -> None:
+    def __init__(
+        self, container_url_arg: str | None = None, container_name_arg: str | None = None
+    ) -> None:
         self._container_url_arg = container_url_arg
         self._container_name_arg = container_name_arg
 
@@ -41,30 +48,39 @@ class LanguageContainerDeployerCli:
         display_progress = kwargs[StdParams.display_progress.name]
 
         display_callback = display_extract_progress if display_progress else None
-        extract_validator = ExtractValidator(pyexasol_connection,
-                                             timedelta(minutes=deploy_timeout_minutes),
-                                             callback=display_callback)
-        deployer = LanguageContainerDeployer(pyexasol_connection,
-                                             language_alias,
-                                             bucketfs_location,
-                                             extract_validator)
+        extract_validator = ExtractValidator(
+            pyexasol_connection,
+            timedelta(minutes=deploy_timeout_minutes),
+            callback=display_callback,
+        )
+        deployer = LanguageContainerDeployer(
+            pyexasol_connection, language_alias, bucketfs_location, extract_validator
+        )
         if not upload_container:
-            deployer.run(alter_system=alter_system,
-                         allow_override=allow_override,
-                         wait_for_completion=wait_for_completion)
+            deployer.run(
+                alter_system=alter_system,
+                allow_override=allow_override,
+                wait_for_completion=wait_for_completion,
+            )
         elif container_file:
-            deployer.run(container_file=Path(container_file),
-                         alter_system=alter_system,
-                         allow_override=allow_override,
-                         wait_for_completion=wait_for_completion)
+            deployer.run(
+                container_file=Path(container_file),
+                alter_system=alter_system,
+                allow_override=allow_override,
+                wait_for_completion=wait_for_completion,
+            )
         elif kwargs.get(self._container_url_arg) and kwargs.get(self._container_name_arg):
-            deployer.download_and_run(kwargs[self._container_url_arg],
-                                      kwargs[self._container_name_arg],
-                                      alter_system=alter_system,
-                                      allow_override=allow_override,
-                                      wait_for_completion=wait_for_completion)
+            deployer.download_and_run(
+                kwargs[self._container_url_arg],
+                kwargs[self._container_name_arg],
+                alter_system=alter_system,
+                allow_override=allow_override,
+                wait_for_completion=wait_for_completion,
+            )
         else:
-            raise ValueError("To upload a language container either its release version "
-                             f"(--{StdParams.version.name}) or a path of the already "
-                             f"downloaded container file (--{StdParams.container_file.name}) "
-                             "must be provided.")
+            raise ValueError(
+                "To upload a language container either its release version "
+                f"(--{StdParams.version.name}) or a path of the already "
+                f"downloaded container file (--{StdParams.container_file.name}) "
+                "must be provided."
+            )

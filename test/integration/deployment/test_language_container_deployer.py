@@ -1,22 +1,19 @@
 from pathlib import Path
+from test.utils.db_utils import assert_udf_running
 from urllib.parse import urlparse
 
 import pyexasol
-from exasol.pytest_backend import BACKEND_ONPREM
 import pytest
+from exasol.pytest_backend import BACKEND_ONPREM
 
 from exasol.python_extension_common.deployment.language_container_deployer import (
-    LanguageContainerDeployer,
     LanguageActivationLevel,
+    LanguageContainerDeployer,
 )
 from exasol.python_extension_common.deployment.temp_schema import get_schema
-from test.utils.db_utils import assert_udf_running
 
 
-def test_container_file(deployer_factory,
-                        db_schema,
-                        language_alias,
-                        container_path):
+def test_container_file(deployer_factory, db_schema, language_alias, container_path):
     """
     Tests the deployment of a container in one call, including the activation at the System level.
     """
@@ -27,10 +24,7 @@ def test_container_file(deployer_factory,
         assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
 
 
-def test_container_file_no_temp_schema(deployer_factory,
-                                       db_schema,
-                                       language_alias,
-                                       container_path):
+def test_container_file_no_temp_schema(deployer_factory, db_schema, language_alias, container_path):
     """
     Tests the deployment of a container without creating a temporary schema for the upload completion test.
     """
@@ -41,10 +35,7 @@ def test_container_file_no_temp_schema(deployer_factory,
         assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
 
 
-def test_cert_failure(backend,
-                      exasol_config,
-                      bucketfs_config,
-                      language_alias):
+def test_cert_failure(backend, exasol_config, bucketfs_config, language_alias):
     """
     Verifies that connecting with an invalid SSL certificate fails with an
     exception.
@@ -55,8 +46,10 @@ def test_cert_failure(backend,
     deployer.
     """
     if backend != BACKEND_ONPREM:
-        pytest.skip(("We run this test only with the Docker-DB "
-                     "because SaaS always verifies the SSL certificate"))
+        pytest.skip(
+            "We run this test only with the Docker-DB "
+            "because SaaS always verifies the SSL certificate"
+        )
     parsed_url = urlparse(bucketfs_config.url)
     with pytest.raises(pyexasol.ExaConnectionFailedError, match="[SSL: CERTIFICATE_VERIFY_FAILED]"):
         deployer = LanguageContainerDeployer.create(
@@ -73,15 +66,12 @@ def test_cert_failure(backend,
             bucket="default",
             use_ssl_cert_validation=True,
             path_in_bucket="container",
-            )
+        )
 
 
 def test_download_and_alter_session(
-        deployer_factory,
-        db_schema,
-        language_alias,
-        container_url,
-        container_name):
+    deployer_factory, db_schema, language_alias, container_url, container_name
+):
     """
     Tests the deployment of a container in 3 stages - 1. download a
     container file from a URL, 2. upload the file to the BucketFS and
@@ -95,9 +85,8 @@ def test_download_and_alter_session(
 
 
 def test_disallow_override_makes_duplicate_alias_fail(
-        deployer_factory,
-        container_path: str,
-        container_name: str):
+    deployer_factory, container_path: str, container_name: str
+):
     """
     Tests that an attempt to activate a container fails with an exception
     when disallowing override and using an alias that already exists.
