@@ -3,6 +3,7 @@
 ## Features
 
 * #84 Added get_opt_name() and get_bool_opt_name() functions to the CLI framework.
+* #92 Added py.typed file
 
 ## Refactoring
 
@@ -13,3 +14,4 @@
 
 * Re-locked the dependencies (2025-02-11)
 * #90 Re-locked the dependencies (2025-04-10)
+* #93 Re-locked the dependencies (2025-05-06) for CVE-2025-43859

@@ -1,18 +1,20 @@
 [project]
 name = "exasol-python-extension-common"
 version = "0.8.0"
+requires-python = "^3.10.0"
 description = "A collection of common utilities for Exasol extensions."
 authors = [
     {name="Mikhail Beck", email="mikhail.beck@exasol.com"},
 ]
 readme = "README.md"
 license = "MIT"
+dynamic = ["dependencies"]
 
 [tool.poetry]
+requires-poetry = ">=2.1.0"
 packages = [ {include = "exasol"}, ]
 
 [tool.poetry.dependencies]
-python = "^3.10.0"
 pyexasol = ">=0.25.0,<1.0.0"
 exasol-bucketfs = ">=0.10.0"
 click = "^8.1.7"
