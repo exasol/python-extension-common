@@ -3,6 +3,7 @@
 ## Features
 
 * #84 Added get_opt_name() and get_bool_opt_name() functions to the CLI framework.
+* #92 Added py.typed file
 
 ## Refactoring
 
