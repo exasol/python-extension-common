@@ -998,7 +998,7 @@ description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
 groups = ["main", "dev"]
-markers = "python_version < \"3.11\""
+markers = "python_version == \"3.10\""
 files = [
     {file = "exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b"},
     {file = "exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc"},
@@ -3827,5 +3827,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.10.0"
-content-hash = "8e9b5e0cf3231a19f814970d1c995875f5f4e13a0f78ae961acfd244d723a542"
+python-versions = ">=3.10,<4.0"
+content-hash = "480342159ddc9454ad97e65645ac170679c49f78f2fcd095cd4cdb521600b340"
