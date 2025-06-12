@@ -46,7 +46,7 @@ class CliRunner:
         self.create = self.context.__enter__()
         return self
 
-    def run(self, *args: List[str]):
+    def run(self, *args: list[str]):
         self.result = click.testing.CliRunner().invoke(
             language_container_deployer_main,
             list(args),
