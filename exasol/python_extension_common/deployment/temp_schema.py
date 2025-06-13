@@ -1,7 +1,7 @@
 import random
 import string
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 import pyexasol  # type: ignore
 from tenacity import retry

@@ -44,7 +44,7 @@ def get_websocket_sslopt(
     """
 
     # Is server certificate validation required?
-    sslopt: Dict[str, object] = {
+    sslopt: dict[str, object] = {
         "cert_reqs": ssl.CERT_REQUIRED if use_ssl_cert_validation else ssl.CERT_NONE
     }
 
@@ -109,7 +109,7 @@ def get_udf_path(bucket_base_path: bfs.path.PathLike, bucket_file: str) -> PureP
     return PurePosixPath(file_path.as_udf_path())
 
 
-def display_extract_progress(n: int, pending: List[int]):
+def display_extract_progress(n: int, pending: list[int]):
     logger.info(f"Verify extraction: {len(pending)} of {n} nodes pending, IDs: {pending}")
 
 
@@ -333,7 +333,7 @@ class LanguageContainerDeployer:
         return result
 
     def _generate_new_language_settings(
-        self, path_in_udf: PurePosixPath, prev_lang_aliases: List[str]
+        self, path_in_udf: PurePosixPath, prev_lang_aliases: list[str]
     ) -> str:
         other_definitions = [
             alias_definition
@@ -351,7 +351,7 @@ class LanguageContainerDeployer:
         return new_definitions_str
 
     def _check_if_requested_language_alias_already_exists(
-        self, allow_override: bool, prev_lang_aliases: List[str]
+        self, allow_override: bool, prev_lang_aliases: list[str]
     ) -> None:
         definition_for_requested_alias = [
             alias_definition

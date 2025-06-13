@@ -48,7 +48,7 @@ class ParameterFormatters:
                 pattern = r"\{(?!" + (param.name or "") + r"\})\w+\}"
                 param_formatter = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", param_formatter)
                 kwargs = {param.name: value}
-                ctx.params[parameter_name] = param_formatter.format(**kwargs)
+                ctx.params[parameter_name] = param_formatter.format(**kwargs)  # type: ignore
 
         if value is not None:
             for prm_name, prm_formatter in self._formatters.items():

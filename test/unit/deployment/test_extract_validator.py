@@ -38,7 +38,7 @@ def archive_bucket_path():
 
 
 class ConnectionMock:
-    def __init__(self, spec: Dict[str, Any]):
+    def __init__(self, spec: dict[str, Any]):
         self.spec = spec
         self.values = iter(())
 
@@ -63,7 +63,7 @@ class ConnectionMock:
 
 
 class Simulator:
-    def __init__(self, nodes: int, udf_results: List[List[any]], create_script=()):
+    def __init__(self, nodes: int, udf_results: list[list[any]], create_script=()):
         self.create_script = create_script
         self.nodes = nodes
         self.udf = Mock(side_effect=udf_results)
@@ -91,7 +91,7 @@ class Simulator:
 
 
 @contextlib.contextmanager
-def mock_tenacity_wait(*wait_lists: List[int | float], max: int = 1000):
+def mock_tenacity_wait(*wait_lists: list[int | float], max: int = 1000):
     """
     This context mocks internals of library ``tenacity`` in order to
     simulate waiting for timeouts in ``tenacity.Retrying()``. All specified
