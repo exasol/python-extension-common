@@ -11,6 +11,7 @@ class Config:
     doc: Path = ROOT_DIR / "doc"
     version_file: Path = ROOT_DIR / "version.py"
     path_filters: Iterable[str] = ("dist", ".eggs", "venv", "metrics-schema", ".poetry")
+    source: Path = Path("exasol/python_extension_common")
 
     exasol_versions = ["7.1.9"]
     python_versions = ["3.10", "3.11"]
