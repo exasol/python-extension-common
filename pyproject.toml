@@ -75,3 +75,8 @@ ignore_missing_imports = true
 markers = [
     "saas: integration test that creates a db in SaaS.",
 ]
+
+[tool.sonar]
+projectKey = "com.exasol:python-extension-common"
+hostUrl = "https://sonarcloud.io"
+organization = "exasol"
