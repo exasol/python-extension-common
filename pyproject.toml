@@ -54,15 +54,12 @@ include = "\\.pyi?$"
 profile = "black"
 force_grid_wrap = 2
 
-
 [tool.pylint.master]
-errors-only = true
-output-format = "colorized,json:.lint.json,text:.lint.txt"
+fail-under = 6.3
 
 [tool.pylint.format]
-max-line-length = 100
+max-line-length = 88
 max-module-lines = 800
-
 
 [[tool.mypy.overrides]]
 module = [
