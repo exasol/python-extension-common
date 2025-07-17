@@ -230,16 +230,23 @@ def test_slc_deployer_get_language_definition(
     assert command == expected_command
 
 
-def mock_deployer(pyexasol_conn, pylanguage_alias, bfs_path):
-    deployer = LanguageContainerDeployer(pyexasol_conn, language_alias, bfs_path)
-    deployer.upload_container = Mock()
-    deployer.activate_container = Mock()
-    return deployer
-
-
 def test_extract_validator_called(sample_bucket_path, container_deployer, container_file):
     container_deployer.run(container_file, wait_for_completion=True)
     expected = container_deployer._extract_validator.verify_all_nodes
     assert expected.called and equal(
         expected.call_args.args[2], sample_bucket_path / container_file.name
     )
+
+@pytest.mark.parametrize(
+    "alter_system, print_alter_session_activation, invocation_generate_activation_command_expected",
+    [
+        (False, True, True),
+        (True, True, False),
+        (False, False, False),
+        (True, False, False),
+    ],
+)
+def test_print_alter_session_activation(container_deployer, container_file, alter_system, print_alter_session_activation, invocation_generate_activation_command_expected):
+    container_deployer.generate_activation_command = MagicMock()
+    container_deployer.run(container_file, wait_for_completion=True, alter_system=alter_system, print_alter_session_activation=print_alter_session_activation)
+    assert container_deployer.generate_activation_command.called == invocation_generate_activation_command_expected

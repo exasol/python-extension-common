@@ -4,6 +4,10 @@
 
 * #98: Updated saas-api to version >1.0,<2.0 and pytest-backend
 
+## Features
+
+* #107: Add parameter to disable printing the alter session info
+
 ## Dependency Updates
 
 Compared to version 0.3.1 this release updates the following dependencies:
