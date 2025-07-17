@@ -125,7 +125,7 @@ class LanguageContainerBuilder:
         image_info = api.build(flavor_path=(str(self.flavor_path),), goal=("release",))
         return image_info
 
-    def export(self, export_path: str | Path | None = None) -> ExportContainerResult:
+    def export(self, export_path: str | Path | None = None, with_compression = True) -> ExportContainerResult:
         """
         Exports the container into an archive.
         """
