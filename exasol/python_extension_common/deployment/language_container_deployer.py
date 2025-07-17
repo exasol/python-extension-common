@@ -159,7 +159,7 @@ class LanguageContainerDeployer:
         allow_override   - If True the activation of a language container with the same alias will be
                            overriden, otherwise a RuntimeException will be thrown.
         wait_for_completion - If True will wait until the language container becomes operational.
-        print_alter_session_activation - If True will and alter_system is False,
+        print_alter_session_activation - If True and alter_system is False,
                                          it will print the ALTER SESSION command to stdout.
         """
 
@@ -208,13 +208,14 @@ class LanguageContainerDeployer:
                             For this to work either of the two conditions should be met.
                             The pyexasol connection should have an open schema, or
                             The calling user should have a permission to create schema.
-        print_alter_session_activation - If True will and alter_system is False,
+        print_alter_session_activation - If True and alter_system is False,
                                          it will print the ALTER SESSION command to stdout.
         """
 
         if alter_system and print_alter_session_activation:
-            logging.warning("LanguageContainerDeployer - flags alter_system "
-                            "and print_alter_session_activation are both enabled.")
+            logging.warning("LanguageContainerDeployer - flags 'alter_system' "
+                            "and 'print_alter_session_activation' are both enabled. "
+                            "Flag 'print_alter_session_activation' will be ignored.")
 
         if not bucket_file_path:
             if not container_file:
