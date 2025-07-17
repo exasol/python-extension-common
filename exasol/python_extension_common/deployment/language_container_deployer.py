@@ -213,9 +213,11 @@ class LanguageContainerDeployer:
         """
 
         if alter_system and print_alter_session_activation:
-            logging.warning("LanguageContainerDeployer - flags 'alter_system' "
-                            "and 'print_alter_session_activation' are both enabled. "
-                            "Flag 'print_alter_session_activation' will be ignored.")
+            logging.warning(
+                "LanguageContainerDeployer - flags 'alter_system' "
+                "and 'print_alter_session_activation' are both enabled. "
+                "Flag 'print_alter_session_activation' will be ignored."
+            )
 
         if not bucket_file_path:
             if not container_file:
