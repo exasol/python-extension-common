@@ -147,6 +147,7 @@ class LanguageContainerDeployer:
         alter_system: bool = True,
         allow_override: bool = False,
         wait_for_completion: bool = True,
+        print_activation_statements: bool = True,
     ) -> None:
         """
         Downloads the language container from the provided url to a temporary file and then deploys it.
@@ -158,6 +159,8 @@ class LanguageContainerDeployer:
         allow_override   - If True the activation of a language container with the same alias will be
                            overriden, otherwise a RuntimeException will be thrown.
         wait_for_completion - If True will wait until the language container becomes operational.
+        print_activation_statements - If True and alter_system is False,
+                                      it will print the ALTER SESSION command to stdout.
         """
 
         with tempfile.NamedTemporaryFile() as tmp_file:
@@ -171,6 +174,7 @@ class LanguageContainerDeployer:
                 alter_system,
                 allow_override,
                 wait_for_completion,
+                print_activation_statements,
             )
 
     def _upload_path(self, bucket_file_path: str | None) -> bfs.path.PathLike:
@@ -183,6 +187,7 @@ class LanguageContainerDeployer:
         alter_system: bool = True,
         allow_override: bool = False,
         wait_for_completion: bool = True,
+        print_activation_statements: bool = True,
     ) -> None:
         """
         Deploys the language container. This includes two steps, both of which are optional:
@@ -203,6 +208,8 @@ class LanguageContainerDeployer:
                             For this to work either of the two conditions should be met.
                             The pyexasol connection should have an open schema, or
                             The calling user should have a permission to create schema.
+        print_activation_statements - If True and alter_system is False,
+                                      it will print the ALTER SESSION command to stdout.
         """
 
         if not bucket_file_path:
@@ -225,18 +232,18 @@ class LanguageContainerDeployer:
         if container_file and wait_for_completion:
             self._wait_container_upload_completion(bucket_file_path)
 
-        if not alter_system:
+        if not alter_system and print_activation_statements:
             message = dedent(
                 f"""
-            In SQL, you can activate the SLC
-            by using the following statements:
-
-            To activate the SLC only for the current session:
-            {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-
-            To activate the SLC on the system:
-            {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
-            """
+                In SQL, you can activate the SLC
+                by using the following statements:
+    
+                To activate the SLC only for the current session:
+                {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
+    
+                To activate the SLC on the system:
+                {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
+                """
             )
             print(message)
 
