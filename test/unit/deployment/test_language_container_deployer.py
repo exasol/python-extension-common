@@ -239,7 +239,7 @@ def test_extract_validator_called(sample_bucket_path, container_deployer, contai
 
 
 @pytest.mark.parametrize(
-    "alter_system, print_alter_session_activation, invocation_generate_activation_command_expected",
+    "alter_system, print_activation_statements, invocation_generate_activation_command_expected",
     [
         (False, True, True),
         (True, True, False),
@@ -251,7 +251,7 @@ def test_print_alter_session_activation(
     container_deployer,
     container_file,
     alter_system,
-    print_alter_session_activation,
+    print_activation_statements,
     invocation_generate_activation_command_expected,
 ):
     container_deployer.generate_activation_command = MagicMock()
@@ -259,7 +259,7 @@ def test_print_alter_session_activation(
         container_file,
         wait_for_completion=True,
         alter_system=alter_system,
-        print_alter_session_activation=print_alter_session_activation,
+        print_activation_statements=print_activation_statements,
     )
     assert (
         container_deployer.generate_activation_command.called
