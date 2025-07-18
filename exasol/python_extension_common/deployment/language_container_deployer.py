@@ -212,13 +212,6 @@ class LanguageContainerDeployer:
                                          it will print the ALTER SESSION command to stdout.
         """
 
-        if alter_system and print_alter_session_activation:
-            logging.warning(
-                "LanguageContainerDeployer - flags 'alter_system' "
-                "and 'print_alter_session_activation' are both enabled. "
-                "Flag 'print_alter_session_activation' will be ignored."
-            )
-
         if not bucket_file_path:
             if not container_file:
                 raise ValueError("Either a container file or a bucket file path must be specified.")
@@ -242,15 +235,15 @@ class LanguageContainerDeployer:
         if not alter_system and print_alter_session_activation:
             message = dedent(
                 f"""
-            In SQL, you can activate the SLC
-            by using the following statements:
-
-            To activate the SLC only for the current session:
-            {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-
-            To activate the SLC on the system:
-            {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
-            """
+                In SQL, you can activate the SLC
+                by using the following statements:
+    
+                To activate the SLC only for the current session:
+                {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
+    
+                To activate the SLC on the system:
+                {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
+                """
             )
             print(message)
 
