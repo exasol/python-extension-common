@@ -34,6 +34,7 @@ def test_prepare_flavor_extra():
         assert container_builder.requirements_file.stat().st_size > len(dummy_req)
         assert container_builder.requirements_file.read_text().startswith(dummy_req)
 
+
 @pytest.fixture(scope="session")
 def language_container_builder():
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
@@ -42,6 +43,7 @@ def language_container_builder():
         # Prepare the SLC
         container_builder.prepare_flavor(project_directory)
         yield container_builder
+
 
 @pytest.mark.parametrize(
     "compression_strategy, expected_container_file_suffix",
@@ -58,19 +60,19 @@ def test_language_container_builder(
     compression_strategy,
     expected_container_file_suffix,
 ):
-        # Build the SLC
-        export_result = language_container_builder.export(compression_strategy=compression_strategy)
-        export_info = export_result.export_infos[str(language_container_builder.flavor_path)]["release"]
+    # Build the SLC
+    export_result = language_container_builder.export(compression_strategy=compression_strategy)
+    export_info = export_result.export_infos[str(language_container_builder.flavor_path)]["release"]
 
-        container_file_path = Path(export_info.cache_file)
-        assert container_file_path.name.endswith(
-            expected_container_file_suffix
-        ), f"Expected container file suffix {expected_container_file_suffix} does not match {container_file_path}"
+    container_file_path = Path(export_info.cache_file)
+    assert container_file_path.name.endswith(
+        expected_container_file_suffix
+    ), f"Expected container file suffix {expected_container_file_suffix} does not match {container_file_path}"
 
-        with deployer_factory(db_schema) as deployer:
-            deployer.run(
-                container_file=Path(container_file_path), alter_system=True, allow_override=True
-            )
+    with deployer_factory(db_schema) as deployer:
+        deployer.run(
+            container_file=Path(container_file_path), alter_system=True, allow_override=True
+        )
 
-            # Verify that the deployed SLC works.
-            assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
+        # Verify that the deployed SLC works.
+        assert_udf_running(deployer.pyexasol_connection, language_alias, db_schema)
