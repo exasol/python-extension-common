@@ -438,9 +438,7 @@ class LanguageContainerDeployer:
                 path=path_in_bucket,
             )
 
-        elif all(
-            (saas_url, saas_account_id, saas_token, any((saas_database_id, saas_database_name)))
-        ):
+        elif saas_url and saas_account_id and saas_token:
             connection_params = get_connection_params(
                 host=saas_url,
                 account_id=saas_account_id,
@@ -448,12 +446,19 @@ class LanguageContainerDeployer:
                 database_name=saas_database_name,
                 pat=saas_token,
             )
-            saas_database_id = saas_database_id or get_database_id(
-                host=saas_url,
-                account_id=saas_account_id,
-                pat=saas_token,
-                database_name=saas_database_name,
-            )
+            if not saas_database_id and saas_database_name:
+                saas_database_id = get_database_id(
+                    host=saas_url,
+                    account_id=saas_account_id,
+                    pat=saas_token,
+                    database_name=saas_database_name,
+                )
+            elif not saas_database_id and not saas_database_name:
+                raise ValueError(
+                    "Incomplete parameter list. "
+                    "Please either provide the parameters saas_database_id or  "
+                    "saas_database_name for a SaaS database."
+                )
             bucketfs_path = bfs.path.build_path(
                 backend=bfs.path.StorageBackend.saas,
                 url=saas_url,
