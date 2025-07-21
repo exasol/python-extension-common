@@ -1,5 +1,9 @@
 from contextlib import ExitStack
 from pathlib import Path
+
+import pytest
+from exasol.slc.models.compression_strategy import CompressionStrategy
+
 from test.utils.db_utils import assert_udf_running
 
 from exasol.python_extension_common.deployment.language_container_builder import (
@@ -31,18 +35,25 @@ def test_prepare_flavor_extra():
         assert container_builder.requirements_file.stat().st_size > len(dummy_req)
         assert container_builder.requirements_file.read_text().startswith(dummy_req)
 
-
-def test_language_container_builder(deployer_factory, db_schema, language_alias):
+@pytest.mark.parametrize(
+    "compression_strategy, expected_container_file_suffix",
+    [
+        (CompressionStrategy.GZIP, ".tar.gz"),
+        (CompressionStrategy.NONE, ".tar"),
+    ],
+)
+def test_language_container_builder(deployer_factory, db_schema, language_alias, compression_strategy, expected_container_file_suffix):
     project_directory = find_path_backwards("pyproject.toml", __file__).parent
 
-    with ExitStack() as stack:
+    with (ExitStack() as stack):
         # Build the SLC
         container_builder = stack.enter_context(LanguageContainerBuilder("test_container"))
         container_builder.prepare_flavor(project_directory)
-        export_result = container_builder.export()
+        export_result = container_builder.export(compression_strategy=compression_strategy)
         export_info = export_result.export_infos[str(container_builder.flavor_path)]["release"]
 
         container_file_path = Path(export_info.cache_file)
+        assert str(container_file_path.suffix).endswith(expected_container_file_suffix), f"Expected container file suffix {expected_container_file_suffix} does not match {container_file_path}"
 
         # Deploy the SCL
         deployer = stack.enter_context(deployer_factory(create_test_schema=True))
