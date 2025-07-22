@@ -69,4 +69,4 @@ def test_export(mock_export, tmp_path, compression_strategy):
                 compression_strategy=compression_strategy,
             ),
         ]
-        mock_export.assert_has_calls(expected_calls)
+        assert mock_export.has_calls(expected_calls)
