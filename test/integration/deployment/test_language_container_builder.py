@@ -45,33 +45,33 @@ def language_container_builder():
         yield container_builder
 
 
-@pytest.mark.parametrize(
-    "compression_strategy, expected_container_file_suffix",
-    [
+@pytest.fixture(
+    scope="session",
+    params=[
         (CompressionStrategy.GZIP, ".tar.gz"),
         (CompressionStrategy.NONE, ".tar"),
     ],
+    ids=["with_gzip_compression", "no_compression"],
 )
-def test_language_container_builder(
-    language_container_builder,
-    deployer_factory,
-    db_schema,
-    language_alias,
-    compression_strategy,
-    expected_container_file_suffix,
-):
-    # Build the SLC
+def slc_container_file_path(request, language_container_builder):
+    compression_strategy = request.param[0]
+    expected_container_file_suffix = request.param[1]
+
     export_result = language_container_builder.export(compression_strategy=compression_strategy)
     export_info = export_result.export_infos[str(language_container_builder.flavor_path)]["release"]
-
     container_file_path = Path(export_info.cache_file)
     assert container_file_path.name.endswith(
         expected_container_file_suffix
     ), f"Expected container file suffix {expected_container_file_suffix} does not match {container_file_path}"
+    return container_file_path
 
+
+def test_language_container_builder(
+    language_container_builder, deployer_factory, db_schema, language_alias, slc_container_file_path
+):
     with deployer_factory(db_schema) as deployer:
         deployer.run(
-            container_file=Path(container_file_path), alter_system=True, allow_override=True
+            container_file=Path(slc_container_file_path), alter_system=True, allow_override=True
         )
 
         # Verify that the deployed SLC works.
