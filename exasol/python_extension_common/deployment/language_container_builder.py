@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Callable
 
 from exasol.slc import api  # type: ignore
+from exasol.slc.models.compression_strategy import CompressionStrategy
 from exasol.slc.models.export_container_result import (
     ExportContainerResult,  # type: ignore
 )
@@ -125,7 +126,9 @@ class LanguageContainerBuilder:
         image_info = api.build(flavor_path=(str(self.flavor_path),), goal=("release",))
         return image_info
 
-    def export(self, export_path: str | Path | None = None) -> ExportContainerResult:
+    def export(
+        self, export_path: str | Path | None = None, compression_strategy=CompressionStrategy.GZIP
+    ) -> ExportContainerResult:
         """
         Exports the container into an archive.
         """
@@ -143,6 +146,7 @@ class LanguageContainerBuilder:
             flavor_path=(str(self.flavor_path),),
             output_directory=str(self._output_path),
             export_path=str(export_path),
+            compression_strategy=compression_strategy,
         )
         return export_result
 

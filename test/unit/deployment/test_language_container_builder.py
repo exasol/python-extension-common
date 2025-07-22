@@ -1,6 +1,13 @@
 import re
+from unittest.mock import (
+    MagicMock,
+    call,
+)
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from exasol.slc import api
+from exasol.slc.models.compression_strategy import CompressionStrategy
 
 from exasol.python_extension_common.deployment.language_container_builder import (
     LanguageContainerBuilder,
@@ -33,3 +40,33 @@ def test_copy_slc_flavor(tmp_path):
     flavor_base = tmp_path / "flavor_base"
     assert flavor_base.exists()
     assert len(list(flavor_base.rglob("*"))) == 7
+
+
+@pytest.fixture
+def mock_export(monkeypatch: MonkeyPatch) -> MagicMock:
+    mock_function_to_mock = MagicMock()
+    monkeypatch.setattr(api, "export", mock_function_to_mock)
+    return mock_function_to_mock
+
+
+@pytest.mark.parametrize(
+    "compression_strategy",
+    [
+        (CompressionStrategy.GZIP),
+        (CompressionStrategy.NONE),
+    ],
+)
+def test_export(mock_export, tmp_path, compression_strategy):
+    project_directory = find_path_backwards("pyproject.toml", __file__).parent
+    with LanguageContainerBuilder("test_container") as builder:
+        builder.prepare_flavor(project_directory)
+        builder.export(tmp_path, compression_strategy=compression_strategy)
+        expected_calls = [
+            call(
+                flavor_path=(str(builder.flavor_path),),
+                output_directory=str(builder._output_path),
+                export_path=str(tmp_path),
+                compression_strategy=compression_strategy,
+            ),
+        ]
+        assert mock_export.has_calls(expected_calls)
