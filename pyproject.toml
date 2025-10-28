@@ -15,7 +15,7 @@ requires-poetry = ">=2.1.0"
 packages = [ {include = "exasol"}, ]
 
 [tool.poetry.dependencies]
-pyexasol = ">=0.25.0,<1.0.0"
+pyexasol = ">=0.25.0,<2"
 exasol-bucketfs = ">=0.10.0,<3"
 click = "^8.1.7"
 exasol-saas-api = ">=1.1.0,<3"
