@@ -1,19 +1,25 @@
 import re
-import exasol.bucketfs as bfs   # type: ignore
-import pyexasol     # type: ignore
-
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 from textwrap import dedent
-from typing import Callable, List
+from typing import (
+    Callable,
+    List,
+)
+
+import exasol.bucketfs as bfs  # type: ignore
+import pyexasol  # type: ignore
 from tenacity import Retrying
-from tenacity.wait import wait_fixed
 from tenacity.stop import stop_after_delay
+from tenacity.wait import wait_fixed
 
 MANIFEST_FILE = "exasol-manifest.json"
 
 
 def _udf_name(schema: str | None, name: str) -> str:
-    timestamp = f'{datetime.now().timestamp():.0f}'
+    timestamp = f"{datetime.now().timestamp():.0f}"
     suffix = f'"{name}_manifest_{timestamp}"'
     return f'"{schema}".{suffix}' if schema else suffix
 
@@ -42,12 +48,14 @@ class ExtractValidator:
     the database cluster as returned by nproc() and a list of the IDs of the
     pending nodes on which the MANIFEST_FILE could not be found, yet.
     """
-    def __init__(self,
-                 pyexasol_connection: pyexasol.ExaConnection,
-                 timeout: timedelta,
-                 interval: timedelta = timedelta(seconds=30),
-                 callback: Callable[[int, List[int]], None] | None = None,
-                 ) -> None:
+
+    def __init__(
+        self,
+        pyexasol_connection: pyexasol.ExaConnection,
+        timeout: timedelta,
+        interval: timedelta = timedelta(seconds=30),
+        callback: Callable[[int, list[int]], None] | None = None,
+    ) -> None:
         self._pyexasol_conn = pyexasol_connection
         self._timeout = timeout
         self._interval = interval
@@ -55,9 +63,8 @@ class ExtractValidator:
 
     def _create_manifest_udf_with_retry(self, language_alias: str, udf_name: str):
         for attempt in Retrying(
-                wait=wait_fixed(self._interval),
-                stop=stop_after_delay(self._timeout),
-                reraise=True):
+            wait=wait_fixed(self._interval), stop=stop_after_delay(self._timeout), reraise=True
+        ):
             with attempt:
                 self._create_manifest_udf(language_alias, udf_name)
 
@@ -71,7 +78,9 @@ class ExtractValidator:
         Much more a later statement "CREATE SCRIPT" will fail with an error
         message. Hence we need to use a retry here, as well.
         """
-        self._pyexasol_conn.execute(dedent(f"""
+        self._pyexasol_conn.execute(
+            dedent(
+                f"""
             CREATE OR REPLACE {language_alias} SET SCRIPT
                 {udf_name}(my_path VARCHAR(256))
                 EMITS (node INTEGER, manifest BOOL) AS
@@ -80,13 +89,15 @@ class ExtractValidator:
                 ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
             /
             """
-        ))
+            )
+        )
 
-    def _check_all_nodes_with_retry(self, udf_name: str, nproc: int, manifest: str, timeout: timedelta):
+    def _check_all_nodes_with_retry(
+        self, udf_name: str, nproc: int, manifest: str, timeout: timedelta
+    ):
         for attempt in Retrying(
-                wait=wait_fixed(self._interval),
-                stop=stop_after_delay(timeout),
-                reraise=True):
+            wait=wait_fixed(self._interval), stop=stop_after_delay(timeout), reraise=True
+        ):
             with attempt:
                 self._check_all_nodes(udf_name, nproc, manifest)
 
@@ -97,14 +108,16 @@ class ExtractValidator:
             FROM VALUES BETWEEN 1 AND {nproc} t(i) GROUP BY i
             """
         ).fetchall()
-        pending = list( x[0] for x in result if not x[1] )
+        pending = list(x[0] for x in result if not x[1])
         self._callback(nproc, pending)
         if len(pending) > 0:
             raise ExtractException(
-                f"{len(pending)} of {nproc} nodes are still pending."
-                f" IDs: {pending}")
+                f"{len(pending)} of {nproc} nodes are still pending." f" IDs: {pending}"
+            )
 
-    def verify_all_nodes(self, schema: str, language_alias: str, bfs_archive_path: bfs.path.PathLike):
+    def verify_all_nodes(
+        self, schema: str, language_alias: str, bfs_archive_path: bfs.path.PathLike
+    ):
         """
         Verify if the given bfs_archive_path was extracted on all nodes
         successfully.

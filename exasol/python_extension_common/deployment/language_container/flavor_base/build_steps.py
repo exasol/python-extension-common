@@ -1,4 +1,6 @@
-from exasol.slc.internal.tasks.build.docker_flavor_image_task import DockerFlavorAnalyzeImageTask    # type: ignore
+from exasol.slc.internal.tasks.build.docker_flavor_image_task import (
+    DockerFlavorAnalyzeImageTask,  # type: ignore
+)
 
 
 class AnalyzeDependencies(DockerFlavorAnalyzeImageTask):
@@ -17,7 +19,7 @@ class AnalyzeRelease(DockerFlavorAnalyzeImageTask):
         return "release"
 
     def requires_tasks(self):
-        return {"dependencies":  AnalyzeDependencies}
+        return {"dependencies": AnalyzeDependencies}
 
     def get_path_in_flavor(self):
         return "flavor_base"

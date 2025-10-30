@@ -1,56 +1,57 @@
 import os
+
 import click
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 
 from exasol.python_extension_common.cli.std_options import (
-    ParameterFormatters,
     SECRET_DISPLAY,
-    StdTags,
+    ParameterFormatters,
     StdParams,
+    StdTags,
+    check_params,
     create_std_option,
-    select_std_options,
-    get_opt_name,
     get_bool_opt_name,
     get_cli_arg,
+    get_opt_name,
     kwargs_to_cli_args,
-    check_params
+    select_std_options,
 )
 
 
 def test_parameter_formatters_1param():
-    container_url_param = 'container_url'
-    cmd = click.Command('a_command')
+    container_url_param = "container_url"
+    cmd = click.Command("a_command")
     ctx = click.Context(cmd)
-    opt = click.Option(['--version'])
+    opt = click.Option(["--version"])
     formatters = ParameterFormatters()
-    formatters.set_formatter(container_url_param, 'http://my_server/{version}/my_stuff')
-    formatters(ctx, opt, '1.3.2')
-    assert ctx.params[container_url_param] == 'http://my_server/1.3.2/my_stuff'
+    formatters.set_formatter(container_url_param, "http://my_server/{version}/my_stuff")
+    formatters(ctx, opt, "1.3.2")
+    assert ctx.params[container_url_param] == "http://my_server/1.3.2/my_stuff"
 
 
 def test_parameter_formatters_2params():
-    container_url_param = 'container_url'
-    container_name_param = 'container_name'
-    cmd = click.Command('a_command')
+    container_url_param = "container_url"
+    container_name_param = "container_name"
+    cmd = click.Command("a_command")
     ctx = click.Context(cmd)
-    opt1 = click.Option(['--version'])
-    opt2 = click.Option(['--user'])
+    opt1 = click.Option(["--version"])
+    opt2 = click.Option(["--user"])
     formatters = ParameterFormatters()
-    formatters.set_formatter(container_url_param, 'http://my_server/{version}/{user}/my_stuff')
-    formatters.set_formatter(container_name_param, 'downloaded-{version}')
-    formatters(ctx, opt1, '1.3.2')
-    formatters(ctx, opt2, 'cezar')
-    assert ctx.params[container_url_param] == 'http://my_server/1.3.2/cezar/my_stuff'
-    assert ctx.params[container_name_param] == 'downloaded-1.3.2'
+    formatters.set_formatter(container_url_param, "http://my_server/{version}/{user}/my_stuff")
+    formatters.set_formatter(container_name_param, "downloaded-{version}")
+    formatters(ctx, opt1, "1.3.2")
+    formatters(ctx, opt2, "cezar")
+    assert ctx.params[container_url_param] == "http://my_server/1.3.2/cezar/my_stuff"
+    assert ctx.params[container_name_param] == "downloaded-1.3.2"
 
 
 def test_get_opt_name():
-    assert get_opt_name('db_user') == '--db-user'
+    assert get_opt_name("db_user") == "--db-user"
 
 
 def test_get_bool_opt_name():
-    assert get_bool_opt_name('alter_system') == '--alter-system/--no-alter-system'
+    assert get_bool_opt_name("alter_system") == "--alter-system/--no-alter-system"
 
 
 def test_create_std_option():
@@ -61,7 +62,7 @@ def test_create_std_option():
 def test_create_std_option_bool():
     opt = create_std_option(StdParams.allow_override, type=bool)
     assert opt.name == StdParams.allow_override.name
-    assert '--no-allow-override' in opt.secondary_opts
+    assert "--no-allow-override" in opt.secondary_opts
 
 
 def test_create_std_option_secret():
@@ -72,7 +73,7 @@ def test_create_std_option_secret():
 
 
 def test_create_std_option_arbitrary_name():
-    opt_name = 'xyz'
+    opt_name = "xyz"
     opt = create_std_option(opt_name, type=str)
     assert opt.name == opt_name
 
@@ -85,7 +86,7 @@ def test_select_std_options():
 
 
 def test_select_std_options_all():
-    opts = {opt.name for opt in select_std_options('all')}
+    opts = {opt.name for opt in select_std_options("all")}
     expected_opts = {std_param.name for std_param in StdParams}
     assert opts == expected_opts
 
@@ -100,32 +101,33 @@ def test_select_std_options_restricted():
 
 def test_select_std_options_multi_tags():
     opts = {opt.name for opt in select_std_options([StdTags.BFS, StdTags.SLC])}
-    expected_opts_bfs = {std_param.name for std_param in StdParams
-                         if StdTags.BFS in std_param.tags}
-    expected_opts_slc = {std_param.name for std_param in StdParams
-                         if StdTags.SLC in std_param.tags}
+    expected_opts_bfs = {std_param.name for std_param in StdParams if StdTags.BFS in std_param.tags}
+    expected_opts_slc = {std_param.name for std_param in StdParams if StdTags.SLC in std_param.tags}
     expected_opts = expected_opts_bfs.union(expected_opts_slc)
     assert opts == expected_opts
 
 
 def test_select_std_options_with_exclude():
-    opts = [opt.name for opt in select_std_options(StdTags.SLC,
-                                                   exclude=StdParams.language_alias)]
+    opts = [opt.name for opt in select_std_options(StdTags.SLC, exclude=StdParams.language_alias)]
     assert StdParams.language_alias.name not in opts
 
 
 def test_select_std_options_with_override():
-    opts = {opt.name: opt for opt in select_std_options(
-        StdTags.SLC, override={StdParams.alter_system: {'type': bool, 'default': False}})}
+    opts = {
+        opt.name: opt
+        for opt in select_std_options(
+            StdTags.SLC, override={StdParams.alter_system: {"type": bool, "default": False}}
+        )
+    }
     assert not opts[StdParams.alter_system.name].default
 
 
 def test_select_std_options_with_formatter():
-    container_url_arg = 'container_url'
-    container_name_arg = 'container_name'
+    container_url_arg = "container_url"
+    container_name_arg = "container_name"
     url_format = "https://my_service_url/{version}/page"
     name_format = "my_service_name"
-    version = '4.5.6'
+    version = "4.5.6"
     expected_url = url_format.format(version=version)
     expected_name = name_format
 
@@ -138,9 +140,9 @@ def test_select_std_options_with_formatter():
     ver_formatter.set_formatter(container_name_arg, name_format)
 
     opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatter})
-    cmd = click.Command('do_something', params=opts, callback=func)
+    cmd = click.Command("do_something", params=opts, callback=func)
     runner = CliRunner()
-    runner.invoke(cmd, args=f'--version {version}', catch_exceptions=False, standalone_mode=False)
+    runner.invoke(cmd, args=f"--version {version}", catch_exceptions=False, standalone_mode=False)
 
 
 def test_hidden_opt_with_envar():
@@ -150,14 +152,14 @@ def test_hidden_opt_with_envar():
     """
     std_param = StdParams.db_password
     envar_name = std_param.name.upper()
-    param_value = 'my_password'
+    param_value = "my_password"
 
     def func(**kwargs):
         assert std_param.name in kwargs
         assert kwargs[std_param.name] == param_value
 
     opt = create_std_option(std_param, type=str, hide_input=True)
-    cmd = click.Command('do_something', params=[opt], callback=func)
+    cmd = click.Command("do_something", params=[opt], callback=func)
     runner = CliRunner()
     os.environ[envar_name] = param_value
     try:
@@ -167,76 +169,80 @@ def test_hidden_opt_with_envar():
 
 
 @pytest.mark.parametrize(
-    ['std_param', 'param_value', 'expected_result'],
+    ["std_param", "param_value", "expected_result"],
     [
-        (StdParams.db_user, 'Me', '--db-user "Me"'),
-        ('user_rating', 5, '--user-rating "5"'),
-        (StdParams.use_ssl_cert_validation, True, '--use-ssl-cert-validation'),
-        (StdParams.use_ssl_cert_validation, False, '--no-use-ssl-cert-validation')
-    ]
+        (StdParams.db_user, "Me", '--db-user "Me"'),
+        ("user_rating", 5, '--user-rating "5"'),
+        (StdParams.use_ssl_cert_validation, True, "--use-ssl-cert-validation"),
+        (StdParams.use_ssl_cert_validation, False, "--no-use-ssl-cert-validation"),
+    ],
 )
 def test_get_cli_arg(std_param, param_value, expected_result):
     assert get_cli_arg(std_param, param_value) == expected_result
 
 
 def test_kwargs_to_cli_args():
-    arg_string = kwargs_to_cli_args(use_rgb=True, colour='Blue', compress_image=False)
+    arg_string = kwargs_to_cli_args(use_rgb=True, colour="Blue", compress_image=False)
     arg_set = set(arg_string.split())
-    expected_set = {'--use-rgb', '--colour', '"Blue"', '--no-compress-image'}
+    expected_set = {"--use-rgb", "--colour", '"Blue"', "--no-compress-image"}
     assert arg_set == expected_set
 
 
 @pytest.mark.parametrize(
-    ['std_params', 'param_kwargs', 'expected_result'],
+    ["std_params", "param_kwargs", "expected_result"],
     [
         (
             [StdParams.dsn, StdParams.db_user],
-            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
-            True
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: "my_user_name"},
+            True,
         ),
         (
             [StdParams.dsn, StdParams.db_user],
-            {StdParams.dsn.name: 'my_dsn', StdParams.db_password.name: 'my_password'},
-            False
+            {StdParams.dsn.name: "my_dsn", StdParams.db_password.name: "my_password"},
+            False,
         ),
         (
             [StdParams.dsn, StdParams.db_user],
-            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: ''},
-            False
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: ""},
+            False,
         ),
         (
             [[StdParams.dsn, StdParams.db_user], [StdParams.saas_url, StdParams.saas_account_id]],
-            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: "my_user_name"},
             False,
         ),
         (
             [[StdParams.dsn, StdParams.saas_url], [StdParams.db_user, StdParams.saas_account_id]],
-            {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: "my_user_name"},
             True,
         ),
         (
             [StdParams.dsn, StdParams.use_ssl_cert_validation],
-            {StdParams.dsn.name: 'my_dsn', StdParams.use_ssl_cert_validation.name: False},
-            True
+            {StdParams.dsn.name: "my_dsn", StdParams.use_ssl_cert_validation.name: False},
+            True,
         ),
         (
             StdParams.dsn,
-            {StdParams.dsn.name: 'my_dsn', StdParams.use_ssl_cert_validation.name: False},
-            True
+            {StdParams.dsn.name: "my_dsn", StdParams.use_ssl_cert_validation.name: False},
+            True,
         ),
         (
-                [[StdParams.dsn.name, StdParams.db_user.name],
-                 [StdParams.saas_url.name, StdParams.saas_account_id.name]],
-                {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
-                False,
+            [
+                [StdParams.dsn.name, StdParams.db_user.name],
+                [StdParams.saas_url.name, StdParams.saas_account_id.name],
+            ],
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: "my_user_name"},
+            False,
         ),
         (
-                [[StdParams.dsn.name, StdParams.saas_url.name],
-                 [StdParams.db_user.name, StdParams.saas_account_id.name]],
-                {StdParams.dsn.name: 'my_dsn', StdParams.db_user.name: 'my_user_name'},
-                True,
+            [
+                [StdParams.dsn.name, StdParams.saas_url.name],
+                [StdParams.db_user.name, StdParams.saas_account_id.name],
+            ],
+            {StdParams.dsn.name: "my_dsn", StdParams.db_user.name: "my_user_name"},
+            True,
         ),
-    ]
+    ],
 )
 def test_check_params(std_params, param_kwargs, expected_result):
     assert check_params(std_params, param_kwargs) == expected_result

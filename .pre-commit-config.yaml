@@ -9,7 +9,7 @@ repos:
         files: "pyproject.toml"
         pass_filenames: false
         language: system
-        entry: poetry run nox -s project:fix
+        entry: poetry run -- nox -s project:fix
 
   - repo: local
     hooks:
@@ -18,7 +18,7 @@ repos:
         types: [ python ]
         pass_filenames: false
         language: system
-        entry: poetry run nox -s lint:typing
+        entry: poetry run -- nox -s lint:typing
 
   - repo: local
     hooks:
@@ -27,7 +27,7 @@ repos:
         types: [ python ]
         pass_filenames: false
         language: system
-        entry: poetry run nox -s lint:code
+        entry: poetry run -- nox -s lint:code
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0

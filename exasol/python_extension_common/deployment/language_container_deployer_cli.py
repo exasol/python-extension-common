@@ -1,12 +1,19 @@
-from typing import Optional, Any
 import os
 import re
+import warnings
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
+from typing import (
+    Any,
+    Optional,
+)
+
 import click
-import warnings
-from exasol.python_extension_common.deployment.language_container_deployer import LanguageContainerDeployer
-from datetime import timedelta
+
+from exasol.python_extension_common.deployment.language_container_deployer import (
+    LanguageContainerDeployer,
+)
 
 
 class CustomizableParameters(Enum):
@@ -15,6 +22,7 @@ class CustomizableParameters(Enum):
     of a specialised version of the cli.
     The names in the enum list should match the parameter names in language_container_deployer_main.
     """
+
     container_url = 1
     container_name = 2
 
@@ -40,10 +48,13 @@ class _ParameterFormatters:
     IMPORTANT! Please make sure that the formatters are set up before the call to the cli function,
     e.g. language_container_deployer_main, is executed.
     """
+
     def __init__(self):
         self._formatters = {}
 
-    def __call__(self, ctx: click.Context, param: click.Parameter, value: Optional[Any]) -> Optional[Any]:
+    def __call__(
+        self, ctx: click.Context, param: click.Parameter, value: Optional[Any]
+    ) -> Optional[Any]:
 
         def update_parameter(parameter_name: str, formatter: str) -> None:
             param_formatter = ctx.params.get(parameter_name, formatter)
@@ -53,10 +64,10 @@ class _ParameterFormatters:
                 # before and after applying the regex, assuming the current parameter is 'version'.
                 # 'something-with-{version}/tailored-for-{user}' => 'something-with-{version}/tailored-for-{{user}}'
                 # We were looking for all occurrences of a pattern '{some_name}', where some_name is not version.
-                pattern = r'\{(?!' + (param.name or '') + r'\})\w+\}'
-                param_formatter = re.sub(pattern, lambda m: f'{{{m.group(0)}}}', param_formatter)
+                pattern = r"\{(?!" + (param.name or "") + r"\})\w+\}"
+                param_formatter = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", param_formatter)
                 kwargs = {param.name: value}
-                ctx.params[parameter_name] = param_formatter.format(**kwargs)
+                ctx.params[parameter_name] = param_formatter.format(**kwargs)  # type: ignore
 
         if value is not None:
             for prm_name, prm_formatter in self._formatters.items():
@@ -65,11 +76,11 @@ class _ParameterFormatters:
         return value
 
     def set_formatter(self, custom_parameter: CustomizableParameters, formatter: str) -> None:
-        """ Sets a formatter for a customizable parameter. """
+        """Sets a formatter for a customizable parameter."""
         self._formatters[custom_parameter.name] = formatter
 
     def clear_formatters(self):
-        """ Deletes all formatters, mainly for testing purposes. """
+        """Deletes all formatters, mainly for testing purposes."""
         self._formatters.clear()
 
 
@@ -80,7 +91,7 @@ slc_parameter_formatters = _ParameterFormatters()
 
 # This text will be displayed instead of the actual value, if found in an environment
 # variable, in a prompt.
-SECRET_DISPLAY = '***'
+SECRET_DISPLAY = "***"
 
 
 class SecretParams(Enum):
@@ -93,11 +104,12 @@ class SecretParams(Enum):
 
     The enum value is also the name of the cli parameter.
     """
-    DB_PASSWORD = 'db-pass'
-    BUCKETFS_PASSWORD = 'bucketfs-password'
-    SAAS_ACCOUNT_ID = 'saas-account-id'
-    SAAS_DATABASE_ID = 'saas-database-id'
-    SAAS_TOKEN = 'saas-token'
+
+    DB_PASSWORD = "db-pass"
+    BUCKETFS_PASSWORD = "bucketfs-password"
+    SAAS_ACCOUNT_ID = "saas-account-id"
+    SAAS_DATABASE_ID = "saas-database-id"
+    SAAS_TOKEN = "saas-token"
 
 
 def secret_callback(ctx: click.Context, param: click.Option, value: Any):
@@ -114,86 +126,114 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
 
 
 @click.command(name="language-container")
-@click.option('--bucketfs-name', type=str)
-@click.option('--bucketfs-host', type=str)
-@click.option('--bucketfs-port', type=int)
-@click.option('--bucketfs-use-https', type=bool, default=False)
-@click.option('--bucketfs-user', type=str)
-@click.option(f'--{SecretParams.BUCKETFS_PASSWORD.value}', type=str,
-              prompt='BucketFS password', prompt_required=False,
-              hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
-@click.option('--bucket', type=str)
-@click.option('--saas-url', type=str,
-              default='https://cloud.exasol.com')
-@click.option(f'--{SecretParams.SAAS_ACCOUNT_ID.value}', type=str,
-              prompt='SaaS account id', prompt_required=False,
-              hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
-@click.option(f'--{SecretParams.SAAS_DATABASE_ID.value}', type=str,
-              prompt='SaaS database id', prompt_required=False,
-              hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
-@click.option('--saas-database-name', type=str)
-@click.option(f'--{SecretParams.SAAS_TOKEN.value}', type=str,
-              prompt='SaaS token', prompt_required=False,
-              hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
-@click.option('--path-in-bucket', type=str)
-@click.option('--container-file',
-              type=click.Path(exists=True, file_okay=True))
-@click.option('--version', type=str, expose_value=False,
-              callback=slc_parameter_formatters)
-@click.option('--dsn', type=str)
-@click.option('--db-user', type=str)
-@click.option(f'--{SecretParams.DB_PASSWORD.value}', type=str,
-              prompt='DB password', prompt_required=False,
-              hide_input=True, default=SECRET_DISPLAY, callback=secret_callback)
-@click.option('--language-alias', type=str, default="PYTHON3_EXT")
-@click.option('--schema', type=str, default="")
-@click.option('--ssl-cert-path', type=str, default="")
-@click.option('--ssl-client-cert-path', type=str, default="")
-@click.option('--ssl-client-private-key', type=str, default="")
-@click.option('--use-ssl-cert-validation/--no-use-ssl-cert-validation', type=bool, default=True)
-@click.option('--upload-container/--no-upload_container', type=bool, default=True)
-@click.option('--alter-system/--no-alter-system', type=bool, default=True)
-@click.option('--allow-override/--disallow-override', type=bool, default=False)
-@click.option('--wait_for_completion/--no-wait_for_completion', type=bool, default=True)
-@click.option('--deploy-timeout-minutes', type=int, default=10)
-@click.option('--display-progress/--no-display-progress', type=bool, default=True)
+@click.option("--bucketfs-name", type=str)
+@click.option("--bucketfs-host", type=str)
+@click.option("--bucketfs-port", type=int)
+@click.option("--bucketfs-use-https", type=bool, default=False)
+@click.option("--bucketfs-user", type=str)
+@click.option(
+    f"--{SecretParams.BUCKETFS_PASSWORD.value}",
+    type=str,
+    prompt="BucketFS password",
+    prompt_required=False,
+    hide_input=True,
+    default=SECRET_DISPLAY,
+    callback=secret_callback,
+)
+@click.option("--bucket", type=str)
+@click.option("--saas-url", type=str, default="https://cloud.exasol.com")
+@click.option(
+    f"--{SecretParams.SAAS_ACCOUNT_ID.value}",
+    type=str,
+    prompt="SaaS account id",
+    prompt_required=False,
+    hide_input=True,
+    default=SECRET_DISPLAY,
+    callback=secret_callback,
+)
+@click.option(
+    f"--{SecretParams.SAAS_DATABASE_ID.value}",
+    type=str,
+    prompt="SaaS database id",
+    prompt_required=False,
+    hide_input=True,
+    default=SECRET_DISPLAY,
+    callback=secret_callback,
+)
+@click.option("--saas-database-name", type=str)
+@click.option(
+    f"--{SecretParams.SAAS_TOKEN.value}",
+    type=str,
+    prompt="SaaS token",
+    prompt_required=False,
+    hide_input=True,
+    default=SECRET_DISPLAY,
+    callback=secret_callback,
+)
+@click.option("--path-in-bucket", type=str)
+@click.option("--container-file", type=click.Path(exists=True, file_okay=True))
+@click.option("--version", type=str, expose_value=False, callback=slc_parameter_formatters)
+@click.option("--dsn", type=str)
+@click.option("--db-user", type=str)
+@click.option(
+    f"--{SecretParams.DB_PASSWORD.value}",
+    type=str,
+    prompt="DB password",
+    prompt_required=False,
+    hide_input=True,
+    default=SECRET_DISPLAY,
+    callback=secret_callback,
+)
+@click.option("--language-alias", type=str, default="PYTHON3_EXT")
+@click.option("--schema", type=str, default="")
+@click.option("--ssl-cert-path", type=str, default="")
+@click.option("--ssl-client-cert-path", type=str, default="")
+@click.option("--ssl-client-private-key", type=str, default="")
+@click.option("--use-ssl-cert-validation/--no-use-ssl-cert-validation", type=bool, default=True)
+@click.option("--upload-container/--no-upload_container", type=bool, default=True)
+@click.option("--alter-system/--no-alter-system", type=bool, default=True)
+@click.option("--allow-override/--disallow-override", type=bool, default=False)
+@click.option("--wait_for_completion/--no-wait_for_completion", type=bool, default=True)
+@click.option("--deploy-timeout-minutes", type=int, default=10)
+@click.option("--display-progress/--no-display-progress", type=bool, default=True)
 def language_container_deployer_main(
-        bucketfs_name: str,
-        bucketfs_host: str,
-        bucketfs_port: int,
-        bucketfs_use_https: bool,
-        bucketfs_user: str,
-        bucketfs_password: str,
-        bucket: str,
-        saas_url: str,
-        saas_account_id: str,
-        saas_database_id: str,
-        saas_database_name: str,
-        saas_token: str,
-        path_in_bucket: str,
-        container_file: str,
-        dsn: str,
-        db_user: str,
-        db_pass: str,
-        language_alias: str,
-        schema: str,
-        ssl_cert_path: str,
-        ssl_client_cert_path: str,
-        ssl_client_private_key: str,
-        use_ssl_cert_validation: bool,
-        upload_container: bool,
-        alter_system: bool,
-        allow_override: bool,
-        wait_for_completion: bool,
-        deploy_timeout_minutes: int,
-        display_progress: bool,
-        container_url: Optional[str] = None,
-        container_name: Optional[str] = None):
+    bucketfs_name: str,
+    bucketfs_host: str,
+    bucketfs_port: int,
+    bucketfs_use_https: bool,
+    bucketfs_user: str,
+    bucketfs_password: str,
+    bucket: str,
+    saas_url: str,
+    saas_account_id: str,
+    saas_database_id: str,
+    saas_database_name: str,
+    saas_token: str,
+    path_in_bucket: str,
+    container_file: str,
+    dsn: str,
+    db_user: str,
+    db_pass: str,
+    language_alias: str,
+    schema: str,
+    ssl_cert_path: str,
+    ssl_client_cert_path: str,
+    ssl_client_private_key: str,
+    use_ssl_cert_validation: bool,
+    upload_container: bool,
+    alter_system: bool,
+    allow_override: bool,
+    wait_for_completion: bool,
+    deploy_timeout_minutes: int,
+    display_progress: bool,
+    container_url: Optional[str] = None,
+    container_name: Optional[str] = None,
+):
     warnings.warn(
         "language_container_deployer_main() function is deprecated and will be removed "
         "in a future version. For CLI use the LanguageContainerDeployerCli class instead.",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
 
     deployer = LanguageContainerDeployer.create(
@@ -224,15 +264,29 @@ def language_container_deployer_main(
     )
 
     if not upload_container:
-        deployer.run(alter_system=alter_system, allow_override=allow_override,
-                     wait_for_completion=wait_for_completion)
+        deployer.run(
+            alter_system=alter_system,
+            allow_override=allow_override,
+            wait_for_completion=wait_for_completion,
+        )
     elif container_file:
-        deployer.run(container_file=Path(container_file), alter_system=alter_system,
-                     allow_override=allow_override, wait_for_completion=wait_for_completion)
+        deployer.run(
+            container_file=Path(container_file),
+            alter_system=alter_system,
+            allow_override=allow_override,
+            wait_for_completion=wait_for_completion,
+        )
     elif container_url and container_name:
-        deployer.download_and_run(container_url, container_name, alter_system=alter_system,
-                                  allow_override=allow_override, wait_for_completion=wait_for_completion)
+        deployer.download_and_run(
+            container_url,
+            container_name,
+            alter_system=alter_system,
+            allow_override=allow_override,
+            wait_for_completion=wait_for_completion,
+        )
     else:
         # The error message should mention the parameters which the callback is specified for being missed.
-        raise ValueError("To upload a language container you should specify either its "
-                         "release version or a path of the already downloaded container file.")
+        raise ValueError(
+            "To upload a language container you should specify either its "
+            "release version or a path of the already downloaded container file."
+        )

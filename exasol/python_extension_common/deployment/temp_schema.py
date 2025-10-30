@@ -1,9 +1,9 @@
-import pyexasol     # type: ignore
 import random
 import string
+from collections.abc import Generator
 from contextlib import contextmanager
 
-from typing import Generator
+import pyexasol  # type: ignore
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 
@@ -15,8 +15,7 @@ def _create_random_schema(conn: pyexasol.ExaConnection, schema_name_length: int)
     as it's theoretically possible to create a collision with an existing schema.
     """
 
-    schema = ''.join(random.choice(string.ascii_letters)
-                     for _ in range(schema_name_length))
+    schema = "".join(random.choice(string.ascii_letters) for _ in range(schema_name_length))
     sql = f'CREATE SCHEMA "{schema}";'
     conn.execute(query=sql)
     return schema
@@ -39,9 +38,9 @@ def delete_schema(conn: pyexasol.ExaConnection, schema: str) -> None:
 
 
 @contextmanager
-def temp_schema(conn: pyexasol.ExaConnection,
-                schema_name_length: int = 20
-                ) -> Generator[str, None, None]:
+def temp_schema(
+    conn: pyexasol.ExaConnection, schema_name_length: int = 20
+) -> Generator[str, None, None]:
     """
     A context manager for running an operation in a newly created temporary schema.
     The schema will be deleted after the operation is competed. Note, that all objects
@@ -51,7 +50,7 @@ def temp_schema(conn: pyexasol.ExaConnection,
     schema_name_length  - Number of characters in the temporary schema name.
     """
     current_schema = get_schema(conn)
-    schema = ''
+    schema = ""
     try:
         schema = _create_random_schema(conn, schema_name_length)
         yield schema
