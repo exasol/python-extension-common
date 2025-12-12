@@ -1167,28 +1167,6 @@ types-requests = ">=2.31.0.6,<3.0.0.0"
 
 [[package]]
 name = "exasol-script-languages-container-tool"
-version = "3.4.1"
-description = "Script Languages Container Tool"
-optional = false
-python-versions = "<4,>=3.10"
-groups = ["main"]
-markers = "python_version >= \"3.14\" or python_version >= \"3.12\" and platform_python_implementation == \"PyPy\""
-files = [
-    {file = "exasol_script_languages_container_tool-3.4.1-py3-none-any.whl", hash = "sha256:d0fabc5a8bfab38c2ad6e13309ebce813051f5e4a13ecfd6e50775bffb733af4"},
-    {file = "exasol_script_languages_container_tool-3.4.1.tar.gz", hash = "sha256:43264a85f2dbc6455993923583a0b73a58c5fb7e987852779fd83d89e3c63e2b"},
-]
-
-[package.dependencies]
-exasol-bucketfs = ">=1,<3"
-exasol-integration-test-docker-environment = ">=4.1.0,<5.0.0"
-importlib_metadata = ">=4.6.0"
-importlib-resources = ">=6.4.0"
-jsonschema = ">=4.23.0,<5.0.0"
-networkx = ">=3.3.0,<4.0.0"
-pydantic = ">=2.10.2,<3.0.0"
-
-[[package]]
-name = "exasol-script-languages-container-tool"
 version = "3.5.0"
 description = "Script Languages Container Tool"
 optional = false
