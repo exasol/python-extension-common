@@ -9,6 +9,7 @@
 * Updated dependency `exasol-integration-test-docker-environment:4.4.1` to `5.0.0`
 * Updated dependency `urllib3:2.5.0` to `2.6.2`
 * Updated dependency `filelock:3.20.0` to `3.20..1`
+* Updated dependency `exasol-saas-api:2.4.0` to `2.6.0`
 
 ### `dev`
 * Updated dependency `pytest-exasol-backend:1.2.1` to `1.2.4`

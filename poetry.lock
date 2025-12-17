@@ -1179,14 +1179,14 @@ simplejson = ">=3.16.0"
 
 [[package]]
 name = "exasol-saas-api"
-version = "2.4.0"
+version = "2.6.0"
 description = "API enabling Python applications connecting to Exasol database SaaS instances and using their SaaS services"
 optional = false
 python-versions = "<4.0,>=3.10.0"
 groups = ["main", "dev"]
 files = [
-    {file = "exasol_saas_api-2.4.0-py3-none-any.whl", hash = "sha256:d672a2cc7154dbe1d8c2746855952286fe1bc202eab5143868a88d5fa39bce13"},
-    {file = "exasol_saas_api-2.4.0.tar.gz", hash = "sha256:16da81e77a179afb9b7b5f89f9ebb0c85d12a5f7b6ae43e23f360a9c670d39f4"},
+    {file = "exasol_saas_api-2.6.0-py3-none-any.whl", hash = "sha256:6518cf571fed74044cd67972cf24c36cf108170315f731950e59db0e2d4f3307"},
+    {file = "exasol_saas_api-2.6.0.tar.gz", hash = "sha256:43ae4eb076f4f402610daee024473bfcb631fc5f31a233b6f54173b750fb2ee1"},
 ]
 
 [package.dependencies]
