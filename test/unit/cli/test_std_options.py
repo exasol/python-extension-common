@@ -7,6 +7,7 @@ from click.testing import CliRunner
 from exasol.python_extension_common.cli.std_options import (
     SECRET_DISPLAY,
     ParameterFormatters,
+    ParamUpdater,
     StdParams,
     StdTags,
     check_params,
@@ -24,8 +25,8 @@ def test_parameter_formatters_1param():
     cmd = click.Command("a_command")
     ctx = click.Context(cmd)
     opt = click.Option(["--version"])
-    formatters = ParameterFormatters()
-    formatters.set_formatter(container_url_param, "http://my_server/{version}/my_stuff")
+    formatters = ParamUpdater()
+    formatters.update(container_url_param, "http://my_server/{version}/my_stuff")
     formatters(ctx, opt, "1.3.2")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/my_stuff"
 
@@ -37,9 +38,9 @@ def test_parameter_formatters_2params():
     ctx = click.Context(cmd)
     opt1 = click.Option(["--version"])
     opt2 = click.Option(["--user"])
-    formatters = ParameterFormatters()
-    formatters.set_formatter(container_url_param, "http://my_server/{version}/{user}/my_stuff")
-    formatters.set_formatter(container_name_param, "downloaded-{version}")
+    formatters = ParamUpdater()
+    formatters.update(container_url_param, "http://my_server/{version}/{user}/my_stuff")
+    formatters.update(container_name_param, "downloaded-{version}")
     formatters(ctx, opt1, "1.3.2")
     formatters(ctx, opt2, "cezar")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/cezar/my_stuff"
@@ -135,9 +136,9 @@ def test_select_std_options_with_formatter():
         assert kwargs[container_name_arg] == expected_name
         assert kwargs[container_url_arg] == expected_url
 
-    ver_formatter = ParameterFormatters()
-    ver_formatter.set_formatter(container_url_arg, url_format)
-    ver_formatter.set_formatter(container_name_arg, name_format)
+    ver_formatter = ParamUpdater()
+    ver_formatter.update(container_url_arg, url_format)
+    ver_formatter.update(container_name_arg, name_format)
 
     opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatter})
     cmd = click.Command("do_something", params=opts, callback=func)

@@ -1,10 +1,12 @@
 import os
 import re
+from dataclasses import dataclass
 from enum import (
     Enum,
     Flag,
     auto,
 )
+from pathlib import Path
 from typing import (
     Any,
     no_type_check,
@@ -13,56 +15,91 @@ from typing import (
 import click
 
 
-class ParameterFormatters:
+@dataclass(frozen=True)
+class Param:
+    name: str | None
+    value: Any | None
+
+
+class ParamUpdater:
     """
-    Class facilitating customization of the cli.
+    Dynamic update for customized CLI parameters.
 
-    The idea is that some of the cli parameters can be programmatically customized based
-    on values of other parameters and externally supplied formatters. For example a specialized
-    version of the cli may want to provide its own url. Furthermore, this url will depend on
-    the user supplied parameter called "version". The solution is to set a formatter for the
-    url, for instance "http://my_stuff/{version}/my_data". If the user specifies non-empty version
-    parameter the url will be fully formed.
+    Example: A specialized variant of the CLI may want to provide a custom URL
+    "http://prefix/{version}/suffix" depending on CLI parameter "version".  If
+    the user specifies version "1.2.3", then the default value for the URL
+    should be updated to "http://prefix/1.2.3/suffix".
 
-    A formatter may include more than one parameter. In the previous example the url could,
-    for instance, also include a username: "http://my_stuff/{version}/{user}/my_data".
+    The URL parameter in this example is called a _destination_ CLI parameter
+    while the version is called _source_.
 
-    Note that customized parameters can only be updated in a callback function. There is no
-    way to inject them directly into the cli. Also, the current implementation doesn't perform
-    the update if the value of the parameter dressed with the callback is None.
+    A destination parameter can depend on a single or multiple source
+    parameters.  In the previous example the URL could, for instance, also
+    include a username: "http://prefix/{version}/{user}/suffix".
+
+    The Click API allows updating customized parameters only in a callback
+    function.  There is no way to inject them directly into the CLI, see
+    https://click.palletsprojects.com/en/stable/api/#click.Command.callback.
+
+    The current implementation updates the destination parameter only if the
+    value of the source parameter is not ``None``.
     """
 
-    def __init__(self):
-        self._formatters: dict[str, str] = {}
+    def __init__(self) -> None:
+        # list of destination parameters to update
+        self._parameters: dict[str, str] = {}
 
-    def __call__(self, ctx: click.Context, param: click.Parameter, value: Any | None) -> Any | None:
+    def __call__(
+        self, ctx: click.Context, source_param: click.Parameter, value: Any | None
+    ) -> Any | None:
+        def update(source: Param, dest: Param) -> None:
+            if not dest.value:
+                return None
+            # Enclose in double curly brackets all other parameters in
+            # dest.value to avoid error "missing parameters".
+            #
+            # Below is an example of a formatter string before and after
+            # applying the regex, assuming the source parameter is 'version'.
+            #
+            # "something-with-{version}/tailored-for-{user}" =>
+            # "something-with-{version}/tailored-for-{{user}}"
+            #
+            # We were looking for all occurrences of a pattern "{xxx}", where
+            # xxx is not "version".
+            pattern = r"\{(?!" + (source.name or "") + r"\})\w+\}"
+            template = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", dest.value)
+            kwargs = {source.name: source.value}
+            ctx.params[dest.name] = template.format(**kwargs)  # type: ignore
 
-        def update_parameter(parameter_name: str, formatter: str) -> None:
-            param_formatter = ctx.params.get(parameter_name, formatter)
-            if param_formatter:
-                # Enclose in double curly brackets all other parameters in the formatting string,
-                # to avoid the missing parameters' error. Below is an example of a formatter string
-                # before and after applying the regex, assuming the current parameter is 'version'.
-                # 'something-with-{version}/tailored-for-{user}' => 'something-with-{version}/tailored-for-{{user}}'
-                # We were looking for all occurrences of a pattern '{some_name}', where some_name is not version.
-                pattern = r"\{(?!" + (param.name or "") + r"\})\w+\}"
-                param_formatter = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", param_formatter)
-                kwargs = {param.name: value}
-                ctx.params[parameter_name] = param_formatter.format(**kwargs)  # type: ignore
+        source = Param(source_param.name, value)
+        if source.value is not None:
+            for name, default in self._parameters.items():
+                value = ctx.params.get(name, default)
+                update(source, dest=Param(name, value))
 
-        if value is not None:
-            for prm_name, prm_formatter in self._formatters.items():
-                update_parameter(prm_name, prm_formatter)
+        return source.value
 
-        return value
+    def update(self, param_name: str, default_value: str) -> None:
+        """Tags the specified destination parameter for update."""
+        self._parameters[param_name] = default_value
+
+    def clear(self):
+        """Deletes all destination parameters to be updated, mainly for testing purposes."""
+        self._parameters.clear()
+
+
+class ParameterFormatters(ParamUpdater):
+    """
+    This class is deprecated. Please use ParamUpdater instead.
+    """
 
     def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """Sets a formatter for a customizable parameter."""
-        self._formatters[custom_parameter_name] = formatter
+        """Deprecated. Please update() instead."""
+        self.update(custom_parameter_name, formatter)
 
     def clear_formatters(self):
-        """Deletes all formatters, mainly for testing purposes."""
-        self._formatters.clear()
+        """Deprecated. Please use clear() instead."""
+        self.clear()
 
 
 # This text will be displayed instead of the actual value for a "secret" option.
