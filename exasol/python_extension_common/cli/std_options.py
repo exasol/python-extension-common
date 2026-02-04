@@ -23,7 +23,7 @@ class Param:
 
 class ParameterFormatters:
     """
-    Dynamic update for customized Click CLI parameters.
+    Dynamic formatting for customized Click CLI parameters.
 
     Example: A specialized variant of the CLI may want to provide a custom URL
     "http://prefix/{version}/suffix" depending on CLI parameter "version".  If
