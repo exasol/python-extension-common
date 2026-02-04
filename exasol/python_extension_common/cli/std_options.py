@@ -276,10 +276,10 @@ def select_std_options(
         A dictionary of standard options with overridden properties
     formatters:
         A dictionary, with each key being a source CLI parameter,
-        see docstring of class ParamUpdater.
+        see docstring of class ParameterFormatters.
 
-        Each value is an instance of ParamUpdater representing a single or
-        multiple destination parameters to be updated based on the source
+        Each value is an instance of ParameterFormatters representing a single
+        or multiple destination parameters to be updated based on the source
         parameter's value. A destination parameter can be updated multiple
         times, if it depends on multiple source parameters.
     """
