@@ -41,7 +41,11 @@ class ParameterFormatters:
     """
 
     def __init__(self) -> None:
-        # list of destination parameters to update
+        # Each key/value pair represents the name of a destination parameter
+        # to update, and its default value.
+        #
+        # The default value can contain placeholders to be replaced by the
+        # values of the other parameters, called "source parameters".
         self._parameters: dict[str, str] = {}
 
     def __call__(
