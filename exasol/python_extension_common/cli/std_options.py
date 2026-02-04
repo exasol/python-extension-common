@@ -290,6 +290,13 @@ def select_std_options(
     override:
         A dictionary of standard options with overridden properties
     formatters:
+        A dictionary, with each key being a source CLI parameter,
+        see docstring of class ParamUpdater.
+
+        Each value is an instance of ParamUpdater representing a single or
+        multiple destination parameters to be updated based on the source
+        parameter's value. A destination parameter can be updated multiple
+        times, if it depends on multiple source parameters.
     """
     if not isinstance(tags, list) and not isinstance(tags, str):
         tags = [tags]
