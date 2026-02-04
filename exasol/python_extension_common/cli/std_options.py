@@ -94,7 +94,7 @@ class ParameterFormatters(ParamUpdater):
     """
 
     def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """Deprecated. Please set() instead."""
+        """Deprecated. Please use set() instead."""
         self.set(custom_parameter_name, formatter)
 
     def clear_formatters(self):
