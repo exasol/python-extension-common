@@ -79,8 +79,8 @@ class ParamUpdater:
 
         return source.value
 
-    def update(self, param_name: str, default_value: str) -> None:
-        """Tags the specified destination parameter for update."""
+    def set(self, param_name: str, default_value: str) -> None:
+        """Adds the specified destination parameter to be updated."""
         self._parameters[param_name] = default_value
 
     def clear(self):
@@ -94,8 +94,8 @@ class ParameterFormatters(ParamUpdater):
     """
 
     def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """Deprecated. Please update() instead."""
-        self.update(custom_parameter_name, formatter)
+        """Deprecated. Please set() instead."""
+        self.set(custom_parameter_name, formatter)
 
     def clear_formatters(self):
         """Deprecated. Please use clear() instead."""

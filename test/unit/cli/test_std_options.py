@@ -26,7 +26,7 @@ def test_parameter_updater_1param():
     ctx = click.Context(cmd)
     opt = click.Option(["--version"])
     updater = ParamUpdater()
-    updater.update(container_url_param, "http://my_server/{version}/my_stuff")
+    updater.set(container_url_param, "http://my_server/{version}/my_stuff")
     updater(ctx, opt, "1.3.2")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/my_stuff"
 
@@ -39,8 +39,8 @@ def test_parameter_updater_2params():
     opt1 = click.Option(["--version"])
     opt2 = click.Option(["--user"])
     updater = ParamUpdater()
-    updater.update(container_url_param, "http://my_server/{version}/{user}/my_stuff")
-    updater.update(container_name_param, "downloaded-{version}")
+    updater.set(container_url_param, "http://my_server/{version}/{user}/my_stuff")
+    updater.set(container_name_param, "downloaded-{version}")
     updater(ctx, opt1, "1.3.2")
     updater(ctx, opt2, "cezar")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/cezar/my_stuff"
@@ -137,8 +137,8 @@ def test_select_std_options_with_formatter():
         assert kwargs[container_url_arg] == expected_url
 
     ver_updater = ParamUpdater()
-    ver_updater.update(container_url_arg, url_format)
-    ver_updater.update(container_name_arg, name_format)
+    ver_updater.set(container_url_arg, url_format)
+    ver_updater.set(container_name_arg, name_format)
 
     opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_updater})
     cmd = click.Command("do_something", params=opts, callback=func)
