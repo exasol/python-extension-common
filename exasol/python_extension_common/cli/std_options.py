@@ -12,13 +12,8 @@ from typing import (
     no_type_check,
 )
 
+from exasol.python_extension_common.cli._param import Param
 import click
-
-
-@dataclass(frozen=True)
-class Param:
-    name: str | None
-    value: Any | None
 
 
 class ParameterFormatters:
