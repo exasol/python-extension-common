@@ -7,7 +7,6 @@ from click.testing import CliRunner
 from exasol.python_extension_common.cli.std_options import (
     SECRET_DISPLAY,
     ParameterFormatters,
-    ParamUpdater,
     StdParams,
     StdTags,
     check_params,
@@ -20,29 +19,29 @@ from exasol.python_extension_common.cli.std_options import (
 )
 
 
-def test_parameter_updater_1param():
+def test_parameter_formatters_1param():
     container_url_param = "container_url"
     cmd = click.Command("a_command")
     ctx = click.Context(cmd)
     opt = click.Option(["--version"])
-    updater = ParamUpdater()
-    updater.set(container_url_param, "http://my_server/{version}/my_stuff")
-    updater(ctx, opt, "1.3.2")
+    formatters = ParameterFormatters()
+    formatters.set_formatter(container_url_param, "http://my_server/{version}/my_stuff")
+    formatters(ctx, opt, "1.3.2")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/my_stuff"
 
 
-def test_parameter_updater_2params():
+def test_parameter_formatters_2params():
     container_url_param = "container_url"
     container_name_param = "container_name"
     cmd = click.Command("a_command")
     ctx = click.Context(cmd)
     opt1 = click.Option(["--version"])
     opt2 = click.Option(["--user"])
-    updater = ParamUpdater()
-    updater.set(container_url_param, "http://my_server/{version}/{user}/my_stuff")
-    updater.set(container_name_param, "downloaded-{version}")
-    updater(ctx, opt1, "1.3.2")
-    updater(ctx, opt2, "cezar")
+    formatters = ParameterFormatters()
+    formatters.set_formatter(container_url_param, "http://my_server/{version}/{user}/my_stuff")
+    formatters.set_formatter(container_name_param, "downloaded-{version}")
+    formatters(ctx, opt1, "1.3.2")
+    formatters(ctx, opt2, "cezar")
     assert ctx.params[container_url_param] == "http://my_server/1.3.2/cezar/my_stuff"
     assert ctx.params[container_name_param] == "downloaded-1.3.2"
 
@@ -136,11 +135,11 @@ def test_select_std_options_with_formatter():
         assert kwargs[container_name_arg] == expected_name
         assert kwargs[container_url_arg] == expected_url
 
-    ver_updater = ParamUpdater()
-    ver_updater.set(container_url_arg, url_format)
-    ver_updater.set(container_name_arg, name_format)
+    ver_formatters = ParameterFormatters()
+    ver_formatters.set_formatter(container_url_arg, url_format)
+    ver_formatters.set_formatter(container_name_arg, name_format)
 
-    opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_updater})
+    opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatters})
     cmd = click.Command("do_something", params=opts, callback=func)
     runner = CliRunner()
     runner.invoke(cmd, args=f"--version {version}", catch_exceptions=False, standalone_mode=False)

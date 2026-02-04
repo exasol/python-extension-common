@@ -21,9 +21,9 @@ class Param:
     value: Any | None
 
 
-class ParamUpdater:
+class ParameterFormatters:
     """
-    Dynamic update for customized CLI parameters.
+    Dynamic update for customized Click CLI parameters.
 
     Example: A specialized variant of the CLI may want to provide a custom URL
     "http://prefix/{version}/suffix" depending on CLI parameter "version".  If
@@ -79,27 +79,13 @@ class ParamUpdater:
 
         return source.value
 
-    def set(self, param_name: str, default_value: str) -> None:
+    def set_formatter(self, param_name: str, default_value: str) -> None:
         """Adds the specified destination parameter to be updated."""
         self._parameters[param_name] = default_value
 
-    def clear(self):
+    def clear_formatters(self):
         """Deletes all destination parameters to be updated, mainly for testing purposes."""
         self._parameters.clear()
-
-
-class ParameterFormatters(ParamUpdater):
-    """
-    This class is deprecated. Please use ParamUpdater instead.
-    """
-
-    def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """Deprecated. Please use set() instead."""
-        self.set(custom_parameter_name, formatter)
-
-    def clear_formatters(self):
-        """Deprecated. Please use clear() instead."""
-        self.clear()
 
 
 # This text will be displayed instead of the actual value for a "secret" option.
