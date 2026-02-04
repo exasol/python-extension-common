@@ -28,6 +28,8 @@ class CustomizableParameters(Enum):
 
 
 class _ParameterFormatters:
+    # Is this class still needed?
+    # Or could it be replaced by std_options.ParamUpdater?
     """
     Class facilitating customization of the cli.
 
