@@ -18,7 +18,9 @@ import click
 
 class ParameterFormatters:
     """
-    Dynamic formatting for customized Click CLI parameters.
+    The idea is that some of the CLI parameters can be programmatically
+    customized based on values of other parameters and externally supplied
+    patterns, called "formatters".
 
     Example: A specialized variant of the CLI may want to provide a custom URL
     "http://prefix/{version}/suffix" depending on CLI parameter "version".  If
@@ -33,8 +35,9 @@ class ParameterFormatters:
     include a username: "http://prefix/{version}/{user}/suffix".
 
     The Click API allows updating customized parameters only in a callback
-    function.  There is no way to inject them directly into the CLI, see
-    https://click.palletsprojects.com/en/stable/api/#click.Command.callback.
+    function.  There is no way to inject them directly into the CLI, see the
+    docs, as ``click.Option`` inherits from ``click.Parameter``:
+    https://click.palletsprojects.com/en/stable/api/#click.Parameter.
 
     The current implementation updates the destination parameter only if the
     value of the source parameter is not ``None``.
@@ -79,7 +82,21 @@ class ParameterFormatters:
         return source.value
 
     def set_formatter(self, param_name: str, default_value: str) -> None:
-        """Adds the specified destination parameter to be updated."""
+        """
+        Adds the specified destination parameter to be updated.
+
+        Better arg names could be `destination_parameter` and `format_pattern`
+        but renaming the arguments would break the public interface.
+
+        Parameters:
+
+          param_name: Name of the destination parameter to be updated.
+
+          default_value: Pattern for the value to assign to the destination
+                parameter. The pattern may contain place holders to be
+                replaced by the values of other CLI parameters, called "source
+                parameters".
+        """
         self._parameters[param_name] = default_value
 
     def clear_formatters(self):
@@ -280,8 +297,11 @@ def select_std_options(
 
         Each value is an instance of ParameterFormatters representing a single
         or multiple destination parameters to be updated based on the source
-        parameter's value. A destination parameter can be updated multiple
-        times, if it depends on multiple source parameters.
+        parameter's value.
+
+        If a particular destination parameter D depends on multiple source
+        parameters S1, S2, ..., then the Click API will iterate through the
+        source parameters Si and update D multiple times.
     """
     if not isinstance(tags, list) and not isinstance(tags, str):
         tags = [tags]
