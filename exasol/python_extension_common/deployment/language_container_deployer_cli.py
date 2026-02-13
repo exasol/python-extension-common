@@ -28,6 +28,11 @@ class CustomizableParameters(Enum):
 
 
 class _ParameterFormatters:
+    # See language_container_deployer_main displaying a deprecation warning.
+    #
+    # Currently, there is only one other project still using this
+    # implementation, see
+    # https://github.com/exasol/advanced-analytics-framework/issues/333.
     """
     Class facilitating customization of the cli.
 

@@ -1,10 +1,12 @@
 import os
 import re
+from dataclasses import dataclass
 from enum import (
     Enum,
     Flag,
     auto,
 )
+from pathlib import Path
 from typing import (
     Any,
     no_type_check,
@@ -12,57 +14,95 @@ from typing import (
 
 import click
 
+from exasol.python_extension_common.cli._param import Param
+
 
 class ParameterFormatters:
     """
-    Class facilitating customization of the cli.
+    The idea is that some of the CLI parameters can be programmatically
+    customized based on values of other parameters and externally supplied
+    patterns, called "formatters".
 
-    The idea is that some of the cli parameters can be programmatically customized based
-    on values of other parameters and externally supplied formatters. For example a specialized
-    version of the cli may want to provide its own url. Furthermore, this url will depend on
-    the user supplied parameter called "version". The solution is to set a formatter for the
-    url, for instance "http://my_stuff/{version}/my_data". If the user specifies non-empty version
-    parameter the url will be fully formed.
+    Example: A specialized variant of the CLI may want to provide a custom URL
+    "http://prefix/{version}/suffix" depending on CLI parameter "version".  If
+    the user specifies version "1.2.3", then the default value for the URL
+    should be updated to "http://prefix/1.2.3/suffix".
 
-    A formatter may include more than one parameter. In the previous example the url could,
-    for instance, also include a username: "http://my_stuff/{version}/{user}/my_data".
+    The URL parameter in this example is called a _destination_ CLI parameter
+    while the version is called _source_.
 
-    Note that customized parameters can only be updated in a callback function. There is no
-    way to inject them directly into the cli. Also, the current implementation doesn't perform
-    the update if the value of the parameter dressed with the callback is None.
+    A destination parameter can depend on a single or multiple source
+    parameters.  In the previous example the URL could, for instance, also
+    include a username: "http://prefix/{version}/{user}/suffix".
+
+    The Click API allows updating customized parameters only in a callback
+    function.  There is no way to inject them directly into the CLI, see the
+    docs, as ``click.Option`` inherits from ``click.Parameter``:
+    https://click.palletsprojects.com/en/stable/api/#click.Parameter.
+
+    The current implementation updates the destination parameter only if the
+    value of the source parameter is not ``None``.
     """
 
-    def __init__(self):
-        self._formatters: dict[str, str] = {}
+    def __init__(self) -> None:
+        # Each key/value pair represents the name of a destination parameter
+        # to update, and its default value.
+        #
+        # The default value can contain placeholders to be replaced by the
+        # values of the other parameters, called "source parameters".
+        self._parameters: dict[str, str] = {}
 
-    def __call__(self, ctx: click.Context, param: click.Parameter, value: Any | None) -> Any | None:
+    def __call__(
+        self, ctx: click.Context, source_param: click.Parameter, value: Any | None
+    ) -> Any | None:
+        def update(source: Param, dest: Param) -> None:
+            if not dest.value:
+                return None
+            # Enclose in double curly brackets all other parameters in
+            # dest.value to avoid error "missing parameters".
+            #
+            # Below is an example of a formatter string before and after
+            # applying the regex, assuming the source parameter is 'version'.
+            #
+            # "something-with-{version}/tailored-for-{user}" =>
+            # "something-with-{version}/tailored-for-{{user}}"
+            #
+            # We were looking for all occurrences of a pattern "{xxx}", where
+            # xxx is not "version".
+            pattern = r"\{(?!" + (source.name or "") + r"\})\w+\}"
+            template = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", dest.value)
+            kwargs = {source.name: source.value}
+            ctx.params[dest.name] = template.format(**kwargs)  # type: ignore
 
-        def update_parameter(parameter_name: str, formatter: str) -> None:
-            param_formatter = ctx.params.get(parameter_name, formatter)
-            if param_formatter:
-                # Enclose in double curly brackets all other parameters in the formatting string,
-                # to avoid the missing parameters' error. Below is an example of a formatter string
-                # before and after applying the regex, assuming the current parameter is 'version'.
-                # 'something-with-{version}/tailored-for-{user}' => 'something-with-{version}/tailored-for-{{user}}'
-                # We were looking for all occurrences of a pattern '{some_name}', where some_name is not version.
-                pattern = r"\{(?!" + (param.name or "") + r"\})\w+\}"
-                param_formatter = re.sub(pattern, lambda m: f"{{{m.group(0)}}}", param_formatter)
-                kwargs = {param.name: value}
-                ctx.params[parameter_name] = param_formatter.format(**kwargs)  # type: ignore
+        source = Param(source_param.name, value)
+        if source.value is not None:
+            for name, default in self._parameters.items():
+                value = ctx.params.get(name, default)
+                update(source, dest=Param(name, value))
 
-        if value is not None:
-            for prm_name, prm_formatter in self._formatters.items():
-                update_parameter(prm_name, prm_formatter)
+        return source.value
 
-        return value
+    def set_formatter(self, param_name: str, default_value: str) -> None:
+        """
+        Adds the specified destination parameter to be updated.
 
-    def set_formatter(self, custom_parameter_name: str, formatter: str) -> None:
-        """Sets a formatter for a customizable parameter."""
-        self._formatters[custom_parameter_name] = formatter
+        Better arg names could be `destination_parameter` and `format_pattern`
+        but renaming the arguments would break the public interface.
+
+        Parameters:
+
+          param_name: Name of the destination parameter to be updated.
+
+          default_value: Pattern for the value to assign to the destination
+                parameter. The pattern may contain place holders to be
+                replaced by the values of other CLI parameters, called "source
+                parameters".
+        """
+        self._parameters[param_name] = default_value
 
     def clear_formatters(self):
-        """Deletes all formatters, mainly for testing purposes."""
-        self._formatters.clear()
+        """Deletes all destination parameters to be updated, mainly for testing purposes."""
+        self._parameters.clear()
 
 
 # This text will be displayed instead of the actual value for a "secret" option.
@@ -253,6 +293,16 @@ def select_std_options(
     override:
         A dictionary of standard options with overridden properties
     formatters:
+        A dictionary, with each key being a source CLI parameter,
+        see docstring of class ParameterFormatters.
+
+        Each value is an instance of ParameterFormatters representing a single
+        or multiple destination parameters to be updated based on the source
+        parameter's value.
+
+        If a particular destination parameter D depends on multiple source
+        parameters S1, S2, ..., then the Click API will iterate through the
+        source parameters Si and update D multiple times.
     """
     if not isinstance(tags, list) and not isinstance(tags, str):
         tags = [tags]
