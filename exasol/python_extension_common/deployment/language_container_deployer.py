@@ -140,6 +140,20 @@ class LanguageContainerDeployer:
     def pyexasol_connection(self) -> pyexasol.ExaConnection:
         return self._pyexasol_conn
 
+    def download_url(self, version: str | None) -> str:
+        """
+        Sub classes can override this method to infer the download url
+        from the version in `download_and_run()`.
+        """
+        return ""
+
+    def default_bucket_file_path(self, version: str | None) -> str:
+        """
+        Sub classes can override this method to specify a default value
+        for `bucket_file_path` in `run()`.
+        """
+        return ""
+
     def download_and_run(
         self,
         url: str,
@@ -148,21 +162,40 @@ class LanguageContainerDeployer:
         allow_override: bool = False,
         wait_for_completion: bool = True,
         print_activation_statements: bool = True,
+        version: str = "",
     ) -> None:
         """
-        Downloads the language container from the provided url to a temporary file and then deploys it.
-        See docstring on the `run` method for details on what is involved in the deployment.
+        Downloads the language container from the provided url to a
+        temporary file and then deploys it.  See docstring on the `run` method
+        for details on what is involved in the deployment.
 
-        url              - Address where the container will be downloaded from.
-        bucket_file_path - Path within the designated bucket where the container should be uploaded.
-        alter_system     - If True will try to activate the container at the System level.
-        allow_override   - If True the activation of a language container with the same alias will be
-                           overriden, otherwise a RuntimeException will be thrown.
-        wait_for_completion - If True will wait until the language container becomes operational.
-        print_activation_statements - If True and alter_system is False,
-                                      it will print the ALTER SESSION command to stdout.
+        Arguments:
+
+        url: Address where the container will be downloaded from.  If url is
+             empty, then method download_url(version) is called to retrieve a
+             default URL, that can depend on the version.
+
+        bucket_file_path: Path within the designated bucket where the
+            container should be uploaded.
+
+        alter_system: If True will try to activate the container at the System
+            level.
+
+        allow_override: If True the activation of a language container with
+            the same alias will be overriden, otherwise a RuntimeException
+            will be thrown.
+
+        wait_for_completion: If True will wait until the language container
+            becomes operational.
+
+        print_activation_statements: If True and alter_system is False, it
+            will print the ALTER SESSION command to stdout.
+
+        version: Optional argument to infer the download URL by calling method
+            self.download_url(version).
         """
 
+        url = url or self.download_url(version)
         with tempfile.NamedTemporaryFile() as tmp_file:
             response = requests.get(url, stream=True, timeout=300)
             response.raise_for_status()
@@ -175,6 +208,7 @@ class LanguageContainerDeployer:
                 allow_override,
                 wait_for_completion,
                 print_activation_statements,
+                version,
             )
 
     def _upload_path(self, bucket_file_path: str | None) -> bfs.path.PathLike:
@@ -188,29 +222,53 @@ class LanguageContainerDeployer:
         allow_override: bool = False,
         wait_for_completion: bool = True,
         print_activation_statements: bool = True,
+        version: str = "",
     ) -> None:
         """
-        Deploys the language container. This includes two steps, both of which are optional:
-        - Uploading the container into the database. This step can be skipped if the container
-          has already been uploaded.
-        - Activating the container. In case the container does not get activated at the System
-        level, two alternative activation SQL commands (one for the System and one for the Session
-        levels) will be printed on the console.
+        Deploys the language container.
 
-        container_file   - Path of the container tar.gz file in a local file system.
-                           If not provided the container is assumed to be uploaded already.
-        bucket_file_path - Path within the designated bucket where the container should be uploaded.
-                           If not specified the name of the container file will be used instead.
-        alter_system     - If True will try to activate the container at the System level.
-        allow_override   - If True the activation of a language container with the same alias will be
-                           overriden, otherwise a RuntimeException will be thrown.
-        wait_for_completion - If True will wait until the language container becomes operational.
-                            For this to work either of the two conditions should be met.
-                            The pyexasol connection should have an open schema, or
-                            The calling user should have a permission to create schema.
-        print_activation_statements - If True and alter_system is False,
-                                      it will print the ALTER SESSION command to stdout.
+        This includes two steps, both of which are optional:
+
+        * Uploading the container into the database. This step can be skipped
+          if the container has already been uploaded.
+
+        * Activating the container. In case the container does not get
+          activated at the System level, two alternative activation SQL
+          commands (one for the System and one for the Session levels) will be
+          printed on the console.
+
+        Arguments:
+
+        container_file: Path of the container tar.gz file in a local file
+            system. If not provided the container is assumed to be uploaded
+            already.
+
+        bucket_file_path: Path within the designated bucket where the
+            container should be uploaded. If not specified then method
+            default_bucket_file_path(version) is called to get a default
+            value. If still empty, then the name of the container file will be
+            used instead.
+
+        alter_system: If True will try to activate the container at the System
+            level.
+
+        allow_override: If True the activation of a language container with
+            the same alias will be overriden, otherwise a RuntimeException
+            will be thrown.
+
+        wait_for_completion: If True will wait until the language container
+            becomes operational. For this to work either of the two conditions
+            should be met. The pyexasol connection should have an open schema,
+            or The calling user should have a permission to create schema.
+
+        print_activation_statements: If True and alter_system is False, it
+            will print the ALTER SESSION command to stdout.
+
+        version: Optional argument to infer the bucket_file_path by calling
+            method self.default_bucket_file_path(version).
         """
+
+        bucket_file_path = bucket_file_path or self.default_bucket_file_path(version)
 
         if not bucket_file_path:
             if not container_file:
@@ -237,10 +295,10 @@ class LanguageContainerDeployer:
                 f"""
                 In SQL, you can activate the SLC
                 by using the following statements:
-    
+
                 To activate the SLC only for the current session:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-    
+
                 To activate the SLC on the system:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
                 """
