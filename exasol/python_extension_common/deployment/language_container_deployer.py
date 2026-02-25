@@ -147,7 +147,7 @@ class LanguageContainerDeployer:
         """
         return ""
 
-    def default_bucket_file_path(version: str | None) -> str:
+    def default_bucket_file_path(self, version: str | None) -> str:
         """
         Sub classes can override this method to specify a default value
         for `bucket_file_path` in `run()`.
