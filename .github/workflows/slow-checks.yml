@@ -4,16 +4,9 @@ on:
   workflow_call:
 
 jobs:
-  build-matrix:
-    name: Build Matrix
-    uses: ./.github/workflows/matrix-all.yml
-    permissions:
-      contents: read
 
   run-integration-tests:
     name: Run Integration Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
-    needs:
-      - build-matrix
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
@@ -21,7 +14,10 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      matrix:
+        python-versions: ["3.10"]
+        exasol-versions: ["2025.1.8"]
+
     steps:
       - name: Allow unprivileged user namespaces
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
