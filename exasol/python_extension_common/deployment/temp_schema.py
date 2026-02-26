@@ -22,7 +22,7 @@ def _create_random_schema(conn: pyexasol.ExaConnection, schema_name_length: int)
 
 
 def get_schema(conn: pyexasol.ExaConnection) -> str | None:
-    return conn.execute(f"SELECT CURRENT_SCHEMA;").fetchval()
+    return conn.execute("SELECT CURRENT_SCHEMA;").fetchval()
 
 
 def set_schema(conn: pyexasol.ExaConnection, schema: str | None):
