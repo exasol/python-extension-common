@@ -25,7 +25,7 @@ exasol-script-languages-container-tool = ">=3,<4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
-exasol-toolbox = "^1.6.0"
+exasol-toolbox = ">=6, <7"
 pytest-exasol-backend = ">=0.4.0,<2"
 
 [tool.poetry.requires-plugins]

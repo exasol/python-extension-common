@@ -5,15 +5,16 @@ on:
 
 jobs:
   build-matrix:
-    name: Generate Build Matrix
+    name: Build Matrix
     uses: ./.github/workflows/matrix-all.yml
     permissions:
       contents: read
 
-  tests:
-    name: Integration-Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
-    needs: [ build-matrix ]
-    runs-on: ubuntu-24.04
+  run-integration-tests:
+    name: Run Integration Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    needs:
+      - build-matrix
+    runs-on: "ubuntu-24.04"
     permissions:
       contents: read
     env:
@@ -21,16 +22,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
-
     steps:
-      - name: SCM Checkout
-        uses: actions/checkout@v4
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
           large-packages: false
+
       - name: Free disk space by removing large directories
         run: |
                 sudo rm -rf /usr/local/graalvm/
@@ -40,13 +41,16 @@ jobs:
                 sudo rm -rf /usr/local/lib/node_modules
                 sudo rm -rf /opt/ghc
 
-      - name: Setup Python & Poetry Environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v1
+      - name: Check out Repository
+        id: check-out-repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python & Poetry Environment
+        id: set-up-python-and-poetry-environment
+        uses: exasol/python-toolbox/.github/actions/python-environment@v6
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Allow unprivileged user namespaces
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          poetry-version: "2.3.0"
 
       - name: Run Tests and Collect Coverage
         run: >
@@ -59,7 +63,8 @@ jobs:
           SAAS_PAT: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_PAT }}
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.6.2
+        id: upload-artifacts
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-python${{ matrix.python-version }}-slow
           path: .coverage
