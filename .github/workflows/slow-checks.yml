@@ -6,17 +6,18 @@ on:
 jobs:
 
   run-integration-tests:
-    name: Run Integration Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    name: Integration Tests (${{ matrix.backend }}, ${{ matrix.exasol-version}})
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
-        python-versions: ["3.10"]
-        exasol-versions: ["2025.1.8"]
+        include:
+          - backend: saas
+            exasol-version: provided
+          - backend: onprem
+            exasol-version: "2025.1.8"
 
     steps:
       - name: Allow unprivileged user namespaces
@@ -45,14 +46,15 @@ jobs:
         id: set-up-python-and-poetry-environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
           poetry-version: "2.3.0"
 
       - name: Run Tests and Collect Coverage
+        id: run-integration-tests
         run: >
-          poetry run -- nox -s test:integration --
-          --coverage --db-version ${{ matrix.exasol-version }}
-          --backend all
+          poetry run -- nox -s test:integration -- --coverage
+          --backend ${{ matrix.backend }}
+          --db-version ${{ matrix.exasol-version }}
         env:
           SAAS_HOST: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_HOST }}
           SAAS_ACCOUNT_ID: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID }}
@@ -62,6 +64,6 @@ jobs:
         id: upload-artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: coverage-python${{ matrix.python-version }}-slow
+          name: coverage-python3.10-${{ matrix.backend }}-${{ matrix.exasol-version }}
           path: .coverage
           include-hidden-files: true
