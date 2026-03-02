@@ -1,11 +1,11 @@
+from collections.abc import (
+    Callable,
+)
 from datetime import (
     datetime,
     timedelta,
 )
 from textwrap import dedent
-from typing import (
-    Callable,
-)
 
 import exasol.bucketfs as bfs  # type: ignore
 import pyexasol  # type: ignore

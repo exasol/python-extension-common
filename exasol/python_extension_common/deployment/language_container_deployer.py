@@ -9,9 +9,6 @@ from pathlib import (
     PurePosixPath,
 )
 from textwrap import dedent
-from typing import (
-    Optional,
-)
 
 import exasol.bucketfs as bfs  # type: ignore
 import pyexasol  # type: ignore
@@ -32,9 +29,9 @@ logger = logging.getLogger(__name__)
 
 def get_websocket_sslopt(
     use_ssl_cert_validation: bool = True,
-    ssl_trusted_ca: Optional[str] = None,
-    ssl_client_certificate: Optional[str] = None,
-    ssl_private_key: Optional[str] = None,
+    ssl_trusted_ca: str | None = None,
+    ssl_client_certificate: str | None = None,
+    ssl_private_key: str | None = None,
 ) -> dict:
     """
     Returns a dictionary in the winsocket-client format
@@ -180,8 +177,8 @@ class LanguageContainerDeployer:
 
     def run(
         self,
-        container_file: Optional[Path] = None,
-        bucket_file_path: Optional[str] = None,
+        container_file: Path | None = None,
+        bucket_file_path: str | None = None,
         alter_system: bool = True,
         allow_override: bool = False,
         wait_for_completion: bool = True,
@@ -245,9 +242,7 @@ class LanguageContainerDeployer:
             )
             print(message)
 
-    def upload_container(
-        self, container_file: Path, bucket_file_path: Optional[str] = None
-    ) -> None:
+    def upload_container(self, container_file: Path, bucket_file_path: str | None = None) -> None:
         """
         Upload the language container to the BucketFS.
 
@@ -376,27 +371,27 @@ class LanguageContainerDeployer:
     def create(
         cls,
         language_alias: str,
-        dsn: Optional[str] = None,
+        dsn: str | None = None,
         schema: str = "",
-        db_user: Optional[str] = None,
-        db_password: Optional[str] = None,
-        bucketfs_host: Optional[str] = None,
-        bucketfs_port: Optional[int] = None,
-        bucketfs_name: Optional[str] = None,
-        bucket: Optional[str] = None,
-        bucketfs_user: Optional[str] = None,
-        bucketfs_password: Optional[str] = None,
+        db_user: str | None = None,
+        db_password: str | None = None,
+        bucketfs_host: str | None = None,
+        bucketfs_port: int | None = None,
+        bucketfs_name: str | None = None,
+        bucket: str | None = None,
+        bucketfs_user: str | None = None,
+        bucketfs_password: str | None = None,
         bucketfs_use_https: bool = True,
-        saas_url: Optional[str] = None,
-        saas_account_id: Optional[str] = None,
-        saas_database_id: Optional[str] = None,
-        saas_database_name: Optional[str] = None,
-        saas_token: Optional[str] = None,
+        saas_url: str | None = None,
+        saas_account_id: str | None = None,
+        saas_database_id: str | None = None,
+        saas_database_name: str | None = None,
+        saas_token: str | None = None,
         path_in_bucket: str = "",
         use_ssl_cert_validation: bool = True,
-        ssl_trusted_ca: Optional[str] = None,
-        ssl_client_certificate: Optional[str] = None,
-        ssl_private_key: Optional[str] = None,
+        ssl_trusted_ca: str | None = None,
+        ssl_client_certificate: str | None = None,
+        ssl_private_key: str | None = None,
         deploy_timeout: timedelta = timedelta(minutes=10),
         display_progress: bool = False,
     ) -> "LanguageContainerDeployer":
