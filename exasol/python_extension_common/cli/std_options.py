@@ -32,7 +32,7 @@ class ParameterFormatters:
     the update if the value of the parameter dressed with the callback is None.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._formatters: dict[str, str] = {}
 
     def __call__(self, ctx: click.Context, param: click.Parameter, value: Any | None) -> Any | None:
@@ -224,7 +224,7 @@ def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
         The option properties.
     """
     param_decls = [
-        get_bool_opt_name(std_param) if kwargs.get("type") == bool else get_opt_name(std_param)
+        get_bool_opt_name(std_param) if kwargs.get("type") is bool else get_opt_name(std_param)
     ]
     if kwargs.get("hide_input", False):
         make_option_secret(kwargs, prompt=_get_param_name(std_param).replace("_", " "))

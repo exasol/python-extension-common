@@ -5,7 +5,7 @@ from pyexasol import ExaConnection  # type: ignore
 
 @contextlib.contextmanager
 def revert_language_settings(connection: ExaConnection):
-    query = f"""
+    query = """
         SELECT "SYSTEM_VALUE", "SESSION_VALUE"
         FROM SYS.EXA_PARAMETERS
         WHERE PARAMETER_NAME='SCRIPT_LANGUAGES'"""

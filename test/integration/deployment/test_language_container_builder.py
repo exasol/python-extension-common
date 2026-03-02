@@ -1,4 +1,3 @@
-from contextlib import ExitStack
 from pathlib import Path
 from test.utils.db_utils import assert_udf_running
 
