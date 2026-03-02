@@ -50,7 +50,7 @@ class ParameterFormatters:
         #
         # The default value can contain placeholders to be replaced by the
         # values of the other parameters, called "source parameters".
-        self._parameters: dict[str, str] = {}
+        self._formatters: dict[str, str] = {}
 
     def __call__(
         self, ctx: click.Context, source_param: click.Parameter, value: Any | None
@@ -76,7 +76,7 @@ class ParameterFormatters:
 
         source = Param(source_param.name, value)
         if source.value is not None:
-            for name, default in self._parameters.items():
+            for name, default in self._formatters.items():
                 value = ctx.params.get(name, default)
                 update(source, dest=Param(name, value))
 
@@ -98,11 +98,11 @@ class ParameterFormatters:
                 replaced by the values of other CLI parameters, called "source
                 parameters".
         """
-        self._parameters[param_name] = default_value
+        self._formatters[param_name] = default_value
 
     def clear_formatters(self):
         """Deletes all destination parameters to be updated, mainly for testing purposes."""
-        self._parameters.clear()
+        self._formatters.clear()
 
 
 # This text will be displayed instead of the actual value for a "secret" option.
@@ -264,7 +264,7 @@ def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
         The option properties.
     """
     param_decls = [
-        get_bool_opt_name(std_param) if kwargs.get("type") == bool else get_opt_name(std_param)
+        get_bool_opt_name(std_param) if kwargs.get("type") is bool else get_opt_name(std_param)
     ]
     if kwargs.get("hide_input", False):
         make_option_secret(kwargs, prompt=_get_param_name(std_param).replace("_", " "))

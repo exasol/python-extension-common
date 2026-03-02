@@ -14,7 +14,6 @@ import exasol.bucketfs as bfs
 import pytest
 from pyexasol import ExaConnection
 
-from exasol.python_extension_common.deployment.extract_validator import ExtractValidator
 from exasol.python_extension_common.deployment.language_container_deployer import (
     LanguageActivationLevel,
     LanguageContainerDeployer,

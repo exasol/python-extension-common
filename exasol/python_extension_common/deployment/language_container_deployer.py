@@ -10,8 +10,6 @@ from pathlib import (
 )
 from textwrap import dedent
 from typing import (
-    Dict,
-    List,
     Optional,
 )
 

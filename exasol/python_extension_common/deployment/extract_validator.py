@@ -1,4 +1,3 @@
-import re
 from datetime import (
     datetime,
     timedelta,
@@ -6,7 +5,6 @@ from datetime import (
 from textwrap import dedent
 from typing import (
     Callable,
-    List,
 )
 
 import exasol.bucketfs as bfs  # type: ignore

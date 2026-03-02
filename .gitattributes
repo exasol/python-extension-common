@@ -1,1 +1,11 @@
-poetry.lock    linguist-generated
+/poetry.lock                               linguist-generated
+/exasol/python_extension_common/version.py linguist-generated
+/.github/workflows/build-and-publish.yml   linguist-generated
+/.github/workflows/cd.yml                  linguist-generated
+/.github/workflows/check-release-tag.yml   linguist-generated
+/.github/workflows/checks.yml              linguist-generated
+/.github/workflows/ci.yml                  linguist-generated
+/.github/workflows/gh-pages.yml            linguist-generated
+/.github/workflows/merge-gate.yml          linguist-generated
+/.github/workflows/pr-merge.yml            linguist-generated
+/.github/workflows/report.yml              linguist-generated

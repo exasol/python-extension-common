@@ -1,20 +1,9 @@
-from collections.abc import Iterable
-from dataclasses import dataclass
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).parent
+from exasol.toolbox.config import BaseConfig
 
-
-@dataclass(frozen=True)
-class Config:
-    root: Path = ROOT_DIR
-    doc: Path = ROOT_DIR / "doc"
-    version_file: Path = ROOT_DIR / "version.py"
-    path_filters: Iterable[str] = ("dist", ".eggs", "venv", "metrics-schema", ".poetry")
-    source: Path = Path("exasol/python_extension_common")
-
-    exasol_versions = ["7.1.9"]
-    python_versions = ["3.10", "3.11"]
-
-
-PROJECT_CONFIG = Config()
+PROJECT_CONFIG = BaseConfig(
+    root_path=Path(__file__).parent,
+    project_name="python_extension_common",
+    python_versions=("3.10", "3.11", "3.12", "3.13"),
+)
