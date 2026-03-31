@@ -76,9 +76,7 @@ class ExtractValidator:
         Much more a later statement "CREATE SCRIPT" will fail with an error
         message. Hence we need to use a retry here, as well.
         """
-        self._pyexasol_conn.execute(
-            dedent(
-                f"""
+        self._pyexasol_conn.execute(dedent(f"""
             CREATE OR REPLACE {language_alias} SET SCRIPT
                 {udf_name}(my_path VARCHAR(256))
                 EMITS (node INTEGER, manifest BOOL) AS
@@ -86,9 +84,7 @@ class ExtractValidator:
             def run(ctx):
                 ctx.emit(exa.meta.node_id, os.path.isfile(ctx.my_path))
             /
-            """
-            )
-        )
+            """))
 
     def _check_all_nodes_with_retry(
         self, udf_name: str, nproc: int, manifest: str, timeout: timedelta
@@ -100,12 +96,10 @@ class ExtractValidator:
                 self._check_all_nodes(udf_name, nproc, manifest)
 
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
-        result = self._pyexasol_conn.execute(
-            f"""
+        result = self._pyexasol_conn.execute(f"""
             SELECT {udf_name}('{manifest}')
             FROM VALUES BETWEEN 1 AND {nproc} t(i) GROUP BY i
-            """
-        ).fetchall()
+            """).fetchall()
         pending = list(x[0] for x in result if not x[1])
         self._callback(nproc, pending)
         if len(pending) > 0:

@@ -228,8 +228,7 @@ class LanguageContainerDeployer:
             self._wait_container_upload_completion(bucket_file_path)
 
         if not alter_system and print_activation_statements:
-            message = dedent(
-                f"""
+            message = dedent(f"""
                 In SQL, you can activate the SLC
                 by using the following statements:
     
@@ -238,8 +237,7 @@ class LanguageContainerDeployer:
     
                 To activate the SLC on the system:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
-                """
-            )
+                """)
             print(message)
 
     def upload_container(self, container_file: Path, bucket_file_path: str | None = None) -> None:
