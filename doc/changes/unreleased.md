@@ -12,7 +12,7 @@ Please note that the situation on the user's machine differs since they have the
 
 ## Security
 
-* Security updates to fix vulnerabilities listed above
+* Security updates to fix vulnerabilities listed above (PR #136)
 
 ## Refactorings
 
