@@ -22,6 +22,7 @@
 hidden:
 ---
 unreleased
+changes_0.13.1
 changes_0.13.0
 changes_0.12.1
 changes_0.12.0
