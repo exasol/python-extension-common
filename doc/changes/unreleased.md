@@ -2,11 +2,17 @@
 
 ## Summary
 
-We updated the `poetry.lock` file in this repository to fix the following security vulnerabilities: 
+We updated the dependencies in the `poetry.lock` file in this repository to fix the following security vulnerabilities: 
 
-* CVE-2025-68146: `TOCTOU` symlink vulnerability in SoftFileLock (affects `filelock` 3.20.1, `virtualenv` 20.35.3)
-* CVE-2026-21441: Decompression bomb vulnerability (affects `urllib3` 2.6.2)
-* CVE-2025-69277: Improper elyptic curve point calculation vulnerability in `libsodium` (affects `pynacl` 1.6.0)
+| Name         | Version | ID                  | Fix Versions |
+|--------------|---------|---------------------|--------------|
+| black        | 25.12.0 | CVE-2026-32274      | 26.3.1       |
+| cryptography | 46.0.5  | CVE-2026-34073      | 46.0.6       |
+| pyasn1       | 0.6.2   | CVE-2026-30922      | 0.6.3        |
+| pygments     | 2.19.2  | CVE-2026-4539       |              |
+| requests     | 2.32.5  | CVE-2026-25645      | 2.33.0       |
+| tornado      | 6.5.4   | GHSA-78cv-mqj4-43f7 | 6.5.5        |
+| tornado      | 6.5.4   | CVE-2026-31958      | 6.5.5        |
 
 Please note that the situation on the user's machine differs since they have their own lock file.
 
