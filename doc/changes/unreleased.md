@@ -16,6 +16,8 @@ We updated the dependencies in the `poetry.lock` file in this repository to fix 
 
 Please note that the situation on the user's machine differs since they have their own lock file.
 
+We also updated versions in the GitHub actions. User are not affected by this.
+
 ## Security
 
 * #136: Security updates to fix vulnerabilities listed above
