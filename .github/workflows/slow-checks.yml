@@ -1,28 +1,54 @@
+# Please note that this workflow was manually adapted from the version generated
+# by the Exasol Python Toolbox.
+#
+# 1. The matrix consists of backend type and Exasol version
+# 2. Disabling AppArmor namespace restrictions is required to run dockerdb
+# 3. To make sure space on the standard runner is freed up,
+#    unneeded large directories are removed
+#
+# Once the workflow patcher can do this modification without having to replace
+# each workflow step individually, this workflow should be generated.
+
 name: Slow-Checks
 
 on:
   workflow_call:
 
 jobs:
-  build-matrix:
-    name: Build Matrix
-    uses: ./.github/workflows/matrix-all.yml
-    permissions:
-      contents: read
 
   run-integration-tests:
-    name: Run Integration Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
-    needs:
-      - build-matrix
+    name: Integration Tests (${{ matrix.backend }}, ${{ matrix.exasol-version}})
     runs-on: "ubuntu-24.04"
     permissions:
       contents: read
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      matrix:
+        include:
+          - backend: saas
+            exasol-version: provided
+          - backend: onprem
+            exasol-version: "2025.1.8"
+
     steps:
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+
+      - name: Free disk space by removing large directories
+        run: |
+                sudo rm -rf /usr/local/graalvm/
+                sudo rm -rf /usr/local/.ghcup/
+                sudo rm -rf /usr/local/share/powershell
+                sudo rm -rf /usr/local/share/chromium
+                sudo rm -rf /usr/local/lib/node_modules
+                sudo rm -rf /opt/ghc
+
       - name: Check out Repository
         id: check-out-repository
         uses: actions/checkout@v6
@@ -31,17 +57,24 @@ jobs:
         id: set-up-python-and-poetry-environment
         uses: exasol/python-toolbox/.github/actions/python-environment@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
           poetry-version: "2.3.0"
 
       - name: Run Integration Tests
         id: run-integration-tests
-        run: poetry run -- nox -s test:integration -- --coverage --db-version ${{ matrix.exasol-version }}
+        run: >
+          poetry run -- nox -s test:integration -- --coverage
+          --backend ${{ matrix.backend }}
+          --db-version ${{ matrix.exasol-version }}
+        env:
+          SAAS_HOST: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_HOST }}
+          SAAS_ACCOUNT_ID: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID }}
+          SAAS_PAT: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_PAT }}
 
       - name: Upload Artifacts
         id: upload-artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version }}-slow
+          name: coverage-python3.10-${{ matrix.backend }}-${{ matrix.exasol-version }}
           path: .coverage
           include-hidden-files: true

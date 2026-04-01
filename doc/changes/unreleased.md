@@ -9,14 +9,14 @@ We updated the dependencies in the `poetry.lock` file in this repository to fix 
 | black        | 25.12.0 | CVE-2026-32274      | 26.3.1       |
 | cryptography | 46.0.5  | CVE-2026-34073      | 46.0.6       |
 | pyasn1       | 0.6.2   | CVE-2026-30922      | 0.6.3        |
-| pygments     | 2.19.2  | CVE-2026-4539       |              |
+| pygments     | 2.19.2  | CVE-2026-4539       | 2.20.0       |
 | requests     | 2.32.5  | CVE-2026-25645      | 2.33.0       |
 | tornado      | 6.5.4   | GHSA-78cv-mqj4-43f7 | 6.5.5        |
 | tornado      | 6.5.4   | CVE-2026-31958      | 6.5.5        |
 
 Please note that the situation on the user's machine differs since they have their own lock file.
 
-We also updated versions in the GitHub actions. User are not affected by this.
+We also updated versions in the GitHub actions. Users are not affected by this.
 
 ## Security
 
