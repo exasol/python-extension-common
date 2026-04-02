@@ -103,12 +103,12 @@ class ExtractValidator:
             )
         result = self._pyexasol_conn.execute(
             f"""
-            SELECT {udf_name}({{manifest}})
-            FROM VALUES BETWEEN 1 AND {{nproc}} t(i) GROUP BY i
+            SELECT {udf_name}({{manifest!s}})
+            FROM VALUES BETWEEN 1 AND {{nproc!r}} t(i) GROUP BY i
             """,
             {"manifest": manifest, "nproc": nproc},
         ).fetchall()
-        pending = list(x[0] for x in result if not x[1])
+        pending = [x[0] for x in result if not x[1]]
         self._callback(nproc, pending)
         if len(pending) > 0:
             raise ExtractException(
