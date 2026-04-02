@@ -18,8 +18,6 @@ MANIFEST_FILE = "exasol-manifest.json"
 
 
 def _udf_name(schema: str | None, name: str) -> str:
-    if not re.fullmatch(r"[A-Za-z0-9_]+", name):
-        raise ValueError("udf_name must contain only alphanumeric characters or underscores.")
     timestamp = f"{datetime.now().timestamp():.0f}"
     suffix = f'"{name}_manifest_{timestamp}"'
     return f'"{schema}".{suffix}' if schema else suffix
@@ -99,7 +97,7 @@ class ExtractValidator:
                 self._check_all_nodes(udf_name, nproc, manifest)
 
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
-        if not re.fullmatch(r"\w+", udf_name):
+        if not re.fullmatch(r"\"\w+\"(?:\.\"\w+\")?", udf_name):
             raise ValueError(
                 "The UDF name must contain only alphanumeric characters or underscores."
             )
@@ -114,7 +112,7 @@ class ExtractValidator:
         self._callback(nproc, pending)
         if len(pending) > 0:
             raise ExtractException(
-                f"{len(pending)} of {nproc} nodes are still pending." f" IDs: {pending}"
+                f"{len(pending)} of {nproc} nodes are still pending. IDs: {pending}"
             )
 
     def verify_all_nodes(
