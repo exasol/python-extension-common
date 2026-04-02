@@ -1,3 +1,14 @@
+# Please note that this workflow was manually adapted from the version generated
+# by the Exasol Python Toolbox.
+#
+# 1. The matrix consists of backend type and Exasol version
+# 2. Disabling AppArmor namespace restrictions is required to run dockerdb
+# 3. To make sure space on the standard runner is freed up,
+#    unneeded large directories are removed
+#
+# Once the workflow patcher can do this modification without having to replace
+# each workflow step individually, this workflow should be generated.
+
 name: Slow-Checks
 
 on:
@@ -49,7 +60,7 @@ jobs:
           python-version: "3.10"
           poetry-version: "2.3.0"
 
-      - name: Run Tests and Collect Coverage
+      - name: Run Integration Tests
         id: run-integration-tests
         run: >
           poetry run -- nox -s test:integration -- --coverage
@@ -62,7 +73,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload-artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-python3.10-${{ matrix.backend }}-${{ matrix.exasol-version }}
           path: .coverage

@@ -3,5 +3,6 @@
 .build_output
 .coverage
 __pycache__
+dist
 
 TAGS
