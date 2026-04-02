@@ -19,7 +19,7 @@ pyexasol = ">=0.25.0, <3"
 exasol-bucketfs = ">=0.10.0, <3"
 click = "^8.1.7"
 exasol-saas-api = ">=1.1.0, <3"
-requests = ">=2.32.4"
+requests = ">=2.33.0"
 tenacity = "^8.3.0"
 exasol-script-languages-container-tool = ">=3, <4"
 
