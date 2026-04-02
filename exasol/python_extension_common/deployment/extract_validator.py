@@ -1,3 +1,4 @@
+import re
 from collections.abc import (
     Callable,
 )
@@ -17,6 +18,8 @@ MANIFEST_FILE = "exasol-manifest.json"
 
 
 def _udf_name(schema: str | None, name: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9_]+", name):
+        raise ValueError("udf_name must contain only alphanumeric characters or underscores.")
     timestamp = f"{datetime.now().timestamp():.0f}"
     suffix = f'"{name}_manifest_{timestamp}"'
     return f'"{schema}".{suffix}' if schema else suffix
@@ -96,10 +99,17 @@ class ExtractValidator:
                 self._check_all_nodes(udf_name, nproc, manifest)
 
     def _check_all_nodes(self, udf_name: str, nproc: int, manifest: str):
-        result = self._pyexasol_conn.execute(f"""
-            SELECT {udf_name}('{manifest}')
-            FROM VALUES BETWEEN 1 AND {nproc} t(i) GROUP BY i
-            """).fetchall()
+        if not re.fullmatch(r"\w+", udf_name):
+            raise ValueError(
+                "The UDF name must contain only alphanumeric characters or underscores."
+            )
+        result = self._pyexasol_conn.execute(
+            f"""
+            SELECT {udf_name}({{manifest}})
+            FROM VALUES BETWEEN 1 AND {{nproc}} t(i) GROUP BY i
+            """,
+            {"manifest": manifest, "nproc": nproc},
+        ).fetchall()
         pending = list(x[0] for x in result if not x[1])
         self._callback(nproc, pending)
         if len(pending) > 0:
