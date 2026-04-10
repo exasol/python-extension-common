@@ -342,7 +342,7 @@ class LanguageContainerDeployer:
         new_language_alias_definition = (
             f"{self._language_alias}=localzmq+protobuf:///"
             f"{path_in_udf_without_buckets}?lang=python#"
-            f"{path_in_udf}/exaudf/exaudfclient_py3"
+            f"{path_in_udf}/exaudf/exaudfclient"
         )
         new_definitions = other_definitions + [new_language_alias_definition]
         new_definitions_str = " ".join(new_definitions)

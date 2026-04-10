@@ -148,7 +148,7 @@ def test_slc_deployer_generate_activation_command(
         f"ALTER {alter_type.value.upper()} SET SCRIPT_LANGUAGES='"
         "R=builtin_r JAVA=builtin_java PYTHON3=builtin_python3 "
         f"{language_alias}=localzmq+protobuf:///{container_bfs_path}?"
-        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient_py3';"
+        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient';"
     )
 
     command = container_deployer.generate_activation_command(container_file_name, alter_type)
@@ -171,7 +171,7 @@ def test_slc_deployer_generate_activation_command_override(
     mock_lang_settings.return_value = (
         "R=builtin_r JAVA=builtin_java PYTHON3=builtin_python3 "
         f"{language_alias}=localzmq+protobuf:///{current_bfs_path}?"
-        f"lang=python#/buckets/{current_bfs_path}/exaudf/exaudfclient_py3"
+        f"lang=python#/buckets/{current_bfs_path}/exaudf/exaudfclient"
     )
     mock_udf_path.return_value = PurePosixPath(f"/buckets/{container_bfs_path}")
 
@@ -180,7 +180,7 @@ def test_slc_deployer_generate_activation_command_override(
         f"ALTER {alter_type.value.upper()} SET SCRIPT_LANGUAGES='"
         "R=builtin_r JAVA=builtin_java PYTHON3=builtin_python3 "
         f"{language_alias}=localzmq+protobuf:///{container_bfs_path}?"
-        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient_py3';"
+        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient';"
     )
 
     command = container_deployer.generate_activation_command(
@@ -205,7 +205,7 @@ def test_slc_deployer_generate_activation_command_failure(
     mock_lang_settings.return_value = (
         "R=builtin_r JAVA=builtin_java PYTHON3=builtin_python3 "
         f"{language_alias}=localzmq+protobuf:///{current_bfs_path}?"
-        f"lang=python#/buckets/{current_bfs_path}/exaudf/exaudfclient_py3"
+        f"lang=python#/buckets/{current_bfs_path}/exaudf/exaudfclient"
     )
     mock_udf_path.return_value = PurePosixPath(f"/buckets/{container_bfs_path}")
 
@@ -222,7 +222,7 @@ def test_slc_deployer_get_language_definition(
     mock_udf_path.return_value = PurePosixPath(f"/buckets/{container_bfs_path}")
     expected_command = (
         f"{language_alias}=localzmq+protobuf:///{container_bfs_path}?"
-        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient_py3"
+        f"lang=python#/buckets/{container_bfs_path}/exaudf/exaudfclient"
     )
 
     command = container_deployer.get_language_definition(container_file_name)
