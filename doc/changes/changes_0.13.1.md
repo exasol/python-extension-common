@@ -25,6 +25,7 @@ We also updated versions in the GitHub actions. Users are not affected by this.
 ## Refactorings
 
 * #127: Refactored class `ParameterFormatters` and docstrings
+* #141: Updating docker base image
 
 ## Dependency Updates
 
