@@ -25,7 +25,7 @@ We also updated versions in the GitHub actions. Users are not affected by this.
 ## Refactorings
 
 * #127: Refactored class `ParameterFormatters` and docstrings
-* #141: Updating docker base image
+* #141: Updated Docker base image version to SLC 11.1.1
 
 ## Dependency Updates
 
