@@ -36,7 +36,12 @@ TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
 
 @pytest.fixture(scope="session")
 def container_name() -> str:
-    return "template-Exasol-all-python-3.10_release.tar.gz"
+    # Warning:
+    # The container name is currently hardcoded to a specific version and build
+    # of the container, which may need to be updated manually when new versions
+    # are released. Consider implementing a more dynamic approach to determine
+    # the container name based on the version or other parameters.
+    return "template-Exasol-all-python-3.10-release_x64_BFOJFIJ2Y42PBIZHWXVEQBBVPAEVHZETG4Z45VAMFWFSXORH3FVA.tar.gz"
 
 
 @pytest.fixture(scope="session")
