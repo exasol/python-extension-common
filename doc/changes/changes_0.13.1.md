@@ -2,7 +2,7 @@
 
 ## Summary
 
-We updated the dependencies in the `poetry.lock` file in this repository to fix the following security vulnerabilities: 
+We updated the dependencies in the `poetry.lock` file in this repository to fix the following security vulnerabilities:
 
 | Name         | Version | ID                  | Fix Versions |
 |--------------|---------|---------------------|--------------|

@@ -231,10 +231,10 @@ class LanguageContainerDeployer:
             message = dedent(f"""
                 In SQL, you can activate the SLC
                 by using the following statements:
-    
+
                 To activate the SLC only for the current session:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-    
+
                 To activate the SLC on the system:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
                 """)
