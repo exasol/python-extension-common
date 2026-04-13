@@ -28,7 +28,7 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
     slc_parameter_formatters,
 )
 
-VERSION = "8.3.0"
+VERSION = "11.1.1"
 
 TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
