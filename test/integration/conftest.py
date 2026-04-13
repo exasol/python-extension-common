@@ -41,7 +41,7 @@ def container_name() -> str:
     # of the container, which may need to be updated manually when new versions
     # are released. Consider implementing a more dynamic approach to determine
     # the container name based on the version or other parameters.
-    return "template-Exasol-all-python-3.10-release_x64_BFOJFIJ2Y42PBIZHWXVEQBBVPAEVHZETG4Z45VAMFWFSXORH3FVA.tar.gz"
+    return "template-Exasol-all-python-3.10-release-x64-BFOJFIJ2Y42PBIZHWXVEQBBVPAEVHZETG4Z45VAMFWFSXORH3FVA.tar.gz"
 
 
 @pytest.fixture(scope="session")
