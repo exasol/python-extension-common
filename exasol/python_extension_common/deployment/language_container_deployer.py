@@ -231,10 +231,10 @@ class LanguageContainerDeployer:
             message = dedent(f"""
                 In SQL, you can activate the SLC
                 by using the following statements:
-    
+
                 To activate the SLC only for the current session:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-    
+
                 To activate the SLC on the system:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
                 """)
@@ -342,7 +342,7 @@ class LanguageContainerDeployer:
         new_language_alias_definition = (
             f"{self._language_alias}=localzmq+protobuf:///"
             f"{path_in_udf_without_buckets}?lang=python#"
-            f"{path_in_udf}/exaudf/exaudfclient_py3"
+            f"{path_in_udf}/exaudf/exaudfclient"
         )
         new_definitions = other_definitions + [new_language_alias_definition]
         new_definitions_str = " ".join(new_definitions)
