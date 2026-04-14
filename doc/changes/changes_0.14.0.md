@@ -1,14 +1,11 @@
 # 0.14.0 - 2026-04-14
 
 ## Summary
+  This release will use latest slc release (11.1.1) and having other dependency updates as follows.
 
 ## Refactoring
 
 * #141: Updated Docker base image version to SLC 11.1.1
-
-## Dependency Updates
-
-* Updated dependency `exasol-saas-api' to `2.10.0`
 
 ## Dependency Updates
 
