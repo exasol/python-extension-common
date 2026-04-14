@@ -1,7 +1,7 @@
 # 0.14.0 - 2026-04-14
 
 ## Summary
-  This release will use latest slc release (11.1.1) and having other dependency updates as follows.
+  This release will use latest SLC release (11.1.1) and having other dependency updates as follows.
 
 ## Refactoring
 
