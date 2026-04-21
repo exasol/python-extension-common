@@ -481,4 +481,4 @@ class LanguageContainerDeployer:
 
         callback = display_extract_progress if display_progress else None
         extract_validator = ExtractValidator(pyexasol_conn, deploy_timeout, callback=callback)
-        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
+        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator, udf_client_binary)
