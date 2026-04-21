@@ -116,11 +116,13 @@ class LanguageContainerDeployer:
         language_alias: str,
         bucketfs_path: bfs.path.PathLike,
         extract_validator: ExtractValidator | None = None,
+        udf_client_binary: str = "exaudfclient",
     ) -> None:
 
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
+        self._udf_client_binary = udf_client_binary
         if extract_validator:
             self._extract_validator = extract_validator
         else:
@@ -342,7 +344,7 @@ class LanguageContainerDeployer:
         new_language_alias_definition = (
             f"{self._language_alias}=localzmq+protobuf:///"
             f"{path_in_udf_without_buckets}?lang=python#"
-            f"{path_in_udf}/exaudf/exaudfclient"
+            f"{path_in_udf}/exaudf/{self._udf_client_binary}"
         )
         new_definitions = other_definitions + [new_language_alias_definition]
         new_definitions_str = " ".join(new_definitions)
@@ -392,6 +394,7 @@ class LanguageContainerDeployer:
         ssl_private_key: str | None = None,
         deploy_timeout: timedelta = timedelta(minutes=10),
         display_progress: bool = False,
+        udf_client_binary: str = "exaudfclient",
     ) -> "LanguageContainerDeployer":
         warnings.warn(
             "create() function is deprecated and will be removed in a future version. "
@@ -478,4 +481,6 @@ class LanguageContainerDeployer:
 
         callback = display_extract_progress if display_progress else None
         extract_validator = ExtractValidator(pyexasol_conn, deploy_timeout, callback=callback)
-        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
+        return cls(
+            pyexasol_conn, language_alias, bucketfs_path, extract_validator, udf_client_binary
+        )

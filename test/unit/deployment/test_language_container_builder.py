@@ -45,6 +45,7 @@ def test_copy_slc_flavor(tmp_path):
 def mock_export(monkeypatch: MonkeyPatch) -> MagicMock:
     mock = MagicMock()
     monkeypatch.setattr(api, "export", mock)
+    monkeypatch.setattr(api, "clean_all_images", MagicMock())
     return mock
 
 
