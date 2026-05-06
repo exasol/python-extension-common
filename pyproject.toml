@@ -26,8 +26,8 @@ dynamic = ["dependencies"]
 
 [dependency-groups]
 dev = [
-    "pytest>=7.2.0,<8",
-    "exasol-toolbox>=6, <7",
+    "pytest>=7.2.0,<10",
+    "exasol-toolbox>=7.0.0, <8",
     "pytest-exasol-backend>=0.4.0,<2",
 ]
 

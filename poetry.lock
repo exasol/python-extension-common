@@ -1247,14 +1247,14 @@ types-pyyaml = ">=6.0.12.20250915,<7.0.0.0"
 
 [[package]]
 name = "exasol-toolbox"
-version = "6.2.0"
+version = "7.0.0"
 description = "Your one-stop solution for managing all standard tasks and core workflows of your Python project."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "exasol_toolbox-6.2.0-py3-none-any.whl", hash = "sha256:4b87a2e4d6a19bda44e1f79d2156bde97cb47daf3cee2a5d0af10de66a42d8dd"},
-    {file = "exasol_toolbox-6.2.0.tar.gz", hash = "sha256:e34c22e46c5ce1031d3e4c408d1aa24ac398e3281df0fc662f40310afebfd278"},
+    {file = "exasol_toolbox-7.0.0-py3-none-any.whl", hash = "sha256:e71dc0822a157e0b1818a6f268f836bf0ee18f26ea6662893b2231813bb5afe4"},
+    {file = "exasol_toolbox-7.0.0.tar.gz", hash = "sha256:0538366da5df1e800c6d43d2106273db97492f3964fdb48afdd9f1afee682365"},
 ]
 
 [package.dependencies]
@@ -3576,43 +3576,44 @@ tomli = ">=2.2.1,<3.0.0"
 
 [[package]]
 name = "pytest"
-version = "7.4.4"
+version = "9.0.3"
 description = "pytest: simple powerful testing with Python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "pytest-7.4.4-py3-none-any.whl", hash = "sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8"},
-    {file = "pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280"},
+    {file = "pytest-9.0.3-py3-none-any.whl", hash = "sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9"},
+    {file = "pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c"},
 ]
 
 [package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
-iniconfig = "*"
-packaging = "*"
-pluggy = ">=0.12,<2.0"
-tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
+colorama = {version = ">=0.4", markers = "sys_platform == \"win32\""}
+exceptiongroup = {version = ">=1", markers = "python_version < \"3.11\""}
+iniconfig = ">=1.0.1"
+packaging = ">=22"
+pluggy = ">=1.5,<2"
+pygments = ">=2.7.2"
+tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 
 [package.extras]
-testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "pytest-exasol-backend"
-version = "1.4.0"
+version = "1.4.1"
 description = ""
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "pytest_exasol_backend-1.4.0-py3-none-any.whl", hash = "sha256:16c2ecfcbbde8c8eee2ad06748d18cc77ff46d49ed60e4c3e4825dd35a9dcca1"},
-    {file = "pytest_exasol_backend-1.4.0.tar.gz", hash = "sha256:640131f69061ecc23f6ab2927d1dbda317a1a8569186c94ef5a1ca0e15429e91"},
+    {file = "pytest_exasol_backend-1.4.1-py3-none-any.whl", hash = "sha256:208b5f6e3da31105a8e692c6aaa04775d3f2d29e3985f69092e2ed805c3285ca"},
+    {file = "pytest_exasol_backend-1.4.1.tar.gz", hash = "sha256:c89af2b959377cc2ac6fda81b6d433ecc66e9e9b6608f2a0048f3f1890223470"},
 ]
 
 [package.dependencies]
 exasol-integration-test-docker-environment = ">=4.3,<7"
 exasol-saas-api = ">=2.8,<3"
-pytest = ">=7,<9"
+pytest = ">=7,<10"
 
 [[package]]
 name = "python-daemon"
@@ -5402,4 +5403,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "bb3ff9c0affd22fcd3ff78d99da1b5f4c7e3fb626fcfc0fdbf15efa2763c1c1b"
+content-hash = "bda1bda756fefe77706452bb47a656f93a81ee52f9ef48e4d4bb4044b0c8e561"
