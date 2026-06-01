@@ -8,7 +8,7 @@
 /.github/workflows/checks.yml                linguist-generated=true
 /.github/workflows/ci.yml                    linguist-generated=true
 /.github/workflows/dependency-update.yml     linguist-generated=true
-/..github/workflows/fast-tests.yml           linguist-generated=true
+/.github/workflows/fast-tests.yml            linguist-generated=true
 /.github/workflows/gh-pages.yml              linguist-generated=true
 /.github/workflows/matrix-exasol.yml         linguist-generated=true
 /.github/workflows/matrix-python.yml         linguist-generated=true
