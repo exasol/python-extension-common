@@ -1,13 +1,7 @@
 import os
-from contextlib import (
-    ExitStack,
-    contextmanager,
-)
+import re
+from contextlib import ExitStack
 from datetime import timedelta
-from typing import (
-    Dict,
-    List,
-)
 from unittest.mock import (
     Mock,
     create_autospec,
@@ -139,9 +133,6 @@ def test_parameter_formatters_2params():
     assert ctx.params[CustomizableParameters.container_name.name] == "downloaded-1.3.2"
 
 
-import re
-
-
 def test_deployer_cli_with_missing_container_option():
     result = click.testing.CliRunner().invoke(
         language_container_deployer_main,
@@ -248,7 +239,7 @@ def test_cli_options_passed_to_create(container_file):
 
     def keys_and_values():
         for o in options:
-            if o.value == False:
+            if not o.value:
                 yield "--no-" + o.cli[2:]
                 continue
             yield o.cli

@@ -2,11 +2,7 @@ import contextlib
 import logging
 import re
 from datetime import timedelta
-from typing import (
-    Any,
-    Dict,
-    List,
-)
+from typing import Any
 from unittest.mock import (
     Mock,
     call,
@@ -15,8 +11,6 @@ from unittest.mock import (
 
 import exasol.bucketfs as bfs  # type: ignore
 import pytest
-from pyexasol import ExaConnection
-from tenacity import RetryError
 
 from exasol.python_extension_common.deployment.extract_validator import (
     ExtractException,
@@ -146,7 +140,7 @@ def test_udf_name(schema, expected):
 def test_create_script_failure(archive_bucket_path):
     create_script = Mock(side_effect=Exception("failed to create UDF script"))
     sim = Simulator(nodes=4, udf_results=[], create_script=create_script)
-    with pytest.raises(Exception, match="failed to create UDF script") as ex:
+    with pytest.raises(Exception, match="failed to create UDF script"):
         with mock_tenacity_wait([1]):
             sim.testee.verify_all_nodes("alias", "schema", archive_bucket_path)
 

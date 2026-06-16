@@ -1,4 +1,3 @@
-import re
 from unittest.mock import (
     MagicMock,
     call,
@@ -44,9 +43,10 @@ def test_copy_slc_flavor(tmp_path):
 
 @pytest.fixture
 def mock_export(monkeypatch: MonkeyPatch) -> MagicMock:
-    mock_function_to_mock = MagicMock()
-    monkeypatch.setattr(api, "export", mock_function_to_mock)
-    return mock_function_to_mock
+    mock = MagicMock()
+    monkeypatch.setattr(api, "export", mock)
+    monkeypatch.setattr(api, "clean_all_images", MagicMock())
+    return mock
 
 
 @pytest.mark.parametrize(
@@ -69,4 +69,4 @@ def test_export(mock_export, tmp_path, compression_strategy):
                 compression_strategy=compression_strategy,
             ),
         ]
-        assert mock_export.has_calls(expected_calls)
+        assert mock_export.call_args_list == expected_calls

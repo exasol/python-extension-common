@@ -3,9 +3,9 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
 from importlib import resources
 from pathlib import Path
-from typing import Callable
 
 from exasol.slc import api  # type: ignore
 from exasol.slc.models.compression_strategy import CompressionStrategy

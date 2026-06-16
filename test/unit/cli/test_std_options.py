@@ -135,11 +135,11 @@ def test_select_std_options_with_formatter():
         assert kwargs[container_name_arg] == expected_name
         assert kwargs[container_url_arg] == expected_url
 
-    ver_formatter = ParameterFormatters()
-    ver_formatter.set_formatter(container_url_arg, url_format)
-    ver_formatter.set_formatter(container_name_arg, name_format)
+    ver_formatters = ParameterFormatters()
+    ver_formatters.set_formatter(container_url_arg, url_format)
+    ver_formatters.set_formatter(container_name_arg, name_format)
 
-    opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatter})
+    opts = select_std_options(StdTags.SLC, formatters={StdParams.version: ver_formatters})
     cmd = click.Command("do_something", params=opts, callback=func)
     runner = CliRunner()
     runner.invoke(cmd, args=f"--version {version}", catch_exceptions=False, standalone_mode=False)

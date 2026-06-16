@@ -21,7 +21,7 @@ def open_pyexasol_connection(**kwargs) -> pyexasol.ExaConnection:
     """
 
     # Fix the compatibility issue
-    if ("db_pass" in kwargs) and not (StdParams.db_password.name in kwargs):
+    if ("db_pass" in kwargs) and (StdParams.db_password.name not in kwargs):
         kwargs[StdParams.db_password.name] = kwargs["db_pass"]
 
     # Infer where the database is - On-Prem or SaaS.

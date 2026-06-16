@@ -6,7 +6,6 @@ from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
-    Optional,
 )
 
 import click
@@ -28,6 +27,11 @@ class CustomizableParameters(Enum):
 
 
 class _ParameterFormatters:
+    # See language_container_deployer_main displaying a deprecation warning.
+    #
+    # Currently, there is only one other project still using this
+    # implementation, see
+    # https://github.com/exasol/advanced-analytics-framework/issues/333.
     """
     Class facilitating customization of the cli.
 
@@ -52,9 +56,7 @@ class _ParameterFormatters:
     def __init__(self):
         self._formatters = {}
 
-    def __call__(
-        self, ctx: click.Context, param: click.Parameter, value: Optional[Any]
-    ) -> Optional[Any]:
+    def __call__(self, ctx: click.Context, param: click.Parameter, value: Any | None) -> Any | None:
 
         def update_parameter(parameter_name: str, formatter: str) -> None:
             param_formatter = ctx.params.get(parameter_name, formatter)
@@ -226,8 +228,8 @@ def language_container_deployer_main(
     wait_for_completion: bool,
     deploy_timeout_minutes: int,
     display_progress: bool,
-    container_url: Optional[str] = None,
-    container_name: Optional[str] = None,
+    container_url: str | None = None,
+    container_name: str | None = None,
 ):
     warnings.warn(
         "language_container_deployer_main() function is deprecated and will be removed "

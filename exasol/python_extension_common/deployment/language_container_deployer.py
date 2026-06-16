@@ -9,11 +9,6 @@ from pathlib import (
     PurePosixPath,
 )
 from textwrap import dedent
-from typing import (
-    Dict,
-    List,
-    Optional,
-)
 
 import exasol.bucketfs as bfs  # type: ignore
 import pyexasol  # type: ignore
@@ -34,9 +29,9 @@ logger = logging.getLogger(__name__)
 
 def get_websocket_sslopt(
     use_ssl_cert_validation: bool = True,
-    ssl_trusted_ca: Optional[str] = None,
-    ssl_client_certificate: Optional[str] = None,
-    ssl_private_key: Optional[str] = None,
+    ssl_trusted_ca: str | None = None,
+    ssl_client_certificate: str | None = None,
+    ssl_private_key: str | None = None,
 ) -> dict:
     """
     Returns a dictionary in the winsocket-client format
@@ -121,11 +116,13 @@ class LanguageContainerDeployer:
         language_alias: str,
         bucketfs_path: bfs.path.PathLike,
         extract_validator: ExtractValidator | None = None,
+        udf_client_binary: str = "exaudfclient",
     ) -> None:
 
         self._bucketfs_path = bucketfs_path
         self._language_alias = language_alias
         self._pyexasol_conn = pyexasol_connection
+        self._udf_client_binary = udf_client_binary
         if extract_validator:
             self._extract_validator = extract_validator
         else:
@@ -182,8 +179,8 @@ class LanguageContainerDeployer:
 
     def run(
         self,
-        container_file: Optional[Path] = None,
-        bucket_file_path: Optional[str] = None,
+        container_file: Path | None = None,
+        bucket_file_path: str | None = None,
         alter_system: bool = True,
         allow_override: bool = False,
         wait_for_completion: bool = True,
@@ -233,23 +230,19 @@ class LanguageContainerDeployer:
             self._wait_container_upload_completion(bucket_file_path)
 
         if not alter_system and print_activation_statements:
-            message = dedent(
-                f"""
+            message = dedent(f"""
                 In SQL, you can activate the SLC
                 by using the following statements:
-    
+
                 To activate the SLC only for the current session:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.Session, True)}
-    
+
                 To activate the SLC on the system:
                 {self.generate_activation_command(bucket_file_path, LanguageActivationLevel.System, True)}
-                """
-            )
+                """)
             print(message)
 
-    def upload_container(
-        self, container_file: Path, bucket_file_path: Optional[str] = None
-    ) -> None:
+    def upload_container(self, container_file: Path, bucket_file_path: str | None = None) -> None:
         """
         Upload the language container to the BucketFS.
 
@@ -351,7 +344,7 @@ class LanguageContainerDeployer:
         new_language_alias_definition = (
             f"{self._language_alias}=localzmq+protobuf:///"
             f"{path_in_udf_without_buckets}?lang=python#"
-            f"{path_in_udf}/exaudf/exaudfclient_py3"
+            f"{path_in_udf}/exaudf/{self._udf_client_binary}"
         )
         new_definitions = other_definitions + [new_language_alias_definition]
         new_definitions_str = " ".join(new_definitions)
@@ -378,29 +371,30 @@ class LanguageContainerDeployer:
     def create(
         cls,
         language_alias: str,
-        dsn: Optional[str] = None,
+        dsn: str | None = None,
         schema: str = "",
-        db_user: Optional[str] = None,
-        db_password: Optional[str] = None,
-        bucketfs_host: Optional[str] = None,
-        bucketfs_port: Optional[int] = None,
-        bucketfs_name: Optional[str] = None,
-        bucket: Optional[str] = None,
-        bucketfs_user: Optional[str] = None,
-        bucketfs_password: Optional[str] = None,
+        db_user: str | None = None,
+        db_password: str | None = None,
+        bucketfs_host: str | None = None,
+        bucketfs_port: int | None = None,
+        bucketfs_name: str | None = None,
+        bucket: str | None = None,
+        bucketfs_user: str | None = None,
+        bucketfs_password: str | None = None,
         bucketfs_use_https: bool = True,
-        saas_url: Optional[str] = None,
-        saas_account_id: Optional[str] = None,
-        saas_database_id: Optional[str] = None,
-        saas_database_name: Optional[str] = None,
-        saas_token: Optional[str] = None,
+        saas_url: str | None = None,
+        saas_account_id: str | None = None,
+        saas_database_id: str | None = None,
+        saas_database_name: str | None = None,
+        saas_token: str | None = None,
         path_in_bucket: str = "",
         use_ssl_cert_validation: bool = True,
-        ssl_trusted_ca: Optional[str] = None,
-        ssl_client_certificate: Optional[str] = None,
-        ssl_private_key: Optional[str] = None,
+        ssl_trusted_ca: str | None = None,
+        ssl_client_certificate: str | None = None,
+        ssl_private_key: str | None = None,
         deploy_timeout: timedelta = timedelta(minutes=10),
         display_progress: bool = False,
+        udf_client_binary: str = "exaudfclient",
     ) -> "LanguageContainerDeployer":
         warnings.warn(
             "create() function is deprecated and will be removed in a future version. "
@@ -487,4 +481,6 @@ class LanguageContainerDeployer:
 
         callback = display_extract_progress if display_progress else None
         extract_validator = ExtractValidator(pyexasol_conn, deploy_timeout, callback=callback)
-        return cls(pyexasol_conn, language_alias, bucketfs_path, extract_validator)
+        return cls(
+            pyexasol_conn, language_alias, bucketfs_path, extract_validator, udf_client_binary
+        )

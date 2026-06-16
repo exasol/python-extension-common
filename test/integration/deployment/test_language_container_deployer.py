@@ -52,7 +52,7 @@ def test_cert_failure(backend, exasol_config, bucketfs_config, language_alias):
         )
     parsed_url = urlparse(bucketfs_config.url)
     with pytest.raises(pyexasol.ExaConnectionFailedError, match="[SSL: CERTIFICATE_VERIFY_FAILED]"):
-        deployer = LanguageContainerDeployer.create(
+        LanguageContainerDeployer.create(
             language_alias=language_alias,
             dsn=f"{exasol_config.host}:{exasol_config.port}",
             db_user=exasol_config.username,
