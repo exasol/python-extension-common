@@ -54,7 +54,7 @@ def test_create_bucketfs_location_onprem(use_onprem, onprem_bfs_params):
     if not use_onprem:
         pytest.skip("The test is not configured to use ITDE.")
 
-    extra_params = {StdParams.path_in_bucket.name: "test_create_location"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_location.csv"}
     bfs_path = create_bucketfs_location(**onprem_bfs_params, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
@@ -64,7 +64,7 @@ def test_create_bucketfs_location_saas_db_id(use_saas, saas_params_id):
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    extra_params = {StdParams.path_in_bucket.name: "test_create_location_with_id"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_location_with_id.csv"}
     bfs_path = create_bucketfs_location(**saas_params_id, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
@@ -74,7 +74,7 @@ def test_create_bucketfs_location_saas_db_name(use_saas, saas_params_name):
     if not use_saas:
         pytest.skip("The test is not configured to use SaaS.")
 
-    extra_params = {StdParams.path_in_bucket.name: "test_create_location_with_name"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_location_with_name.csv"}
     bfs_path = create_bucketfs_location(**saas_params_name, **extra_params)
     with write_test_file(bfs_path):
         validate_test_file(bfs_path)
@@ -93,7 +93,7 @@ def test_create_bucketfs_conn_object_onprem(
         pytest.skip("The test is not configured to use ITDE.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object.csv"}
     bfs_path = create_bucketfs_location(**onprem_bfs_params, **extra_params)
     with write_test_file(bfs_path):
         # onprem_db_params and onprem_bfs_params have one item in common -
@@ -109,7 +109,7 @@ def test_create_bucketfs_conn_object_saas_db_id(write_conn_object_mock, use_saas
         pytest.skip("The test is not configured to use SaaS.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object_with_id"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object_with_id.csv"}
     bfs_path = create_bucketfs_location(**saas_params_id, **extra_params)
     with write_test_file(bfs_path):
         create_bucketfs_conn_object(conn_name="SAAS_TEST_BFS_ID", **saas_params_id, **extra_params)
@@ -123,7 +123,7 @@ def test_create_bucketfs_conn_object_saas_db_name(
         pytest.skip("The test is not configured to use SaaS.")
 
     write_conn_object_mock.side_effect = validate_conn_object
-    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object_with_name"}
+    extra_params = {StdParams.path_in_bucket.name: "test_create_conn_object_with_name.csv"}
     bfs_path = create_bucketfs_location(**saas_params_name, **extra_params)
     with write_test_file(bfs_path):
         create_bucketfs_conn_object(
