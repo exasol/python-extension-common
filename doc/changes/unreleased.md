@@ -9,3 +9,5 @@
 ## Refactoring
 
 * #151: Updated exasol-toolbox to 8.1.1
+* #154: Enabled on-prem integration tests for all supported Python versions.
+* #159: Fixed the extensions of uploaded files in integration tests to comply with SaaS rules.
