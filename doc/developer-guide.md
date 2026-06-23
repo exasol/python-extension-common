@@ -1,5 +1,16 @@
 # Python Extension Common (PEC) Developer Guide
 
+## Optional Dependencies
+
+### `slc-tool`
+
+The `slc-tool` extra provides [`exasol-script-languages-container-tool`](https://github.com/exasol/script-languages-container-tool), which is needed to build custom Script Language Containers using `LanguageContainerBuilder`. Install it with:
+
+```shell
+pip install exasol-python-extension-common[slc-tool]
+```
+
+
 ## Pytest Plugins
 
 PEC declares a dependency to pytest plugin `pytest-exasol-saas` which are maintained in GitHub repository [pytest-plugins/pytest_saas](https://github.com/exasol/pytest-plugins/tree/main/pytest-saas/).
