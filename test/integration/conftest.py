@@ -43,6 +43,7 @@ def container_name() -> str:
     # the container name based on the version or other parameters.
     return "template-Exasol-all-python-3.12-release-x64-UG64HQTRRKYKCIT3IS4SRUQ6ZBXI42MJ4NS77M7UMZDTBX2VR2MQ.tar.gz"
 
+
 @pytest.fixture(scope="session")
 def container_url_formatter(container_name) -> str:
     return (

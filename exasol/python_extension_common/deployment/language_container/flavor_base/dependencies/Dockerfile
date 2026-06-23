@@ -2,4 +2,4 @@ FROM exasol/script-language-container:template-Exasol-all-python-3.12-release_x6
 
 Run mkdir /project
 COPY dependencies/requirements.txt /project/requirements.txt
-RUN python3.12 -m pip install -r /project/requirements.txt
+RUN python3.12 -m pip install --break-system-packages -r /project/requirements.txt
