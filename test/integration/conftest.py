@@ -28,7 +28,7 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
     slc_parameter_formatters,
 )
 
-VERSION = "11.1.1"
+VERSION = "11.2.0"
 
 TEST_SCHEMA = "PEC_DEPLOYER_TESTS"
 TEST_LANGUAGE_ALIAS = "PYTHON3_PEC_TESTS"
@@ -41,7 +41,7 @@ def container_name() -> str:
     # of the container, which may need to be updated manually when new versions
     # are released. Consider implementing a more dynamic approach to determine
     # the container name based on the version or other parameters.
-    return "template-Exasol-all-python-3.10-release-x64-BFOJFIJ2Y42PBIZHWXVEQBBVPAEVHZETG4Z45VAMFWFSXORH3FVA.tar.gz"
+    return "template-Exasol-all-python-3.12-release-x64-UG64HQTRRKYKCIT3IS4SRUQ6ZBXI42MJ4NS77M7UMZDTBX2VR2MQ.tar.gz"
 
 
 @pytest.fixture(scope="session")
