@@ -28,7 +28,7 @@ slc-tool = ["exasol-script-languages-container-tool>=3, <5"]
 [dependency-groups]
 dev = [
     "pytest>=7.2.0,<10",
-    "exasol-toolbox>=8.1.1, <9",
+    "exasol-toolbox>=10.0.0, <11",
     "pytest-exasol-backend>=0.4.0,<2",
     "exasol-script-languages-container-tool>=3, <5",
 ]
@@ -54,7 +54,6 @@ fail_under = 15
 line-length = 100
 verbose = false
 include = "\\.pyi?$"
-
 
 [tool.isort]
 profile = "black"

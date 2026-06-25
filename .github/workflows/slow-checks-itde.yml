@@ -6,12 +6,14 @@ on:
 jobs:
   build-matrix:
     name: Build Matrix
-    uses: ./.github/workflows/matrix-all.yml
+    uses: ./.github/workflows/matrix.yml
+    with:
+      matrix_keys_json: '["exasol_versions", "python_versions"]'
     permissions:
       contents: read
 
   run-integration-tests:
-    name: Run Integration Tests (Python-${{ matrix.python-version }}, Exasol-${{ matrix.exasol-version}})
+    name: Run Integration Tests (Python-${{ matrix.python_versions }}, Exasol-${{ matrix.exasol_versions}})
     needs:
       - build-matrix
     runs-on: "ubuntu-24.04"
@@ -20,36 +22,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
-
     steps:
       - name: Allow unprivileged user namespaces
         id: allow-unprivileged-user-namespaces
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          large-packages: false
-
       - name: Free disk space by removing large directories
         run: |
-                sudo rm -rf /usr/local/graalvm/
-                sudo rm -rf /usr/local/.ghcup/
-                sudo rm -rf /usr/local/share/powershell
-                sudo rm -rf /usr/local/share/chromium
-                sudo rm -rf /usr/local/lib/node_modules
-                sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/graalvm/
+          sudo rm -rf /usr/local/.ghcup/
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+
 
       - name: Check out Repository
         id: check-out-repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python & Poetry Environment
         id: set-up-python-and-poetry-environment
-        uses: exasol/python-toolbox/.github/actions/python-environment@v8
+        uses: exasol/python-toolbox/.github/actions/python-environment@v10
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python_versions }}
           poetry-version: "2.3.0"
 
       - name: Run Integration Tests
@@ -57,12 +57,15 @@ jobs:
         run: >
           poetry run -- nox -s test:integration -- -s --coverage
           --backend=onprem
-          --db-version ${{ matrix.exasol-version }}
+          --db-version ${MATRIX_EXASOL_VERSIONS}
+        env:
+          MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Upload Artifacts
         id: upload-artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-python${{ matrix.python-version }}-exasol${{ matrix.exasol-version }}-slow-itde
+          name: coverage-python${{ matrix.python_versions }}-exasol${{ matrix.exasol_versions }}-slow-itde
           path: .coverage
           include-hidden-files: true
+          overwrite: false
