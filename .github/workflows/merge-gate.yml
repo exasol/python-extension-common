@@ -1,9 +1,18 @@
 # Generated and maintained by the exasol-toolbox.
-# Last generated with exasol-toolbox version 8.1.1.
+# Last generated with exasol-toolbox version 10.0.0.
 name: Merge-Gate
 
 on:
   workflow_call:
+    secrets:
+      INTEGRATION_TEAM_SAAS_STAGING_HOST:
+        required: true
+      INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID:
+        required: true
+      INTEGRATION_TEAM_SAAS_STAGING_PAT:
+        required: true
+      SONAR_TOKEN:
+        required: true
 
 jobs:
   run-fast-checks:
@@ -24,7 +33,8 @@ jobs:
       - run-fast-checks
       - run-fast-tests
     uses: ./.github/workflows/report.yml
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     permissions:
       contents: read
 
@@ -46,7 +56,10 @@ jobs:
     needs:
       - approve-run-slow-tests
     uses: ./.github/workflows/slow-checks.yml
-    secrets: inherit
+    secrets:
+      INTEGRATION_TEAM_SAAS_STAGING_HOST: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_HOST }}
+      INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_ACCOUNT_ID }}
+      INTEGRATION_TEAM_SAAS_STAGING_PAT: ${{ secrets.INTEGRATION_TEAM_SAAS_STAGING_PAT }}
     permissions:
       contents: read
 
@@ -61,14 +74,17 @@ jobs:
     # If you need additional jobs to be part of the merge gate, add them below
     needs:
       - run-fast-checks
+      - run-fast-tests
       - run-slow-checks
     # To prevent accidentally merges, this step is required. For more details
     # see: https://github.com/exasol/python-toolbox/issues/563
     steps:
       - name: Branch Protection - failure if any ancestor failed or was cancelled
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
         run: |
-          echo '${{ toJSON(needs) }}'
+          echo "$NEEDS_JSON"
           exit 1
       - name: branch protection
         run: echo "All required checks passed. Merge allowed."
