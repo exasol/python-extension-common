@@ -57,7 +57,9 @@ jobs:
         run: >
           poetry run -- nox -s test:integration -- -s --coverage
           --backend=onprem
-          --db-version ${{ matrix.exasol_versions }}
+          --db-version ${MATRIX_EXASOL_VERSIONS}
+        env:
+          MATRIX_EXASOL_VERSIONS: ${{ matrix.exasol_versions }}
 
       - name: Upload Artifacts
         id: upload-artifacts
