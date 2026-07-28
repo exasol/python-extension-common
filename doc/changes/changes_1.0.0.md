@@ -2,11 +2,11 @@
 
 ## Summary
 
-Added support for Python3.14
+Added support for Python 3.14
 
 ## Dependencies
 
-* #163: Added support for Python3.14
+* #163: Added support for Python 3.14
 
 ## Dependency Updates
 
