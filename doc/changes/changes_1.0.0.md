@@ -1,4 +1,4 @@
-# 1.0.0 - 2026-06-25
+# 1.0.0 - 2026-07-28
 
 ## Summary
 
@@ -13,3 +13,7 @@ Added support for Python3.14
 ### `dev`
 
 * Updated dependency `pytest-exasol-backend:1.4.1` to `1.5.0`
+
+## Refactoring
+
+* #152: Re-enabled `check-workflows` in `checks.yml` and updated to `exasol-toolbox` 10.0.0
