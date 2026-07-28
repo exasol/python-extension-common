@@ -337,7 +337,11 @@ def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
     option_name = _get_param_name(std_param).replace("_", "-")
     if isinstance(param_value, bool):
         return f"--{option_name}" if param_value else f"--no-{option_name}"
-    return f'--{option_name} "{param_value}"'
+    # The value is joined to the option with "=" rather than passed as a
+    # separate token. Otherwise, if the value itself starts with "--"
+    # (e.g. a randomly generated id), click's parser would mistake it for
+    # another option instead of treating it as this option's value.
+    return f'--{option_name}="{param_value}"'
 
 
 def kwargs_to_cli_args(**kwargs) -> str:

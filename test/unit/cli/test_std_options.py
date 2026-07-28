@@ -171,10 +171,11 @@ def test_hidden_opt_with_envar():
 @pytest.mark.parametrize(
     ["std_param", "param_value", "expected_result"],
     [
-        (StdParams.db_user, "Me", '--db-user "Me"'),
-        ("user_rating", 5, '--user-rating "5"'),
+        (StdParams.db_user, "Me", '--db-user="Me"'),
+        ("user_rating", 5, '--user-rating="5"'),
         (StdParams.use_ssl_cert_validation, True, "--use-ssl-cert-validation"),
         (StdParams.use_ssl_cert_validation, False, "--no-use-ssl-cert-validation"),
+        ("db_id", "--dI0m90RUKefql382tsWA", '--db-id="--dI0m90RUKefql382tsWA"'),
     ],
 )
 def test_get_cli_arg(std_param, param_value, expected_result):
@@ -184,8 +185,31 @@ def test_get_cli_arg(std_param, param_value, expected_result):
 def test_kwargs_to_cli_args():
     arg_string = kwargs_to_cli_args(use_rgb=True, colour="Blue", compress_image=False)
     arg_set = set(arg_string.split())
-    expected_set = {"--use-rgb", "--colour", '"Blue"', "--no-compress-image"}
+    expected_set = {"--use-rgb", '--colour="Blue"', "--no-compress-image"}
     assert arg_set == expected_set
+
+
+def test_kwargs_to_cli_args_value_starting_with_dashes():
+    """
+    A value that itself looks like a CLI option (e.g. a randomly generated id
+    starting with "--") must still be parsed as this option's value, not as a
+    separate option. See https://github.com/exasol/python-extension-common/issues/164
+    """
+    tricky_value = "--dI0m90RUKefql382tsWA"
+    arg_string = kwargs_to_cli_args(db_id=tricky_value)
+
+    received = {}
+
+    @click.command()
+    @click.option("--db-id")
+    def cmd(db_id):
+        received["db_id"] = db_id
+
+    runner = CliRunner()
+    result = runner.invoke(cmd, args=arg_string, catch_exceptions=False, standalone_mode=False)
+
+    assert result.exit_code == 0
+    assert received["db_id"] == tricky_value
 
 
 @pytest.mark.parametrize(
