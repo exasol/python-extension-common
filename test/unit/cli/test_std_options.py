@@ -166,8 +166,8 @@ def test_hidden_opt_with_envar(monkeypatch):
 @pytest.mark.parametrize(
     ["std_param", "param_value", "expected_result"],
     [
-        (StdParams.db_user, "Me", '--db-user="Me"'),
-        ("user_rating", 5, '--user-rating="5"'),
+        (StdParams.db_user, "Me", '--db-user "Me"'),
+        ("user_rating", 5, '--user-rating "5"'),
         (StdParams.use_ssl_cert_validation, True, "--use-ssl-cert-validation"),
         (StdParams.use_ssl_cert_validation, False, "--no-use-ssl-cert-validation"),
         ("db_id", "--dI0m90RUKefql382tsWA", '--db-id="--dI0m90RUKefql382tsWA"'),
@@ -180,7 +180,7 @@ def test_get_cli_arg(std_param, param_value, expected_result):
 def test_kwargs_to_cli_args():
     arg_string = kwargs_to_cli_args(use_rgb=True, colour="Blue", compress_image=False)
     arg_set = set(arg_string.split())
-    expected_set = {"--use-rgb", '--colour="Blue"', "--no-compress-image"}
+    expected_set = {"--use-rgb", "--colour", '"Blue"', "--no-compress-image"}
     assert arg_set == expected_set
 
 
