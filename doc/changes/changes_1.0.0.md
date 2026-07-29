@@ -1,4 +1,4 @@
-# 1.0.0 - 2026-07-28
+# 1.0.0 - 2026-07-29
 
 ## Summary
 
@@ -17,7 +17,3 @@ Added support for Python 3.14
 ## Refactoring
 
 * #152: Re-enabled `check-workflows` in `checks.yml` and updated to `exasol-toolbox` 10.0.0
-
-## Bug Fixes
-
-* #168: Fixed `get_cli_arg`/`kwargs_to_cli_args` mishandling option values that start with `--`.
