@@ -1,5 +1,3 @@
-import os
-
 import click
 import pytest
 from click.testing import CliRunner
@@ -145,7 +143,7 @@ def test_select_std_options_with_formatter():
     runner.invoke(cmd, args=f"--version {version}", catch_exceptions=False, standalone_mode=False)
 
 
-def test_hidden_opt_with_envar():
+def test_hidden_opt_with_envar(monkeypatch):
     """
     This test checks the mechanism of providing a value of a confidential parameter
     via an environment variable.
@@ -161,11 +159,8 @@ def test_hidden_opt_with_envar():
     opt = create_std_option(std_param, type=str, hide_input=True)
     cmd = click.Command("do_something", params=[opt], callback=func)
     runner = CliRunner()
-    os.environ[envar_name] = param_value
-    try:
-        runner.invoke(cmd)
-    finally:
-        os.environ.pop(envar_name)
+    monkeypatch.setenv(envar_name, param_value)
+    runner.invoke(cmd)
 
 
 @pytest.mark.parametrize(
