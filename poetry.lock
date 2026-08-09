@@ -1186,7 +1186,6 @@ description = "BucketFS utilities for the Python programming language"
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main", "dev"]
-markers = "python_version >= \"3.12\""
 files = [
     {file = "exasol_bucketfs-2.1.0-py3-none-any.whl", hash = "sha256:82d0f87d756921846ce60b7af112a71a491019aa46976693046399805c303a12"},
     {file = "exasol_bucketfs-2.1.0.tar.gz", hash = "sha256:55583af02e8a65b40bb15bc462e8bcdf1c0195e00f8c1e70148724869fb6da29"},
@@ -1196,23 +1195,6 @@ files = [
 attrs = ">=23.2.0"
 exasol-saas-api = ">2.0.0,<3.0"
 httpx = ">=0.27.0"
-requests = ">=2.32.4"
-
-[[package]]
-name = "exasol-bucketfs"
-version = "2.2.0"
-description = "BucketFS utilities for the Python programming language"
-optional = false
-python-versions = "<3.14,>=3.10"
-groups = ["main", "dev"]
-markers = "python_version < \"3.12\""
-files = [
-    {file = "exasol_bucketfs-2.2.0-py3-none-any.whl", hash = "sha256:cc1e1331467f64b951ee484fa0e51ba40d1e28bd7963cd09a021b793ba66531c"},
-    {file = "exasol_bucketfs-2.2.0.tar.gz", hash = "sha256:a66fe0e80756e034adc665dc1bc7f9c2115ecbb4d83ffd214099c35c6c62e539"},
-]
-
-[package.dependencies]
-exasol-saas-api = ">2.0.0,<3.0"
 requests = ">=2.32.4"
 
 [[package]]
@@ -1491,14 +1473,14 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "gitpython"
-version = "3.1.57"
+version = "3.1.58"
 description = "GitPython is a Python library used to interact with Git repositories"
 optional = false
 python-versions = ">=3.7"
 groups = ["main", "dev"]
 files = [
-    {file = "gitpython-3.1.57-py3-none-any.whl", hash = "sha256:4ccf7d73c10f5c9e76043fbb2675ac5a1b3ff5b41e648f56bcbed5f63792ecaf"},
-    {file = "gitpython-3.1.57.tar.gz", hash = "sha256:c493ec57c0ef6b19743798b6a5af859c71814b524e7e6f97baa2f8e658961488"},
+    {file = "gitpython-3.1.58-py3-none-any.whl", hash = "sha256:d331e722577f0fd7fc1f857419b3ecc07af66282b933d2a4d95f84a042fdd50f"},
+    {file = "gitpython-3.1.58.tar.gz", hash = "sha256:621416df10ef3fd0e19fabf9172ddeed0fa704d353d04f194eec56a625a95b22"},
 ]
 markers = {main = "extra == \"slc-tool\""}
 
