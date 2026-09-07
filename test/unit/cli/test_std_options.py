@@ -175,6 +175,9 @@ def test_hidden_opt_with_envar(monkeypatch):
     assert captured[std_param.name] == param_value
 
 
+_QUOTE_INSIDE_VALUE = 'quote"inside'
+
+
 @pytest.mark.parametrize(
     ["std_param", "param_value", "expected_result"],
     [
@@ -182,7 +185,11 @@ def test_hidden_opt_with_envar(monkeypatch):
         ("user_rating", 5, "--user-rating 5"),
         (StdParams.use_ssl_cert_validation, True, "--use-ssl-cert-validation"),
         (StdParams.use_ssl_cert_validation, False, "--no-use-ssl-cert-validation"),
-        (StdParams.db_user, 'quote"inside', f'--db-user {shlex.quote("quote\"inside")}'),
+        (
+            StdParams.db_user,
+            _QUOTE_INSIDE_VALUE,
+            f"--db-user {shlex.quote(_QUOTE_INSIDE_VALUE)}",
+        ),
     ],
 )
 def test_get_cli_arg(std_param, param_value, expected_result):
