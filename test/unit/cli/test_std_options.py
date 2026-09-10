@@ -257,6 +257,39 @@ def test_encode_secret_value_leaves_unremarkable_values_unchanged():
     assert encode_secret_value("regular_value") == "regular_value"
 
 
+@pytest.mark.parametrize(
+    ["value", "expected_encoded"],
+    [
+        # Plain dash-prefixed values: the leading "-" run is replaced by the
+        # escape-boundary character (U+2010, a lookalike click's parser doesn't
+        # recognize as an option prefix) followed by its length, so the encoded
+        # value no longer starts with an ASCII "-".
+        ("--dI0m90RUKefql382tsWA", "‐2‐dI0m90RUKefql382tsWA"),
+        ("-dashy", "‐1‐dashy"),
+        ("---triple-dash", "‐3‐triple-dash"),
+        ("-", "‐1‐"),
+        # Values that themselves start with the escape-boundary character (but
+        # not with an ASCII "-") still get the same two-part prefix, with a
+        # leading-dash count of 0, so decode_secret_value can still tell them
+        # apart from a "real" encoding of a dash-prefixed value.
+        ("‐2-", "‐0‐‐2-"),
+        ("‐‐realtoken", "‐0‐‐‐realtoken"),
+        ("-‐‐foo", "‐1‐‐‐foo"),
+        ("‐", "‐0‐‐"),
+    ],
+)
+def test_encode_secret_value_escapes_leading_dashes(value, expected_encoded):
+    """
+    Regression test for the PR #174 review comment: test_encode_decode_secret_value_roundtrip
+    only proves encode_secret_value and decode_secret_value are inverses of each other, not
+    that encoding actually strips the leading "-"/_ESCAPE_BOUNDARY that click's parser
+    chokes on. This pins down the exact encoded form instead.
+    """
+    encoded = encode_secret_value(value)
+    assert encoded == expected_encoded
+    assert not encoded.startswith("-")
+
+
 def test_get_cli_arg_secret_param_with_dash_prefixed_value():
     """
     Regression test for #168. A secret option's value that itself starts with "-"
