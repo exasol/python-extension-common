@@ -11,7 +11,6 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from exasol.python_extension_common.cli import std_options
 from exasol.python_extension_common.cli.language_container_deployer_cli import (
     LanguageContainerDeployerCli,
 )
@@ -28,29 +27,6 @@ from exasol.python_extension_common.connections.pyexasol_connection import (
 
 CONTAINER_URL_ARG = "container_url"
 CONTAINER_NAME_ARG = "container_name"
-
-
-@pytest.fixture(autouse=True)
-def _patch_get_cli_arg_for_dash_prefixed_values(monkeypatch):
-    """
-    SaaS database ids are randomly generated and may themselves start with "-"
-    (e.g. "--dI0m90RUKefql382tsWA"). `get_cli_arg` joins an option and its
-    value with a space, which click's parser can mistake for a new option
-    when the value itself looks like one. This is patched here, rather than
-    in `get_cli_arg` itself, to avoid changing that function's behavior for
-    its other, non-test callers. See
-    https://github.com/exasol/python-extension-common/issues/168
-    """
-    original_get_cli_arg = std_options.get_cli_arg
-
-    def patched_get_cli_arg(std_param, param_value):
-        if isinstance(param_value, bool) or not str(param_value).startswith("-"):
-            return original_get_cli_arg(std_param, param_value)
-        option_name = std_param if isinstance(std_param, str) else std_param.name
-        option_name = option_name.replace("_", "-")
-        return f'--{option_name}="{param_value}"'
-
-    monkeypatch.setattr(std_options, "get_cli_arg", patched_get_cli_arg)
 
 
 @pytest.fixture(scope="session")

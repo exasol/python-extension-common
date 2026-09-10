@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 from enum import (
     Enum,
     Flag,
@@ -106,6 +107,46 @@ class ParameterFormatters:
 # This text will be displayed instead of the actual value for a "secret" option.
 SECRET_DISPLAY = "***"
 
+# A lookalike character used as a reserved delimiter in encode_secret_value's output
+# (see there). Click's parser only recognizes the ASCII hyphen-minus (U+002D) as an
+# option prefix, so this is invisible to it.
+_ESCAPE_BOUNDARY = "‐"
+
+
+def encode_secret_value(value: str) -> str:
+    """
+    Encodes value so that a secret option's value can be put on the command line
+    without click's parser mistaking it for a new option (see get_cli_arg's
+    docstring). Use decode_secret_value to reverse this.
+
+    A value that neither starts with "-" (which click's parser would choke on) nor
+    with _ESCAPE_BOUNDARY (which decode_secret_value would otherwise mistake for its
+    own encoding) is returned unchanged. Otherwise, the value is encoded as
+    _ESCAPE_BOUNDARY + <n> + _ESCAPE_BOUNDARY + <value with its leading "-" run of
+    length n removed>, e.g. "--secret" -> "‐2‐secret". This length-prefixed form is
+    an exact inverse for every possible input, including a value that itself starts
+    with "-" and/or _ESCAPE_BOUNDARY, since decoding only ever needs the first two
+    occurrences of _ESCAPE_BOUNDARY to recover n and the remainder verbatim.
+    """
+    if not value.startswith("-") and not value.startswith(_ESCAPE_BOUNDARY):
+        return value
+    stripped = value.lstrip("-")
+    n = len(value) - len(stripped)
+    return f"{_ESCAPE_BOUNDARY}{n}{_ESCAPE_BOUNDARY}{stripped}"
+
+
+def decode_secret_value(value: str) -> str:
+    """
+    Inverse of encode_secret_value. Applied automatically by secret_callback for
+    options built through this module (see get_cli_arg). Call this explicitly only
+    if you parse a kwargs_to_cli_args()/get_cli_arg() args string some other way,
+    e.g. with a different parser or in another program/language.
+    """
+    if not value.startswith(_ESCAPE_BOUNDARY):
+        return value
+    _, n, rest = value.split(_ESCAPE_BOUNDARY, 2)
+    return "-" * int(n) + rest
+
 
 def secret_callback(ctx: click.Context, param: click.Option, value: Any):
     """
@@ -115,8 +156,16 @@ def secret_callback(ctx: click.Context, param: click.Option, value: Any):
     be no way of altering this behaviour.
     """
     if value == SECRET_DISPLAY:
-        envar_name = param.opts[0][2:].upper()
+        # Derived from param.opts[0] (the CLI flag itself) rather than param.name, so this
+        # keeps tracking the flag actually shown to the user (e.g. in --help) even for an
+        # option declared directly via make_option_secret with a custom internal name.
+        # Hyphens are converted to underscores because POSIX environment variable names
+        # can't contain them (#173) - matching the underscored names documented in
+        # user-guide.md, e.g. "--db-password" -> "DB_PASSWORD".
+        envar_name = param.opts[0][2:].upper().replace("-", "_")
         return os.environ.get(envar_name)
+    if isinstance(value, str):
+        return decode_secret_value(value)
     return value
 
 
@@ -179,7 +228,7 @@ def _get_param_name(std_param: StdParamOrName) -> str:
 Standard options defined in the form of key-value pairs, where key is the option's
 StaParam key and the value is a kwargs for creating the click.Options(...).
 """
-_std_options = {
+_std_options: dict[StdParams, dict[str, Any]] = {
     StdParams.bucketfs_name: {"type": str},
     StdParams.bucketfs_host: {"type": str},
     StdParams.bucketfs_port: {"type": int},
@@ -247,6 +296,30 @@ def get_bool_opt_name(std_param: StdParamOrName) -> str:
     std_param_name = _get_param_name(std_param)
     opt_name = std_param_name.replace("_", "-")
     return f"--{opt_name}/--no-{opt_name}"
+
+
+def is_secret_param(std_param: StdParamOrName) -> bool:
+    """
+    True if std_param is a StdParams member defined with hide_input=True in
+    _std_options. A plain string name is only considered secret if it happens to match
+    the name of such a StdParams member; any other string name can never be secret,
+    since it has no entry in _std_options.
+
+    Note: this only reflects the default hide_input in _std_options, not any
+    hide_input a caller passed directly to create_std_option or via
+    select_std_options(override=...). get_cli_arg (the only caller) is only ever
+    given a param name, not the click.Option that was actually constructed, so it
+    has no way to see such an override.
+    """
+    if isinstance(std_param, StdParams):
+        member = std_param
+    elif std_param in StdParams.__members__:
+        member = StdParams[std_param]
+    else:
+        return False
+    if member not in _std_options:
+        return False
+    return bool(_std_options[member].get("hide_input", False))
 
 
 def create_std_option(std_param: StdParamOrName, **kwargs) -> click.Option:
@@ -332,12 +405,32 @@ def get_cli_arg(std_param: StdParamOrName, param_value: Any) -> str:
     Makes a CLI args string from an option and its value.
     An option can be given as either an StdParams or its string name.
     For boolean values the args string takes the form --option-name/--no-option-name.
+    A non-boolean value is quoted with shlex.quote, so the returned string can be
+    split back into args with shlex.split (as click.testing.CliRunner.invoke does for
+    a string args) regardless of what characters the value contains.
+
+    For a "secret" (hide_input) standard parameter, click's parser can't tell an
+    option value starting with "-"/"--" apart from the option being given with no
+    value at all, since such an option allows omitting its value (which is how it
+    lets its value be entered interactively instead) - this holds no matter how the
+    option and its value are joined in the returned string. To avoid that, such a
+    value is encoded with encode_secret_value before being put on the command line.
+
+    This is decoded back automatically only if the resulting args string is parsed by
+    a click.Option built through this module (create_std_option, select_std_options,
+    make_option_secret), since decoding happens in their shared secret_callback. A
+    caller who instead parses this string themselves, or hands it to a different
+    program/language, must call decode_secret_value explicitly to recover the
+    original value.
     """
 
     option_name = _get_param_name(std_param).replace("_", "-")
     if isinstance(param_value, bool):
         return f"--{option_name}" if param_value else f"--no-{option_name}"
-    return f'--{option_name} "{param_value}"'
+    str_value = str(param_value)
+    if is_secret_param(std_param):
+        str_value = encode_secret_value(str_value)
+    return f"--{option_name} {shlex.quote(str_value)}"
 
 
 def kwargs_to_cli_args(**kwargs) -> str:
