@@ -19,7 +19,7 @@ jobs:
     name: Build Matrix
     needs:
       - approve-run-slow-tests-for-saas
-    uses: ./.github/workflows/matrix.yml
+    uses: $/.github/workflows/matrix.yml
     with:
       matrix_keys_json: '["minimum_python_version"]'
     permissions:
