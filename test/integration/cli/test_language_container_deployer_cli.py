@@ -1,9 +1,4 @@
 from contextlib import ExitStack
-from test.utils.db_utils import (
-    assert_udf_running,
-    create_schema,
-)
-from test.utils.revert_language_settings import revert_language_settings
 from typing import Any
 from urllib.parse import urlparse
 
@@ -24,6 +19,11 @@ from exasol.python_extension_common.cli.std_options import (
 from exasol.python_extension_common.connections.pyexasol_connection import (
     open_pyexasol_connection,
 )
+from test.utils.db_utils import (
+    assert_udf_running,
+    create_schema,
+)
+from test.utils.revert_language_settings import revert_language_settings
 
 CONTAINER_URL_ARG = "container_url"
 CONTAINER_NAME_ARG = "container_name"
