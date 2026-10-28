@@ -4,11 +4,6 @@ from contextlib import (
     ExitStack,
     contextmanager,
 )
-from test.utils.db_utils import (
-    create_schema,
-    open_schema,
-)
-from test.utils.revert_language_settings import revert_language_settings
 from typing import Any
 from urllib.parse import urlparse
 
@@ -27,6 +22,11 @@ from exasol.python_extension_common.deployment.language_container_deployer_cli i
     language_container_deployer_main,
     slc_parameter_formatters,
 )
+from test.utils.db_utils import (
+    create_schema,
+    open_schema,
+)
+from test.utils.revert_language_settings import revert_language_settings
 
 VERSION = "11.2.0"
 

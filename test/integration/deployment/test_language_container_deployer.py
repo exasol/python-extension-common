@@ -1,5 +1,4 @@
 from pathlib import Path
-from test.utils.db_utils import assert_udf_running
 from urllib.parse import urlparse
 
 import pyexasol
@@ -11,6 +10,7 @@ from exasol.python_extension_common.deployment.language_container_deployer impor
     LanguageContainerDeployer,
 )
 from exasol.python_extension_common.deployment.temp_schema import get_schema
+from test.utils.db_utils import assert_udf_running
 
 
 def test_container_file(deployer_factory, db_schema, language_alias, container_path):
