@@ -2,6 +2,8 @@
 
 ## Summary
 
+Bug fixes, base SLC image and dependency updates
+
 ## Security Issues
 
 This release fixes vulnerabilities by updating dependencies:
@@ -100,3 +102,7 @@ This release fixes vulnerabilities by updating dependencies:
 * Updated dependency `exasol-script-languages-container-tool:4.2.0` to `4.4.0`
 * Updated dependency `exasol-toolbox:10.4.0` to `12.0.0`
 * Updated dependency `pytest:9.1.1` to `9.2.0`
+
+### `slc`
+
+* Updated base image `exasol/script-language-container:template-Exasol-all-python-3.12-release_x64_11.2.0`
