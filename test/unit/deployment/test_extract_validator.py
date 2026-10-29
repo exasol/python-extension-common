@@ -53,7 +53,7 @@ class ConnectionMock:
         return [next(self.values)]
 
     def fetchall(self):
-        return [v for v in self.values]
+        return [*self.values]
 
 
 class Simulator:

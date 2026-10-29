@@ -1,5 +1,4 @@
 from pathlib import Path
-from test.utils.db_utils import assert_udf_running
 
 import pytest
 from exasol.slc.models.compression_strategy import CompressionStrategy
@@ -8,6 +7,7 @@ from exasol.python_extension_common.deployment.language_container_builder import
     LanguageContainerBuilder,
     find_path_backwards,
 )
+from test.utils.db_utils import assert_udf_running
 
 
 def test_prepare_flavor():
