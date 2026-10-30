@@ -105,4 +105,4 @@ This release fixes vulnerabilities by updating dependencies:
 
 ### `slc`
 
-* Updated base image `exasol/script-language-container:template-Exasol-all-python-3.12-release_x64_11.2.0`
+* Updated base image `exasol/script-language-container:template-Exasol-all-python-3.12-release_x64_12.0.1`
