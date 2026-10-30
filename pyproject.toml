@@ -1,6 +1,6 @@
 [project]
 name = "exasol-python-extension-common"
-version = "1.0.0"
+version = "1.1.0"
 description = "A collection of common utilities for Exasol extensions."
 authors = [{ name = "Mikhail Beck", email = "mikhail.beck@exasol.com" }]
 requires-python = ">=3.11,<3.15"

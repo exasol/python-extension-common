@@ -1,4 +1,4 @@
-FROM exasol/script-language-container:template-Exasol-all-python-3.12-release_x64_11.2.0
+FROM exasol/script-language-container:template-Exasol-all-python-3.12-release_x64_12.0.1
 
 Run mkdir /project
 COPY dependencies/requirements.txt /project/requirements.txt
